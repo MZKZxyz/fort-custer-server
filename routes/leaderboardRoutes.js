@@ -23,6 +23,7 @@ router.get('/:timeframe', async (req, res) => {
   const { date, start } = req.query;
   let targetDates = [];
 
+  // Determine targetDates based on timeframe
   if (timeframe === 'daily') {
     const target = date || new Date().toISOString().slice(0, 10);
     if (!isWithinSummer(target)) {
@@ -51,13 +52,16 @@ router.get('/:timeframe', async (req, res) => {
 
     users.forEach((user) => {
       user.subProfiles.forEach((profile) => {
-        let totalTime = 0;
-        let bestTime  = Infinity;
+        let totalTime      = 0;
+        let bestTime       = Infinity;
+        let completedMazes = 0;
 
-        for (const [d, data] of profile.progress.entries()) {
+        // Aggregate progress
+        for (const [dateKey, data] of profile.progress.entries()) {
           if (!data.completed || !data.time) continue;
-          if (timeframe !== 'alltime' && !targetDates.includes(d)) continue;
+          if (timeframe !== 'alltime' && !targetDates.includes(dateKey)) continue;
 
+          completedMazes++;
           const t = parseFloat(data.time);
           if (timeframe === 'daily') {
             if (t < bestTime) bestTime = t;
@@ -67,20 +71,22 @@ router.get('/:timeframe', async (req, res) => {
         }
 
         const finalTime = timeframe === 'daily' ? bestTime : totalTime;
-        const valid    =
+        const valid     =
           (timeframe === 'daily' && bestTime < Infinity) ||
           (timeframe !== 'daily' && totalTime > 0);
 
         if (valid) {
           scoresMap[profile._id] = {
-            name:         profile.name,
-            subProfileId: profile._id,
-            time:         finalTime.toFixed(3),
+            name:           profile.name,
+            subProfileId:   profile._id,
+            time:           finalTime.toFixed(3),
+            completedMazes,                // New field
           };
         }
       });
     });
 
+    // Convert to array, default sort by time ascending (client can re-sort)
     const scores = Object.values(scoresMap)
       .sort((a, b) => parseFloat(a.time) - parseFloat(b.time))
       .slice(0, 25);

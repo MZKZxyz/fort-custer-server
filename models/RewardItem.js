@@ -7,7 +7,7 @@ const RewardItemSchema = new mongoose.Schema({
   description: { type: String, required: true },
   category: {
     type: String,
-    enum: ['badge', 'tool', 'consumable', 'artifact'],
+    enum: ['trophy', 'tool', 'consumable', 'artifact', 'weapon', 'gear', 'goods'],
     required: true,
   },
   rarity: {
