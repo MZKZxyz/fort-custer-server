@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "schemaVersion": 1,
+    "generatorHash": "cf0c29029b3ea8c17a6247a7aec46ab589246d48ec5afadbcc2b4646348dafe1",
+    "rngVersion": "sha256-mulberry32-v1",
+    "options": {
+      "count": 10000,
+      "prefix": "sprint4",
+      "start": 0,
+      "width": 13,
+      "height": 17,
+      "minDistance": 25,
+      "maxStates": 100000
+    },
+    "rules": "client-single-slot-fire-input-v1",
+    "thresholds": {
+      "shortMoves": 25,
+      "longMovesPerCell": 2,
+      "difficultyOutlier": "score < 25 or score > 175 (fixed experimental thresholds)"
+    }
+  },
+  "node": "v24.19.0",
+  "platform": "linux",
+  "architecture": "x64",
+  "count": 10000,
+  "solved": 5706,
+  "errors": 4294,
+  "maxStates": 281,
+  "elapsedMs": 26806.783767,
+  "peakRssKiB": 201580,
+  "heapUsedBytes": 16921648
+}
