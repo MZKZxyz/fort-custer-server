@@ -1,0 +1,3551 @@
+{
+  "metadata": {
+    "schemaVersion": 1,
+    "generatorHash": "cf0c29029b3ea8c17a6247a7aec46ab589246d48ec5afadbcc2b4646348dafe1",
+    "rngVersion": "sha256-mulberry32-v1",
+    "options": {
+      "count": 1000,
+      "prefix": "sprint4",
+      "start": 0,
+      "width": 13,
+      "height": 17,
+      "minDistance": 25,
+      "maxStates": 100000
+    },
+    "rules": "client-single-slot-fire-input-v1",
+    "thresholds": {
+      "shortMoves": 25,
+      "longMovesPerCell": 2,
+      "difficultyOutlier": "score < 25 or score > 175 (fixed experimental thresholds)"
+    }
+  },
+  "summary": {
+    "total": 1000,
+    "solved": 572,
+    "issueCounts": {
+      "generation-or-validation-error": 428,
+      "inaccessible-extinguisher": 33,
+      "short-solution": 13
+    },
+    "minimumMoves": 24,
+    "maximumMoves": 126,
+    "meanMoves": 46.23251748251748
+  },
+  "problematicSeeds": [
+    {
+      "seed": "sprint4-1",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-3",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-5",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 39,
+      "unreachableItems": [
+        [
+          1,
+          1
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-10",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-11",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-14",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-16",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-17",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-20",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-22",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 25,
+      "unreachableItems": [
+        [
+          2,
+          1
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-26",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-28",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-29",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-32",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-34",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-35",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-39",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-40",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-41",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-42",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-43",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-47",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-50",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-53",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-54",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-57",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-58",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-59",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-63",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-66",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-67",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-71",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-72",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-78",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-79",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-83",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 30,
+      "unreachableItems": [
+        [
+          4,
+          5
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-85",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-86",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-88",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 34,
+      "unreachableItems": [
+        [
+          10,
+          11
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-89",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-90",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 33,
+      "unreachableItems": [
+        [
+          1,
+          9
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-92",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-94",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-95",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-98",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-99",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-103",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-105",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-110",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-113",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-114",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-115",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-117",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze generation failed: no valid path found"
+    },
+    {
+      "seed": "sprint4-118",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-121",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-122",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-123",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-124",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-125",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-127",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-128",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Cannot read properties of null (reading '0')"
+    },
+    {
+      "seed": "sprint4-129",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-131",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-132",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-134",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-135",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-136",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Cannot read properties of null (reading '0')"
+    },
+    {
+      "seed": "sprint4-138",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-141",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-147",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-149",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-151",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-155",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-156",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-158",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-161",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-164",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-167",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 46,
+      "unreachableItems": [
+        [
+          15,
+          7
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-169",
+      "issues": [
+        "short-solution"
+      ],
+      "minimumMoves": 24,
+      "unreachableItems": []
+    },
+    {
+      "seed": "sprint4-170",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 25,
+      "unreachableItems": [
+        [
+          11,
+          3
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-172",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-173",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-174",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-176",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-178",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-180",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-184",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-185",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-186",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-189",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 28,
+      "unreachableItems": [
+        [
+          7,
+          9
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-191",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-193",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-194",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-199",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-200",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-201",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-202",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-203",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-204",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-205",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-206",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-207",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-211",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-212",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze generation failed: no valid path found"
+    },
+    {
+      "seed": "sprint4-216",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-217",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-220",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-227",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-229",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-233",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-234",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-235",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Cannot read properties of null (reading '0')"
+    },
+    {
+      "seed": "sprint4-237",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-238",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-239",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-240",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-241",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-243",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-244",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-246",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-247",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Cannot read properties of null (reading '0')"
+    },
+    {
+      "seed": "sprint4-248",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-252",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-259",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-260",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-263",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Cannot read properties of null (reading '0')"
+    },
+    {
+      "seed": "sprint4-264",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-267",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-268",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-269",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 37,
+      "unreachableItems": [
+        [
+          4,
+          5
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-271",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-276",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-278",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-279",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-280",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 25,
+      "unreachableItems": [
+        [
+          7,
+          3
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-281",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-284",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-285",
+      "issues": [
+        "short-solution"
+      ],
+      "minimumMoves": 24,
+      "unreachableItems": []
+    },
+    {
+      "seed": "sprint4-287",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-288",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-289",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-291",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-292",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-296",
+      "issues": [
+        "short-solution"
+      ],
+      "minimumMoves": 24,
+      "unreachableItems": []
+    },
+    {
+      "seed": "sprint4-299",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-300",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-301",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-302",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-303",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-308",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-309",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-311",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-315",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-319",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-321",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-325",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-326",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-329",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-330",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze generation failed: no valid path found"
+    },
+    {
+      "seed": "sprint4-332",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-336",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-337",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-338",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-339",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-340",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-342",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-344",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-347",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze generation failed: no valid path found"
+    },
+    {
+      "seed": "sprint4-348",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-349",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-351",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-353",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-359",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-360",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-361",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 32,
+      "unreachableItems": [
+        [
+          8,
+          1
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-362",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-363",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-364",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 26,
+      "unreachableItems": [
+        [
+          1,
+          5
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-365",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-368",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-369",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-372",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-374",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-375",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-376",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-380",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-384",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-385",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-386",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-387",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-390",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-398",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-400",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-406",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-409",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-411",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-413",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-414",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-416",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-417",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-420",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 38,
+      "unreachableItems": [
+        [
+          9,
+          5
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-424",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-425",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-427",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 55,
+      "unreachableItems": [
+        [
+          3,
+          1
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-428",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-430",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-431",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-440",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-442",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-444",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-446",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-447",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-449",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-450",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-452",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-454",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-455",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-456",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-457",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-458",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-459",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-464",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-465",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-466",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-467",
+      "issues": [
+        "inaccessible-extinguisher",
+        "short-solution"
+      ],
+      "minimumMoves": 24,
+      "unreachableItems": [
+        [
+          5,
+          9
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-469",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-478",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 25,
+      "unreachableItems": [
+        [
+          12,
+          11
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-484",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-485",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-486",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-488",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-489",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-490",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-493",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 54,
+      "unreachableItems": [
+        [
+          1,
+          6
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-497",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-499",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-501",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-502",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-512",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 30,
+      "unreachableItems": [
+        [
+          5,
+          7
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-514",
+      "issues": [
+        "inaccessible-extinguisher",
+        "short-solution"
+      ],
+      "minimumMoves": 24,
+      "unreachableItems": [
+        [
+          11,
+          10
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-515",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-516",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 45,
+      "unreachableItems": [
+        [
+          3,
+          1
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-517",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-518",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-522",
+      "issues": [
+        "short-solution"
+      ],
+      "minimumMoves": 24,
+      "unreachableItems": []
+    },
+    {
+      "seed": "sprint4-529",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-532",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-535",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-536",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-537",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-538",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-539",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-542",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-543",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-544",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze generation failed: no valid path found"
+    },
+    {
+      "seed": "sprint4-550",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-552",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-553",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 30,
+      "unreachableItems": [
+        [
+          8,
+          7
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-555",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-557",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-559",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-560",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-561",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-562",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-564",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-565",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-566",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-572",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-575",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-576",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 26,
+      "unreachableItems": [
+        [
+          13,
+          5
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-577",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-578",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-580",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-582",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-583",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 27,
+      "unreachableItems": [
+        [
+          11,
+          5
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-585",
+      "issues": [
+        "short-solution"
+      ],
+      "minimumMoves": 24,
+      "unreachableItems": []
+    },
+    {
+      "seed": "sprint4-586",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-588",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-589",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-592",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-593",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 30,
+      "unreachableItems": [
+        [
+          3,
+          1
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-594",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 31,
+      "unreachableItems": [
+        [
+          3,
+          3
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-595",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-598",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze generation failed: no valid path found"
+    },
+    {
+      "seed": "sprint4-600",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-601",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-604",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-611",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-613",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-614",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-617",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-619",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-620",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-624",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-625",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-626",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-632",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-634",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-635",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-637",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-641",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-644",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-649",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-652",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-654",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-656",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-657",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-658",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-659",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-661",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-665",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-670",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-672",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-674",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-676",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-679",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-681",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-682",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-683",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-686",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-687",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-688",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-691",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-692",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-693",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-696",
+      "issues": [
+        "short-solution"
+      ],
+      "minimumMoves": 24,
+      "unreachableItems": []
+    },
+    {
+      "seed": "sprint4-698",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-699",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-700",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 48,
+      "unreachableItems": [
+        [
+          5,
+          5
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-701",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-703",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-704",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-708",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-711",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-712",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-716",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 31,
+      "unreachableItems": [
+        [
+          7,
+          3
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-717",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-720",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-721",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-723",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-726",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-729",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-730",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-733",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-739",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 51,
+      "unreachableItems": [
+        [
+          7,
+          3
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-741",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-745",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-748",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Cannot read properties of null (reading '0')"
+    },
+    {
+      "seed": "sprint4-749",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-750",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-751",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-752",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Cannot read properties of null (reading '0')"
+    },
+    {
+      "seed": "sprint4-753",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-757",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-760",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-762",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-763",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-764",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-765",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-767",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-771",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-775",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-777",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-779",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-782",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-783",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-785",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 38,
+      "unreachableItems": [
+        [
+          1,
+          5
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-787",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 28,
+      "unreachableItems": [
+        [
+          11,
+          5
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-790",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 40,
+      "unreachableItems": [
+        [
+          5,
+          3
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-796",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-797",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-798",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-799",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 41,
+      "unreachableItems": [
+        [
+          15,
+          5
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-800",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-801",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-803",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-804",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-805",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-806",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-809",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-811",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-812",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-816",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-818",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-819",
+      "issues": [
+        "short-solution"
+      ],
+      "minimumMoves": 24,
+      "unreachableItems": []
+    },
+    {
+      "seed": "sprint4-821",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-824",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-825",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze generation failed: no valid path found"
+    },
+    {
+      "seed": "sprint4-827",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-832",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-833",
+      "issues": [
+        "short-solution"
+      ],
+      "minimumMoves": 24,
+      "unreachableItems": []
+    },
+    {
+      "seed": "sprint4-837",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-838",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-839",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-840",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Cannot read properties of null (reading '0')"
+    },
+    {
+      "seed": "sprint4-846",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-847",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-853",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-854",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-855",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-856",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-858",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-860",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-861",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-862",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-863",
+      "issues": [
+        "short-solution"
+      ],
+      "minimumMoves": 24,
+      "unreachableItems": []
+    },
+    {
+      "seed": "sprint4-864",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-865",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-866",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-869",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-870",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-871",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-874",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-875",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-876",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-879",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-880",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-883",
+      "issues": [
+        "short-solution"
+      ],
+      "minimumMoves": 24,
+      "unreachableItems": []
+    },
+    {
+      "seed": "sprint4-886",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-887",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-889",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-890",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-891",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-895",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-896",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-901",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-903",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-906",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-908",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-909",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-911",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-912",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-915",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-917",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-925",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-926",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-927",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-933",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-936",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-937",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-939",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-944",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-945",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-946",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-950",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-954",
+      "issues": [
+        "short-solution"
+      ],
+      "minimumMoves": 24,
+      "unreachableItems": []
+    },
+    {
+      "seed": "sprint4-955",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-956",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-959",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-960",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-961",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-962",
+      "issues": [
+        "inaccessible-extinguisher"
+      ],
+      "minimumMoves": 52,
+      "unreachableItems": [
+        [
+          3,
+          1
+        ]
+      ]
+    },
+    {
+      "seed": "sprint4-964",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-968",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-969",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-970",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-971",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-972",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-973",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-974",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-976",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-977",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-979",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-981",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-982",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-983",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-988",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-992",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Cannot read properties of null (reading '0')"
+    },
+    {
+      "seed": "sprint4-994",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-996",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-997",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-998",
+      "issues": [
+        "generation-or-validation-error"
+      ],
+      "error": "Maze invalid: extinguisher or exit unreachable"
+    }
+  ]
+}
