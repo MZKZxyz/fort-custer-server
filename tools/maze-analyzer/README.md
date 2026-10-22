@@ -63,3 +63,15 @@ JSON batch output streams metadata, compact records (without paths/actions) and 
 This branch starts at server main `e5b69742c7849eb58fb58755fa909a44c8d87dc7`. It adds tools/tests/reports and npm scripts. It has no dependency on Sprint 3 completion API work and touches no routes, models or production generator. Sprint 3 may also add a root `test` script: both use `node --test`; preserve its API tests when combining branches. Any future generator refactor must update/review the VM declaration boundary and report hash; a client inventory/fire-rule change requires solver/fixture review.
 
 `npm test` runs all server tests available on this main plus the analyzer suite. This repository has no production compilation/build script; the production server is interpreted JavaScript. Validate syntax with `node --check` for all production and tool JavaScript. Do not start the API or run the destructive maze/reward seeders for this sprint. No deployment is part of this tool.
+
+## GitHub Actions CI
+
+`.nvmrc` declares Node 24 for development and CI. Server CI runs on pull requests to main and pushes to main, with read-only repository permissions and no production secrets/environments. It uses `npm ci`, installs the checksum-verified MongoDB 8.0.16 test binary, and runs **`npm test` with automatic discovery**. This includes analyzer/CLI smoke tests now and PR #2's completion integration tests after merge; those tests spawn their own loopback MongoDB with temporary synthetic data. No shared database service, production server, Railway command, or seeder is started. Keep the union of npm scripts if resolving package.json conflicts with PR #2.
+
+CI also runs a successful single-seed CLI smoke check, regenerates the 1,000-seed sample and 10,000-seed benchmark, and validates every flagged seed plus deterministic counts/options/provenance against the committed reports. Timing, RSS and final heap usage vary by runner and are checked for valid positive measurements rather than equal to one host. Reproduce validation locally:
+
+```sh
+node tools/maze-analyzer/cli.js --batch 1000 --prefix sprint4 > /tmp/maze-sample.json
+node --max-old-space-size=64 tools/maze-analyzer/benchmark.js 10000 > /tmp/maze-benchmark.json
+node tools/maze-analyzer/validate-reports.js /tmp/maze-sample.json /tmp/maze-benchmark.json
+```
