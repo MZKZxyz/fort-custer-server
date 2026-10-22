@@ -273,3 +273,60 @@ test('missing document versions fail safely without silently rewriting imported 
   assert.equal(saved.subProfiles[0].progress.size, 0);
   assert.equal(saved.subProfiles[0].attempts.get(date)[0].completed, false);
 });
+
+test('missing and invalid versions cannot be initialized by maze start or profile saves', async () => {
+  for (const version of [undefined, null, -1, 1.5]) {
+    const change = version === undefined ? { $unset: { __v: '' } } : { $set: { __v: version } };
+    await User.collection.updateOne({ _id: user._id }, change);
+    const before = await User.collection.findOne({ _id: user._id });
+    const starts = await Promise.all([request('/start'), request('/start')]);
+    assert.ok(starts.every(r => r.status === 409 && r.data.code === 'PROFILE_VERSION_REQUIRED'));
+    const loaded = await User.findById(user.id);
+    loaded.subProfiles[0].name = 'Should not save';
+    await assert.rejects(loaded.save(), { code: 'PROFILE_VERSION_REQUIRED' });
+    assert.deepEqual(await User.collection.findOne({ _id: user._id }), before);
+  }
+});
+
+test('raw legacy records retain old progress, reward quantities and retired inventory on completion and replay', async () => {
+  const previousDate = '2025-05-25';
+  const raw = {
+    _id: user._id, email: 'synthetic@example.invalid', password: 'unused', __v: 0,
+    subProfiles: [{ _id: user.subProfiles[0]._id, name: 'Legacy player',
+      progress: { [previousDate]: { completed: true, time: '42.500', collected: ['old'] } },
+      rewards: { synthetic: 5, retired: 2 },
+      attempts: {
+        [previousDate]: [{ started: new Date('2025-05-25T12:00:00Z'), completed: true, time: 42.5 }],
+        [date]: [{ started: new Date(Date.now() - 10000), completed: false }],
+      },
+    }],
+  };
+  await User.collection.replaceOne({ _id: user._id }, raw);
+  await RewardItem.create({ id: 'second', name: 'New reward', image: 'second.png', description: 'Synthetic', category: 'artifact', rarity: 'common' });
+  const completed = await request('/complete');
+  assert.equal(completed.status, 200);
+  assert.equal(completed.data.reward.id, 'second');
+  for (let i = 0; i < 3; i++) assert.deepEqual(await request('/complete'), completed);
+  const historical = await request('/complete', { date: previousDate });
+  assert.equal(historical.status, 409);
+  assert.equal(historical.data.code, 'LEGACY_COMPLETED');
+  const saved = await User.collection.findOne({ _id: user._id });
+  assert.deepEqual(saved.subProfiles[0].rewards, { synthetic: 5, retired: 2, second: 1 });
+  assert.deepEqual(saved.subProfiles[0].progress[previousDate], raw.subProfiles[0].progress[previousDate]);
+  assert.deepEqual(saved.subProfiles[0].attempts[previousDate], raw.subProfiles[0].attempts[previousDate]);
+});
+
+test('historical completed records and saved snapshots are read-only even without a version', async () => {
+  const attemptId = await readyAttempt();
+  const result = await request('/complete', { attemptId });
+  await User.collection.updateOne({ _id: user._id }, { $unset: { __v: '' } });
+  let before = await User.collection.findOne({ _id: user._id });
+  assert.deepEqual(await request('/complete', { attemptId }), result);
+  assert.deepEqual(await User.collection.findOne({ _id: user._id }), before);
+  await User.collection.updateOne({ _id: user._id }, { $unset: { [`subProfiles.0.attempts.${date}.0.result`]: '' } });
+  before = await User.collection.findOne({ _id: user._id });
+  const legacy = await request('/complete', { attemptId });
+  assert.equal(legacy.status, 409);
+  assert.equal(legacy.data.code, 'LEGACY_COMPLETED');
+  assert.deepEqual(await User.collection.findOne({ _id: user._id }), before);
+});

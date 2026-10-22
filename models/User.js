@@ -36,6 +36,19 @@ const UserSchema = new mongoose.Schema({
   subProfiles: [SubProfileSchema]
 }, { timestamps: true, optimisticConcurrency: true });
 
+// Missing versions disable Mongoose's optimistic-concurrency predicate. Never
+// initialize them implicitly through a start/profile edit and race another writer.
+export function assertUserVersion(user) {
+  if (!Number.isInteger(user.__v) || user.__v < 0) {
+    throw Object.assign(new Error('This profile needs a data repair before saving. Contact support.'), {
+      status: 409, code: 'PROFILE_VERSION_REQUIRED',
+    });
+  }
+}
+UserSchema.pre('save', function () {
+  if (!this.isNew) assertUserVersion(this);
+});
+
 const User = mongoose.model('User', UserSchema);
 
 export default User;

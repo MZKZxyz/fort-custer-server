@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "node --test"
+    "test": "node --test",
+    "analyze": "node tools/maze-analyzer/cli.js",
+    "test:analyzer": "node --test test/analyzer.test.js"
   },
   "keywords": [],
   "type": "module",

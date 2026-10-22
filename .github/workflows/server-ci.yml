@@ -1,0 +1,73 @@
+name: Server CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: server-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Node 24 tests and deterministic reports
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      NODE_ENV: test
+      # No production secrets or environment binding. Integration tests own their DB.
+      MONGO_URI: mongodb://127.0.0.1:1/unused_ci_database
+      JWT_SECRET: synthetic-ci-only-signing-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install local MongoDB test binary
+        # PR #2 spawns this binary on loopback in a fresh temporary data directory.
+        # Do not start a shared service or the production server/seeders here.
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/mongodb.tgz"
+          url="https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2404-8.0.16.tgz"
+          curl --fail --silent --show-error --location --retry 3 "$url" --output "$archive"
+          curl --fail --silent --show-error --location --retry 3 "$url.sha256" --output "$archive.sha256"
+          checksum="$(awk '{print $1}' "$archive.sha256")"
+          [[ "$checksum" =~ ^[a-fA-F0-9]{64}$ ]]
+          printf '%s  %s\n' "$checksum" "$archive" | sha256sum --check -
+          mkdir -p "$RUNNER_TEMP/mongodb"
+          tar -xzf "$archive" -C "$RUNNER_TEMP/mongodb" --strip-components=1
+          "$RUNNER_TEMP/mongodb/bin/mongod" --version
+          echo "MONGOD_BINARY=$RUNNER_TEMP/mongodb/bin/mongod" >> "$GITHUB_ENV"
+      - name: Run all tests (analyzer, reports, and MongoDB completion integration)
+        # Keep automatic discovery: do not replace this with only test:analyzer.
+        run: |
+          test -f test/analyzer.test.js
+          test -f test/report-validation.test.js
+          test -f test/completions.test.js
+          npm test
+      - name: Check application and analyzer JavaScript syntax
+        run: git ls-files -z '*.js' | xargs -0 -n1 node --check
+      - name: CLI seed and batch smoke tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tools/maze-analyzer/cli.js --seed sprint4-0 > "$RUNNER_TEMP/maze-seed.json"
+          node --input-type=module -e 'import fs from "node:fs"; import assert from "node:assert/strict"; const r = JSON.parse(fs.readFileSync(process.argv[1])); assert.equal(r.seed, "sprint4-0"); assert.equal(r.solution.solvable, true);' "$RUNNER_TEMP/maze-seed.json"
+          node tools/maze-analyzer/cli.js --batch 1000 --prefix sprint4 > "$RUNNER_TEMP/maze-sample.json"
+      - name: Validate deterministic benchmark and documented sample
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --max-old-space-size=64 tools/maze-analyzer/benchmark.js 10000 > "$RUNNER_TEMP/maze-benchmark.json"
+          node tools/maze-analyzer/validate-reports.js "$RUNNER_TEMP/maze-sample.json" "$RUNNER_TEMP/maze-benchmark.json"

@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import User from '../models/User.js';
+import User, { assertUserVersion } from '../models/User.js';
 import RewardItem from '../models/RewardItem.js';
 
 const fail = (status, message, code) => Object.assign(new Error(message), { status, code });
@@ -30,7 +30,7 @@ export async function completeAttempt(userId, { subProfileId, date, attemptId },
     }
     // Mongoose omits its version predicate for documents without __v.
     // Never complete such imported/corrupt records with an unguarded write.
-    if (!Number.isInteger(user.__v) || user.__v < 0) throw fail(409, 'This profile needs a data repair before saving. Contact support.', 'PROFILE_VERSION_REQUIRED');
+    assertUserVersion(user);
     if (!attempt.started) throw fail(400, 'Attempt has no start time', 'INVALID_ATTEMPT');
     const started = new Date(attempt.started).getTime();
     if (!Number.isFinite(started) || started > receivedAt.getTime()) throw fail(400, 'Invalid attempt start time', 'INVALID_ATTEMPT');

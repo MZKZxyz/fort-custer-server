@@ -2,7 +2,7 @@ import express from 'express';
 import { randomUUID } from 'node:crypto';
 import { completeAttempt } from '../services/completions.js';
 import mongoose from 'mongoose';
-import User from '../models/User.js';
+import User, { assertUserVersion } from '../models/User.js';
 import Maze from '../models/Maze.js'; // make sure this is imported
 import RewardItem from '../models/RewardItem.js';
 import { protect } from '../middleware/authMiddleware.js';
@@ -33,6 +33,7 @@ router.post('/start', protect, validateAttempt, async (req, res) => {
     const sub = user.subProfiles.id(subProfileId);
     if (!sub) return res.status(404).json({ error: 'Sub-profile not found' });
 
+    assertUserVersion(user);
     const maze = await Maze.findOne({ date });
     if (!maze) return res.status(404).json({ error: `Maze not found for ${date}` });
 
@@ -63,6 +64,7 @@ router.post('/start', protect, validateAttempt, async (req, res) => {
     if (err instanceof mongoose.Error.VersionError) {
       return res.status(409).json({ error: 'Profile changed; reload before trying again' });
     }
+    if (err.status) return res.status(err.status).json({ error: err.message, code: err.code });
     console.error('Maze start error:', err);
     res.status(500).json({ error: 'Server error: ' + err.message });
   }
