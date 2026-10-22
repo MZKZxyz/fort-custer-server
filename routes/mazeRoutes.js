@@ -1,13 +1,28 @@
 import express from 'express';
-import User from '../models/User.js';
+import { randomUUID } from 'node:crypto';
+import { completeAttempt } from '../services/completions.js';
+import mongoose from 'mongoose';
+import User, { assertUserVersion } from '../models/User.js';
 import Maze from '../models/Maze.js'; // make sure this is imported
 import RewardItem from '../models/RewardItem.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+// Reject invalid dates instead of normalizing overflow dates or throwing in handlers.
+const validateAttempt = (req, res, next) => {
+  const { subProfileId, date } = req.body || {};
+  const parsed = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
+    ? new Date(`${date}T00:00:00Z`) : null;
+  if (!mongoose.isObjectIdOrHexString(subProfileId) || !parsed ||
+      !Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date) {
+    return res.status(400).json({ error: 'A valid subProfileId and YYYY-MM-DD date are required' });
+  }
+  next();
+};
+
 // POST /maze/start
-router.post('/start', protect, async (req, res) => {
+router.post('/start', protect, validateAttempt, async (req, res) => {
   const { subProfileId, date } = req.body;
   const today = new Date().toISOString().split('T')[0];
   const now = new Date();
@@ -15,10 +30,10 @@ router.post('/start', protect, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
-
     const sub = user.subProfiles.id(subProfileId);
     if (!sub) return res.status(404).json({ error: 'Sub-profile not found' });
 
+    assertUserVersion(user);
     const maze = await Maze.findOne({ date });
     if (!maze) return res.status(404).json({ error: `Maze not found for ${date}` });
 
@@ -28,7 +43,7 @@ router.post('/start', protect, async (req, res) => {
     }
 
     // Add new attempt
-    const attempt = { started: now, completed: false };
+    const attempt = { attemptId: randomUUID(), started: now, completed: false };
     sub.attempts.get(date).push(attempt);
     user.markModified(`subProfiles.${user.subProfiles.indexOf(sub)}.attempts`);
 
@@ -42,9 +57,14 @@ router.post('/start', protect, async (req, res) => {
       },
       seed: maze.seed,
       today,
+      attemptId: attempt.attemptId,
       attemptIndex: sub.attempts.get(date).length - 1, // optional
     });
   } catch (err) {
+    if (err instanceof mongoose.Error.VersionError) {
+      return res.status(409).json({ error: 'Profile changed; reload before trying again' });
+    }
+    if (err.status) return res.status(err.status).json({ error: err.message, code: err.code });
     console.error('Maze start error:', err);
     res.status(500).json({ error: 'Server error: ' + err.message });
   }
@@ -52,60 +72,13 @@ router.post('/start', protect, async (req, res) => {
 
 
 // POST /maze/complete
-router.post('/complete', protect, async (req, res) => {
-  const { subProfileId, date } = req.body;
-
-  const safeDate = new Date(date).toISOString().slice(0, 10);
-  const now = new Date();
-  const today = now.toISOString().slice(0, 10);
-
+router.post('/complete', protect, validateAttempt, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
-    const sub = user.subProfiles.id(subProfileId);
-    if (!sub) return res.status(404).json({ error: 'Sub-profile not found' });
-
-    const attempts = sub.attempts.get(safeDate);
-    if (!attempts || !attempts.length) {
-      return res.status(400).json({ error: 'No maze attempt found for this date' });
-    }
-
-    const latest = attempts[attempts.length - 1];
-    if (!latest.started) {
-      return res.status(400).json({ error: 'Attempt has no start time' });
-    }
-
-    const duration = ((now - new Date(latest.started)) / 1000).toFixed(3);
-    if (duration < 3) {
-      return res.status(400).json({ error: 'Too fast — possible cheat detected' });
-    }
-
-    latest.completed = true;
-    latest.time = duration;
-    sub.progress.set(safeDate, { completed: true, time: duration });
-
-    // Determine available rewards
-    const allRewards = await RewardItem.find({});
-    const available = allRewards.filter(r => !sub.rewards.has(r.id));
-    const reward = available.length > 0
-      ? available[Math.floor(Math.random() * available.length)]
-      : null;
-
-    if (reward) {
-      const prevQty = sub.rewards.get(reward.id) || 0;
-      sub.rewards.set(reward.id, prevQty + 1);
-    }
-
-    await user.save();
-
-    res.status(200).json({
-      message: 'Maze complete',
-      time: duration,
-      reward,
-      today,
-    });
+    const result = await completeAttempt(req.user.id, req.body);
+    res.json(result);
   } catch (err) {
-    console.error('Maze completion error:', err);
-    res.status(500).json({ error: err.message });
+    if (!err.status) console.error('Maze completion error:', err);
+    res.status(err.status || 500).json({ error: err.status ? err.message : 'Could not save your result. Retry with the same attempt.', code: err.code || 'SAVE_FAILED' });
   }
 });
 
@@ -115,6 +88,7 @@ router.get('/rewards', protect, async (req, res) => {
 
   try {
     const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
     const sub = user.subProfiles.id(subProfileId);
     if (!sub) return res.status(404).json({ error: 'Sub-profile not found' });
 

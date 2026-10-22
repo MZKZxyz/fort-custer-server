@@ -49,9 +49,15 @@ jobs:
           tar -xzf "$archive" -C "$RUNNER_TEMP/mongodb" --strip-components=1
           "$RUNNER_TEMP/mongodb/bin/mongod" --version
           echo "MONGOD_BINARY=$RUNNER_TEMP/mongodb/bin/mongod" >> "$GITHUB_ENV"
-      - name: Run all tests (analyzer, CLI smoke, and available integration suites)
+      - name: Run all tests (analyzer, reports, and MongoDB completion integration)
         # Keep automatic discovery: do not replace this with only test:analyzer.
-        run: npm test
+        run: |
+          test -f test/analyzer.test.js
+          test -f test/report-validation.test.js
+          test -f test/completions.test.js
+          npm test
+      - name: Check application and analyzer JavaScript syntax
+        run: git ls-files -z '*.js' | xargs -0 -n1 node --check
       - name: CLI seed and batch smoke tests
         shell: bash
         run: |

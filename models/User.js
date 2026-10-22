@@ -15,6 +15,9 @@ const SubProfileSchema = new mongoose.Schema({
     of: [
       new mongoose.Schema(
         {
+          attemptId: { type: String }, // Additive: legacy attempts have no ID.
+          result: { type: mongoose.Schema.Types.Mixed }, // Immutable response snapshot.
+          expiresAt: { type: Date }, // Optional; no new expiry policy for existing games.
           started: { type: Date, required: true },
           completed: { type: Boolean, default: false },
           time: { type: Number }, // seconds (or ms, if you prefer)
@@ -31,7 +34,20 @@ const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   subProfiles: [SubProfileSchema]
-}, { timestamps: true });
+}, { timestamps: true, optimisticConcurrency: true });
+
+// Missing versions disable Mongoose's optimistic-concurrency predicate. Never
+// initialize them implicitly through a start/profile edit and race another writer.
+export function assertUserVersion(user) {
+  if (!Number.isInteger(user.__v) || user.__v < 0) {
+    throw Object.assign(new Error('This profile needs a data repair before saving. Contact support.'), {
+      status: 409, code: 'PROFILE_VERSION_REQUIRED',
+    });
+  }
+}
+UserSchema.pre('save', function () {
+  if (!this.isNew) assertUserVersion(this);
+});
 
 const User = mongoose.model('User', UserSchema);
 

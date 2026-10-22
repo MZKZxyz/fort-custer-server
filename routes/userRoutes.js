@@ -126,25 +126,18 @@ router.get('/subprofiles', protect, async (req, res) => {
   }
 });
 
-// Record maze result for a sub-profile
+// Legacy clients may read an already saved result, but cannot author leaderboard time.
 router.post('/subprofile/:id/progress', protect, async (req, res) => {
-  const { date, time, collected } = req.body;
-  const subProfileId = req.params.id;
-
   try {
     const user = await User.findById(req.user.id);
-    const sub = user.subProfiles.id(subProfileId);
-
+    const sub = user?.subProfiles.id(req.params.id);
     if (!sub) return res.status(404).json({ error: 'Sub-profile not found' });
-
-    sub.progress.set(date, { completed: true, time, collected });
-    await user.save();
-
-    res.status(200).json({ message: 'Progress saved', progress: sub.progress.get(date) });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
+    const progress = sub.progress.get(req.body?.date);
+    if (progress?.completed) return res.json({ message: 'Progress saved', progress });
+    res.status(409).json({ error: 'Complete a server-started attempt using /maze/complete' });
+  } catch {
+    res.status(400).json({ error: 'Invalid progress request' });
   }
 });
-
 
 export default router;
