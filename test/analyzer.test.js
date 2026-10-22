@@ -22,6 +22,14 @@ test('simple path, blocked goal, and boundary rejection', () => {
   const maze = compile(['SE']);
   assert.equal(transition(maze, initialState(maze), 'up'), null);
 });
+test('invalid and inherited property directions are rejected', () => {
+  const maze = compile(['S E']), state = initialState(maze);
+  for (const direction of ['toString', 'constructor', '__proto__', 'hasOwnProperty', 'valueOf', '', 'diagonal', undefined, null]) {
+    assert.equal(transition(maze, state, direction), null);
+  }
+  assert.deepEqual(state, initialState(maze));
+  assert.equal(transition(maze, state, 'right').pos, 1);
+});
 test('fire needs an extinguisher and an extra stationary input', () => {
   const r = result(['SXF E']).solution;
   assert.equal(r.minimumMoves, 5);

@@ -23,7 +23,7 @@ export const coordinate = (maze, pos) => [Math.floor(pos / maze.width), pos % ma
 
 // One accepted directional input. null means a blocked/invalid input.
 export function transition(maze, state, direction) {
-  const delta = directions[direction];
+  const delta = Object.prototype.hasOwnProperty.call(directions, direction) ? directions[direction] : null;
   if (!delta || state.pos === maze.goal) return null;
   const [r, c] = coordinate(maze, state.pos);
   const nr = r + delta[0], nc = c + delta[1];
