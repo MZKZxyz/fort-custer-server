@@ -1,23 +1,23 @@
 # FC-SYS-01 — playable sessions and permanent per-maze bests
 
-RFC **v0.2**, reconciled from `effc3f47584ff6d315302a9c05569cbd31c4a0f4` on `design/fc-sys-01-rfc`. **Design proposal; no implementation, migration or activation approval.** Only this RFC directory changes. Lead: Server Systems Architect / Integrator; reviewers: Gameplay/Security, Independent QA; Progression owns the SYS-03 interface.
+RFC **v0.3**, continued from `e30e1b72f51f19f7e20f646770bc08dcfed67551` on `design/fc-sys-01-rfc`. **Design proposal; no implementation, migration or activation approval.** Only this RFC directory changes. Lead: Server Systems Architect / Integrator; reviewers: Gameplay/Security, Independent QA; Progression owns the SYS-03 interface.
 
-Acceptance authority: [consolidated handoff, issue #5 comment 6414142018](https://github.com/MZKZxyz/fort-custer-server/issues/5#issuecomment-6414142018), incorporating [Gameplay/Security](https://github.com/MZKZxyz/fort-custer-server/issues/5#issuecomment-6413990629) and [Independent QA](https://github.com/MZKZxyz/fort-custer-server/issues/5#issuecomment-6414071389). Prior review was conditional design refinement; ranked security signoff remains withheld. The revised fixtures do not replace independent delta review.
+Acceptance authority: [consolidated handoff 6416107046](https://github.com/MZKZxyz/fort-custer-server/issues/5#issuecomment-6416107046), [Independent QA delta](https://github.com/MZKZxyz/fort-custer-server/issues/5#issuecomment-6416076593), [Gameplay/Security delta](https://github.com/MZKZxyz/fort-custer-server/issues/5#issuecomment-6415910687), and the later [owner clarification 6416037589](https://github.com/MZKZxyz/fort-custer-server/issues/5#issuecomment-6416037589). The owner clarification supersedes the earlier high-assurance interpretation of D1=B. Previous reviews were conditional design promotion, not runtime or release approval.
 
-Read with [owner decision matrix](decisions.md), [phased implementation and rollback prerequisites](implementation-plan.md), and [reproducible validation record](validation.md). OD-05/08/09/12/15 principles and EG-09 equal logical visibility are preserved. New policies below are recommendations pending the listed owners; EG-01/02/03/05 and EG-09 geometry/validation remain gates. Client release UX #45 remains a separate workstream.
+Fort Custer prioritizes maze exploration, collectibles, narrative/Field Journal and personal satisfaction. Leaderboards are optional, low-stakes recognition inspired by the physical contests. Placement, participation or fast times must not gate collection completion, core progression, unique competitive advantages or scarce valuable rewards. Any commemorative weekly/personal-best recognition needs Owner/UX policy, separate from OD-09 date entitlement. Reasonable route/timing validation is required; live anti-cheat infrastructure is not the initial release gate.
 
-## Reconciliation checklist
+Read with the [transcript/replayer specification and architecture comparison](transcript.md), [decision matrix](decisions.md), [smallest implementation package and isolated transaction tests](implementation-plan.md), and [reproducible validation record](validation.md). Approved OD-05/08/09/12/15 and EG-09 equal logical visibility stay intact. D2/D5/D6, material cutover/TTL/privacy tradeoffs and actual implementation evidence remain gates; routine engineering defaults need no repeated owner vote. Client UX #45 stays independent.
 
-| Handoff | v0.2 disposition | Executable evidence |
+## Consolidated delta checklist
+
+| Requirement | v0.3 disposition | Executable evidence |
 | --- | --- | --- |
-| 1. Expired idempotent replies | Effective state on create/ready/status; original ID/start retained; explicit receipt/guard/commit rule | Prepare/play replay at deadline−1/0/+1; cleanup and completion orderings |
-| 2. Clock health | Immutable start/receipt evidence; irreparable vs review-required; audited independent repair | Positive unhealthy start/receipt, epoch/missing/negative evidence, uncertainty/authority/revision guards |
-| 3. Successful-date entitlement | First accepted success, no pending reservation; revision-fenced reassignment; terminal consumption | Rejected/quarantined/pending first receipt; both accepted orderings; late reacceptance; exhausted/unknown history |
-| 4. Writer coexistence | Every writer upgraded to shared ledger, or gated/drained transition; unchanged legacy writer excluded | Mandatory API/replica-set failpoints specified in implementation plan; not proven offline |
-| 5. Ties and operation identity | `(elapsedMs, receivedAt, resultId)`; account key scope and normalized hash; If-Match | Reversed adjudication ties, exact ties, multi-profile key collision, stale revisions |
-| 6. Visibility | Approved equal player-relative logical window retained; dimensions open | Immutable competition manifest modeled; device/accessibility validation remains required |
-| 7. Integrity | Receipt timing separate from client-claimed traversal; explicit tier/policy and acceptance rule | A 2400ms claim with no movement evidence can be accepted only at receipt-only tier |
-| 8. Interruptions/class/privacy | Continuous clock; explicit fresh ranked replay; grants locked at create; TTL/privacy choices | Recovery/expiry/reload and immutable grant fixtures; accessibility/privacy release evidence pending |
+| QA P2 clock reversal | Pre-commit CLOCK_UNAVAILABLE vs diagnostic post-commit observation; durable result/unknown-outcome precedence; fenced abort resolution | Guard and observation offsets −1/0/+1; unknown committed and unknown uncommitted outcomes; old request fenced after abort |
+| QA P2 key scope | Account/operation/key for create/complete; account/attempt/operation/key for ready/abandon, with payload hashes | Same ready/abandon key on two owned attempts; changed nonce/reason conflict within one attempt; foreign replay denied |
+| D1 target | Server-owned timing + deterministic legal route replay, no per-step round trip; fabricated legal routes remain possible | Missing/partial route cannot create receipt; valid fabricated route has limited tier; hash-bound idempotency |
+| Replay semantics | Pinned S/E/grid; boundaries/walls, equipment, stationary fire clearing and terminal tipi arrival | Separate standalone validator suite, canonical source-fixture comparison, malformed/order/size boundaries |
+| Product/privacy/labels | Exact latency disclosure; confidential cursor; public allowlist; manifest binds tier, validator and label | Binding tested offline; HTTP serialization/cursor/consent remain implementation tests |
+| Implementation boundary | One substantive server/client/compatibility work package following isolated replica-set feasibility | Explicit transaction/restart/failpoint matrix; no DB tests executed by this design package |
 
 ## Audit and pinned baseline
 
@@ -38,16 +38,16 @@ Client audited files match the merged main source (local pre-merge branch was no
 
 ## Scoring and integrity contract
 
-Wire protocol remains `session-v2`; this is document revision v0.2. Any implementation must negotiate capability before create; a started v2 UUID never falls back to v1 latest-attempt selection. All values here are proposed, with activation gates in the decision matrix.
+Wire protocol remains `session-v2`; this is document revision v0.3; capability `route-transcript-v1` is required for the new manifest. Any implementation must negotiate capability before create; a started v2 UUID never falls back to v1 latest-attempt selection. All values here are proposed, with activation gates in the decision matrix.
 
-`playable-receipt-v2` measures integer `receivedAt − startedAt` milliseconds. `startedAt` is captured immediately before the guarded PREPARED→STARTED write and becomes authoritative only when its transaction commits. `receivedAt` is captured once after authentication, ownership resolution and request/session binding at the trusted application boundary. Retain it through internal transaction retries. The first committed completion wins; this need not be the earliest packet. After a definitive no-commit, a new HTTP request has a later receipt. Unknown commit must be resolved by stable IDs before treating it as no-commit.
+`playable-receipt-v2` measures integer `receivedAt − startedAt` milliseconds. `startedAt` is captured immediately before the guarded PREPARED→STARTED write and becomes authoritative only when its transaction commits. `receivedAt` is captured once after authentication, ownership resolution, bounded schema normalization and request/session binding at the trusted application boundary. Retain it through internal transaction retries. The first committed completion wins; this need not be the earliest packet. After a definitive no-commit, a new HTTP request has a later receipt. Unknown commit must be resolved by stable IDs before treating it as no-commit.
 
 | Timestamp | Definition / use |
 | --- | --- |
 | `startedAt` | Trusted ready write timestamp; immutable origin of official elapsed |
 | `receivedAt` | Winning completion request's trusted receipt; official finish and ranking tie timestamp |
 | `guardAt` | Trusted completion session-CAS timestamp on the successful transaction execution; expiry eligibility only |
-| `committedAt` | Commit observation/diagnostic metadata; not a scoring input or exact physical commit claim |
+| `commitObservedAt` | Separate private post-commit diagnostic; not in the frozen result, not a scoring input or proof of commit outcome |
 | `adjudicatedAt` | Validator/reviewer decision timestamp; audit only, never leaderboard tie order |
 | `acceptedAt` | **Not a v2 field.** Removed because v0.1 confused receipt and adjudication |
 
@@ -76,28 +76,31 @@ stateDiagram-v2
 
 Validation is orthogonal to session state: `pending → accepted | quarantined | rejected`, with subsequent decisions appended by revision. Completed/pending validation releases the playable slot; a validation hold never occupies a session indefinitely.
 
-### What accepted means
+### What accepted means — owner-selected D1
 
-The proposed immutable result declares independent provenance fields:
+Initial ranked target is **server-owned start/finish receipt timing plus deterministic route legality**, using one bounded completion upload. Client movement remains immediate; no network hop per movement. [Full schema/replayer contract](transcript.md) defines the authoritative pinned state machine. The accepted completion must replay from S to logical E (presented as the tipi); caller position, inventory, timestamps, class and finish flags never supply authority.
 
 ```json
 {
   "scoringMethod": "playable-receipt-v2",
   "competitionVersion": "approved-manifest-id",
-  "runClass": "standard",
-  "integrityTier": "receipt-only-client-claimed-v1",
-  "validationPolicyVersion": "receipt-policy-v1",
-  "elapsedMs": 5000,
-  "clockDisposition": "healthy",
-  "entitlementStatus": "unresolved-at-receipt"
+  "rulesVersion": "cardinal-fire-v1",
+  "integrityTier": "server-timed-legal-route-v1",
+  "validationPolicyVersion": "route-replay-v1",
+  "publicLabel": "Server-timed · route validated",
+  "transcriptHash": "private-sha256",
+  "commandCount": 4,
+  "elapsedMs": 5000
 }
 ```
 
-`receipt-policy-v1` may accept a successful **claim** after structural/state/ownership/manifest checks, trustworthy nonnegative clock evidence and resolution of documented risk flags. Its trusted validator records reason, policy version and adjudication revision. There is no traversal evidence in `{completionKey}`. An authenticated client can wait a plausible duration without moving and satisfy this limited policy. Acceptance is never proof of reaching E, honest rendering, human input or absence of hidden assistance. Ranked activation of this low-assurance policy requires an explicit owner choice. A stronger policy needs a different integrity tier and independently reviewed protocol; never silently relabel old receipts.
+`route-replay-v1` requires legal submitted commands reaching E under immutable grid/rules/grants, valid operation/ownership/state/expiry checks, healthy or independently repaired timing, and no unresolved policy hold. Route validation happens before result transaction; its success cannot be replaced by a generic accepted enum. Store immutable transcript reference/digest, validator version and derived summary; `accepted` adjudication is privileged/revision-checked. Route failure produces no accepted completion/date claim. Timing-only holds remain auditable and never become accusations.
 
-Public copy proposed for this tier: **“Client-claimed completion with server receipt timing. Official time includes connection and save delays; gameplay is not server-verified.”** Show standard/assisted and competition/scoring era. A nonce, auth token, grid hash, minimum wait or pre-ready barrier cannot justify “verified gameplay.”
+The immutable competition manifest binds **allowed tier, validation policy and public label together**; no silent upgrade of old `receipt-only-client-claimed-v1` results or implied equivalence of legacy eras. This does not automatically create extra public boards. Receipt-only is historical/lower assurance, not the selected new ranked path. Any stronger future claim needs a new reviewed policy/label.
 
-A future bounded command log could verify legal transitions on the pinned grid and reaching E, but cannot prove when, interactively, or by whom commands were produced. Server-authoritative movement is a separate phase with its own network/input contract; it still cannot prove human input or prevent pre-solving archives. Published-maze replay remains eligible under OD-08/12. Quarantine signals are appealable risk indicators, not fraud labels; network instability and unusual accessible controls are not cheating.
+Public disclosure: **“Server-timed · route validated. Official time includes start-acknowledgement and completion-upload delays, plus server work before the accepted timestamps. The server checks the submitted route against maze rules; it does not verify live movement, human input or when individual actions occurred.”** For an old receipt-only result, retain the reviewer's exact ending: **“gameplay is not server-verified.”** Once a result is committed, later commit observation, response ACK, validation/commit work after the retained receipt and response retries do not universally add to its score. A new HTTP receipt after proven no-commit can be later; internal retries retain the captured receipt, subject to fresh guard/expiry checks.
+
+An altered client can fabricate/precompute a fully legal transcript or hide local assistance/extra grid visibility. Nonces, signatures, client timestamps and legal replay cannot prove actual real-time or human play. These are accepted limitations for optional low-stakes recognition. Live authoritative movement is a possible escalation on evidence of material abuse, not an initial gate. Never advertise cheat-proof/verified-human play. No 400/180ms cadence or three-second floor in this validator; fast manual/accessibility input is not evidence of fraud.
 
 ### Clock evidence and adjudication
 
@@ -109,16 +112,26 @@ Persist immutable evidence for start and receipt: clock provider/epoch, monitor 
 
 Review operations are private privileged services, not player API fields. The model's authority and repair objects are synthetic trusted inputs, not authentication or independent evidence verification. Public status uses neutral reasons such as “timing review required.” Health thresholds, appeal windows and operational reconciliation must be approved and tested.
 
+### QA P2: clock reversal and uncertain commit
+
+`receivedAt` and `guardAt` are pre-commit samples in the same comparable clock epoch. If `guardAt < receivedAt`, abort before final transaction effects and return **503 CLOCK_UNAVAILABLE**, `retrySameOperation:true`, with a confirmed-abort outcome only when the server actually knows it aborted. No SCHEDULE error remains. A retry within the same request keeps the receipt and records the guard reversal in clock evidence; even after recovery, that receipt is review-required until independent corroboration. Equality is allowed. A new HTTP receipt is allowed only after a definitive abort, using health evidence from the actual clock monitor, not “wall time caught up” alone. Cross-node unknown/incomparable health remains quarantined/fail-closed.
+
+A post-commit `commitObservedAt < guardAt` is a **diagnostic clock incident**, not a rollback or proof of no-commit. Append private observation separately; never edit/discard the durable receipt, change its elapsed, re-award, or pretend its transaction was absent. Diagnose operational health independently. The frozen result contains no post-commit observation field. A stored result always replays before unfinished expiry, stale revisions or new sample ordering checks.
+
+Unknown outcome, including stepdown/lost ACK, returns **503 COMMIT_UNKNOWN**, `retrySameOperation:true`, owned status `saveStatus: resolving`. Keep the terminal client save latch; no new start/replacement receipt, abandonment or grant while that completion remains unresolved. Durable result lookup/driver commit recovery takes precedence over all new timing. A missing result on one read is not proof of abort, and elapsed wall time is not proof either.
+
+Implementation uses a durable completion-intent/generation fence (detailed in the implementation plan). If the outcome cannot be recovered directly, a resolver transaction checks result/current generation and CAS-writes the same session/intent fences: either the completion already won and is returned, or the resolver proves abort by advancing the session revision and closing the old intent. An old transaction can no longer commit after that fence. Only then can a new generation receive a later receipt; keep the operation key/body binding. Do not infer outcome from diagnostic UTC ordering. The oracle's `provedAborted` is a synthetic proof input plus a session revision advance, not a player field or DB proof.
+
 ### Security assumptions and evidence limits
 
 | Threat / failure | Proposed control | Remaining limit / proof required |
 | --- | --- | --- |
-| Caller clocks, fabricated finish | Server-owned start/receipt; reject elapsed fields | Authenticated claim can omit all gameplay; tier disclosure/owner choice required |
+| Caller clocks, fabricated finish | Server-owned start/receipt; reject elapsed fields | Missing/illegal route cannot rank; fabricated legal route remains possible under selected limited tier |
 | Pre-solving, archive reuse, ignoring ACK | Honest-client readiness/input lock, immutable published grid manifest | No secrecy or proof of interactive play; archives/replays remain eligible |
-| Ownership/key replay or collisions | Auth on every operation, account-scoped keys, canonical hash, nonce/session binding | Actual HTTP/auth/TLS/nonce entropy and key storage unverified offline |
+| Ownership/key replay or collisions | Auth on every operation, explicitly scoped keys, canonical hash, nonce/session binding | Actual HTTP/auth/TLS/nonce entropy and key storage unverified offline |
 | ACK loss, asymmetric connection, contention | Stable committed receipt and status recovery, no RTT deductions | Delays remain charged; no network-neutral score claim |
 | Declared/hidden assistance or wider view | Server-selected locked grants/class/competition manifest | Client can hide local help/read whole grid; compliant-client geometry/semantic tests required |
-| Fast manual or assistive input | Documented appealable risk review; no blanket hold-cadence floor | 400/180ms defaults are not minimum legal action timing. Stateful action feasibility needs rules proof; solver exhaustion means unknown |
+| Fast manual or assistive input | Documented appealable risk review; no blanket hold-cadence floor | 400/180ms defaults are not minimum legal action timing. Replay checks canonical legality, not action-time feasibility or human speed |
 | Clock outage/jump/drift | Immutable health/epoch/uncertainty; acceptance guards and auditable repair | Real multi-node monitor, threshold and evidence verification required |
 | Duplicate rewards/transaction crash | Unique date ledger, shared writer fences, atomic receipt/adjudication/grant boundaries | Replica-set isolation/failpoints/unknown-commit proof and all-writer cutover required |
 | Resource abuse / evidence exposure | Bounded allocations/payloads, recoverable status, alias/private evidence | Quotas, capacity, retention and accessible shared-network behavior need review |
@@ -132,16 +145,16 @@ Canonical hash: normalize schema defaults and dates, sort/deduplicate declared a
 | Operation | Body / precondition | Outcome and replay |
 | --- | --- | --- |
 | POST `/api/v2/sessions` | `{subProfileId,date,createKey,requestedAbilityIds:[]}` | 201 PREPARED, immutable published grid/hash/rules/competition/grants/class and ready nonce. Unique `(accountId,createKey)` with profile in payload hash. Same normalized request: 200 same ID and current effective state; changed profile/body: 409 IDEMPOTENCY_CONFLICT. Different key with active profile slot: 409 ACTIVE_SESSION; never implicit takeover. |
-| POST `/sessions/:id/ready` under v2 prefix | `{readyKey,nonce,gridHash,rulesVersion}`, `If-Match: revision` | CAS PREPARED→STARTED, 200 start/deadline/revision. Exact hash replay returns original start plus effective state despite stale revision. Changed request after transition: 409; bad binding: 409. Server resolves grants and supported manifest, never caller dimensions. |
+| POST `/sessions/:id/ready` under v2 prefix | `{readyKey,nonce,gridHash,rulesVersion}`, `If-Match: revision` | CAS PREPARED→STARTED, 200 start/deadline/revision. Keys scoped `(accountId,attemptId,ready,key)`; exact hash replay returns original start plus effective state despite stale revision. Same scoped key/changed payload: 409 IDEMPOTENCY_CONFLICT; bad binding: 409. Server resolves grants and supported manifest, never caller dimensions. |
 | GET `/api/v2/sessions/:id` | Auth only | 200 effective state, current revision/serverNow, original manifest/start/deadlines, result link if committed. Recovery never creates another attempt. |
-| POST `/api/v2/sessions/:id/complete` | `{completionKey}`, `If-Match: revision` | 201 first immutable receipt; 200 existing receipt after authorized replay, regardless of stale revision/expiry. Account-scoped `(accountId,completionKey)` binds profile/attempt and canonical payload. Different unused keys for same completed attempt bind aliases to its single result. Reusing a key for another attempt/profile: 409, including replay. No second receipt/award. |
-| POST `/api/v2/sessions/:id/abandon` | `{abandonKey}`, `If-Match: revision` | CAS PREPARED/STARTED→ABANDONED. Exact key replay returns effective terminal state despite stale revision. New stale operation: 409. Cannot rewrite COMPLETED/EXPIRED. Explicit user action required. |
+| POST `/api/v2/sessions/:id/complete` | `{completionKey,transcript:{version,commands}}`, `If-Match: revision` | 201 first immutable receipt; 200 existing receipt after authorized replay, regardless of stale revision/expiry. Account-scoped `(accountId,completionKey)` binds profile/attempt and canonical payload including normalized transcript hash. Different unused keys for same completed attempt bind aliases to its single result only with the same transcript hash. Reusing a key for another attempt/profile: 409, including replay. No second receipt/award. |
+| POST `/api/v2/sessions/:id/abandon` | `{abandonKey,reason?:enum}`, `If-Match: revision` | Keys scoped `(accountId,attemptId,abandon,key)`, hash includes normalized reason: user-choice (default), restart or change-grants. CAS PREPARED/STARTED→ABANDONED. Same scoped key/changed reason conflicts. Exact key replay returns effective terminal state despite stale revision. New stale operation: 409. Cannot rewrite COMPLETED/EXPIRED. Explicit user action required. |
 | GET `/api/v2/results/:id` | Owned/authenticated | Frozen receipt plus separately versioned current adjudication, completion credit and date entitlement status. Original completion response never mutates to report a later reward. |
 | GET `/api/v2/leaderboards/:mazeId` | Explicit segment, opaque cursor, limit ≤100 | Accepted current result references only, alias/opaque public identity, boardRevision/asOf; no silent legacy fallback. |
 
 Private session envelope includes `protocol`, attemptId, state, revision, mazeId/date, gridHash, rulesVersion, scoringMethod, competitionVersion, runClass, grant/config versions, integrityTier, validationPolicyVersion, serverNow and applicable deadlines. Completion envelope stores immutable result ID, attempt ID, start/receipt, elapsed, clock evidence/disposition, manifest reference and unresolved-at-receipt entitlement status. Later grant/status has its own revision/URL, never a rerolled original receipt.
 
-Errors: 400 schema; 401 auth; 404 foreign/unknown; 409 state/revision/key conflict; 410 unfinished expiry; 422 ineligible policy; 429 plus Retry-After; 503 transient/unknown commit plus `retrySameOperation:true`. Missing If-Match on a fresh mutation is 428; exact recognized replay bypasses revision requirements. A completed receipt replays only after authorization, valid shape and key-binding checks. Stable result IDs resolve uncertain commits. Across separate requests following definitive no-commit, the client obtains a new receipt timestamp; it cannot submit an old timestamp.
+Errors: 400 schema/command order; 413 decoded transcript/body limit; 401 auth; 404 foreign/unknown; 409 state/revision/key conflict; 410 unfinished expiry; 422 invalid/incomplete/after-goal route or ineligible policy; 429 plus Retry-After; 503 CLOCK_UNAVAILABLE / COMMIT_UNKNOWN / transient plus `retrySameOperation:true` and explicit commit outcome. Missing If-Match on a fresh mutation is 428; exact recognized replay bypasses revision requirements. A completed receipt replays only after authorization, valid shape and key-binding checks. Stable result IDs resolve uncertain commits. Across separate requests following definitive no-commit, the client obtains a new receipt timestamp; it cannot submit an old timestamp.
 
 | Identity/race case | Required outcome |
 | --- | --- |
@@ -153,13 +166,13 @@ Errors: 400 schema; 401 auth; 404 foreign/unknown; 409 state/revision/key confli
 | Same completion key or different keys, same UUID | One result; stale revisions do not obstruct committed replay |
 | Same account/completion key, different UUID | Conflict before effects |
 | Complete vs abandon/cleanup | Shared session fence, one committed terminal state |
-| Failure/unknown outcome | No independent writes; resolve same IDs before later receipt or entitlement |
+| Failure/unknown outcome | No partial final writes; durable intake may exist. Resolve same IDs before later receipt or entitlement |
 
 ### Client readiness, interruptions and session class
 
 Persist create/ready/complete intent keys before sending, scoped by authenticated profile/date. Initialize canonical state at S, assets/layout, supported renderer or working fallback, focus/controls and recovery before ready. Mount/HTTP success alone is insufficient. Start input/timer only once after usable ACK/status; duplicate ACK never starts another scheduler. A frame boundary is an honest-client readiness check, not proof of display or anti-cheat. Finish uses a synchronous terminal latch and accessible saving/pending/retry feedback.
 
-Lost ready ACK: recover same STARTED session and original start; delay remains charged. Connectivity loss with intact local state: same run, clock continues. Blur, modal, tab throttling and offline time do not pause/refund; cancel unsafe held input. Lost local state/reload: no trusted position can be reconstructed here. Offer explicit abandon and a **fresh ranked attempt from S** after readiness, or clearly labeled practice continuation. Reload never permanently excludes that date from personal-best improvement. Do not silently reset a STARTED clock or create a replacement. After expiry, retain owned status/result recovery and offer an explicit new attempt; no keepalive revival.
+Lost ready ACK: recover same STARTED session and original start; delay remains charged. Connectivity loss with intact local state: same run, clock continues. Blur, modal, tab throttling and offline time do not pause/refund; cancel unsafe held input. Reload with a coherent complete local transcript prefix can reconstruct client state by replay from S under the pinned manifest, after status recovery; this is not a server-authoritative live position. Lost/torn/missing state or prefix cannot be recovered from caller coordinates. Offer explicit abandon and a **fresh ranked attempt from S** after readiness, or clearly labeled practice continuation. Reload never permanently excludes that date from personal-best improvement. Do not silently reset a STARTED clock or create a replacement. After expiry, retain owned status/result recovery and offer an explicit new attempt; no keepalive revival.
 
 Server-selected competitive grants, config versions and class lock **at creation**. Competitive ability ownership, cosmetic display, grant and observed use are different. Mere ownership/art selection does not grant an ability. If use cannot be independently observed, any granted competitive capability conservatively makes the session assisted, disclosed before ready. Changing grants requires explicit abandon/new attempt; no in-run upgrade/downgrade. Screen readers, zoom, reduced motion, equivalent input adapters and approved hold/turn access controls remain standard; classify by added route knowledge/solving capability, not disability/device or gesture automation alone. Unknown historical class stays unknown.
 
@@ -183,7 +196,7 @@ The first **accepted successful** result claims eventual entitlement, ordered by
 | --- | --- | --- |
 | Pending/quarantined | Private saved claim; no accepted completion credit or rank | No reservation; later accepted replay can claim |
 | Rejected | No accepted credit/rank; receipt retained | No reservation; release/reassign any unconsumed claim |
-| Accepted receipt-policy result | Accepted completion distinction and segment best eligibility, clearly limited integrity | First current accepted success gets eligible claim; other accepted results can be fallbacks |
+| Accepted route-replay result | Accepted completion distinction and segment best eligibility, clearly limited integrity | First current accepted success gets eligible claim; other accepted results can be fallbacks |
 | Historic awarded or exhausted | Preserve recorded distinctions/inventory/snapshots | Already consumed; never reopen |
 | Unknown/missing historical attribution | Preserve unknown, do not guess success/grant | Hold new reward; ranking new accepted attempts remains independent |
 
@@ -202,20 +215,21 @@ Proposed additive collections; no live deployment shape assumed:
 | SessionsV2 | UUID; owner/profile/immutable manifest, hashed request/nonce, state/revision, start/deadlines/evidence; unique `(accountId,createKey)` tombstone |
 | ActiveSession | Unique profile identity, current attemptId; guarded successor-safe delete |
 | ResultsV2 | Unique attemptId + stable resultId; immutable receipt/start/elapsed/clock/manifest/snapshot |
-| OperationKeys | Unique account/operation/key; canonical request hash and target/result alias; no unversioned reclamation |
+| OperationKeys | Create/complete: unique `(accountId,operation,key)`; ready/abandon: unique `(accountId,attemptId,operation,key)`. Canonical payload hash and ownership/target/result binding; no unversioned reclamation |
+| CompletionIntents / Transcripts | Durable pending/completed/aborted generation; key/hash, captured receipt, bounded private transcript reference and expected session revision; shares final-result/resolver fences |
 | Adjudications | Unique result/revision; append decision/authority/reason/evidence/adjudicatedAt/policy; current state fenced |
 | DateEntitlements / GrantRecords | Unique profile/date; history/claim/revision/terminal outcome; unique stable grant ID, immutable snapshot |
 | Outbox | Unique event ID; result/adjudication/ledger revision, stable aggregate sequence; atomic insertion with source mutation |
 | BestV2 / BoardEpoch | Unique profile/maze/scoring/competition/class best; monotone source eligibility epoch + published board revision |
 | LegacySidecar | Source reference/hash, known/unknown units/method/class/eligibility; never rewrites old arrays |
 
-Receipt, terminal session, active-slot release, operation-key mapping and receipt outbox commit atomically. Accepted decision, date-claim/fallback, board eligibility epoch and decision/entitlement outbox commit atomically. Grant transaction is separate as above. Snapshot isolation alone does not serialize read predicates: use unique constraints and explicit aggregate fence writes, not check-then-insert logic. See implementation plan for concerns/failpoints and rollback requirements.
+After bounded route validation, intake persists a completion intent/generation and private transcript under the session fence; it does not reserve a score or extend the deadline. Final receipt, intent completion, terminal session, active-slot release, operation-key mapping and receipt outbox commit atomically. Accepted decision, date-claim/fallback, board eligibility epoch and decision/entitlement outbox commit atomically. Grant transaction is separate as above. Snapshot isolation alone does not serialize read predicates: use unique constraints and explicit aggregate fence writes, not check-then-insert logic. See implementation plan for concerns/failpoints and rollback requirements.
 
 Personal best and board ordering use exactly **`(elapsedMs ASC, receivedAt ASC, resultId ASC)`** with a fixed binary comparison for canonical opaque IDs. Receipt time breaks equal elapsed regardless of adjudication order; commit/validator timestamps do not. No coarse displayed tie rule is implicitly introduced. Index prefix is `(mazeId,scoringMethod,competitionVersion,runClass)`, followed by sort tuple. Never compare latest v1 progress as historical fastest; retain seasonal daily and weekly/all-time totals with their existing labels.
 
 An invalidated minimum requires full eligible fallback recomputation, including empty-board deletion. Worker reads current adjudications and a source eligibility epoch in one consistent snapshot, then writes projection only if that same epoch is still current; it must write/lock the source fence in its publication transaction so invalidation conflicts. Reading a newer projection revision after an older eligibility snapshot is insufficient. Deduplicate outbox event IDs and fence per-source revisions. Duplicate/reversed events trigger current-state recomputation; no stale resurrection. The offline oracle models a global source-revision fence for clarity, not scalable MongoDB worker/event mechanics.
 
-Public reads validate candidate result/current decision revision so an already-rejected entry is suppressed even if projection repair lags. A lagging board may temporarily omit an improvement/fallback; expose boardRevision/asOf and measured lag. Cursor includes full tuple + segment + board/source revision; changed revision returns explicit restart-pagination response, not silently mixed snapshots. Required read-consistency implementation remains unverified.
+Public reads validate candidate result/current decision revision so an already-rejected entry is suppressed even if projection repair lags. A lagging board may temporarily omit an improvement/fallback; expose boardRevision/asOf and measured lag. Cursor uses a random server-side reference (recommended) or authenticated-encrypted token binding tuple, segment, audience, board/source revision and expiry. Base64 encoding or a signed readable payload is not confidential. Keep the tuple/receivedAt private; changed revision returns explicit restart-pagination response. Public response allowlist: rank, opaque publicEntryId, consented alias, elapsedMs, runClass, competitionVersion, scoringMethod and manifest integrity label, plus boardRevision/coarse board freshness and confidential nextCursor. Exclude account/profile/attempt/result DB IDs, exact receipt/start/commit times, clock evidence, transcript/hash and internal oracle rows. Auth/consent-safe serialization and cursor TTL/tamper/cross-segment/revision tests are mandatory. Required read-consistency implementation remains unverified.
 
 Recommend opt-in public alias/participation controls and opaque board identity. Never publish account/subprofile DB IDs, personal account names, IP/device evidence, precise session timestamps, raw logs or private evidence references. Public tie order is supplied by rank/cursor, not raw receipt time. Aliases need moderation and must not copy personal account names by default. Private evidence has least-privilege access, audited review/export and an owner-approved appeal/retention/deletion period. Separate short-lived detailed telemetry from minimal identity/key/result/entitlement tombstones required to prevent replay/re-award; pseudonymize deleted-profile references under an approved deletion contract. Session TTL is not an evidence-retention rule. No numerical retention period is silently approved here.
 
@@ -223,6 +237,6 @@ Recommend opt-in public alias/participation controls and opaque board identity. 
 
 A **behaviorally unchanged v1 per-attempt reward writer cannot coexist with date-unique entitlement**. Preserving request shapes/snapshots does not preserve that old reward rule for new results. Choose the all-writer ledger upgrade or a gated/drained cutover in the implementation plan. Preserve committed v1 UUID response bytes, missing-ID ambiguity only for v1, User OCC/invalid-version policy, historical quantities and labels. Do not infer old successful dates/reward attribution from latest progress or current inventory alone.
 
-Local fixtures are executable design evidence only. They import no app, database, credentials or external packages, and model serial schedules; HTTP/auth/crypto, independent clock reconciliation, MongoDB transactions, throughput, migration and delivery are **UNVERIFIED**. Exact model API arguments such as trusted grants, repair objects and guard timestamps are oracle inputs, not public fields. See validation record for coverage and limits.
+Local fixtures are executable design evidence only. They import only built-ins and a pinned pure client-movement test fixture, no app entrypoint, database, credentials or external packages, and model serial schedules; HTTP/auth/crypto, independent clock reconciliation, MongoDB transactions, throughput, migration and delivery are **UNVERIFIED**. Exact model API arguments such as trusted grants, repair objects and guard timestamps are oracle inputs, not public fields. See validation record for coverage and limits.
 
-Request a focused delta review on handoff items 1–8 after this revision: Gameplay/Security for integrity/class/visibility/recovery language; Independent QA for expiry, clocks, rewards, keys/ties and source-fenced projection counterexamples; Integrator/Progression for SYS-03 all-writer cutover and owner matrix. This request confers no signoff. Keep issue #5 in design/review; do not mark Ready-to-activate or open an implementation PR from this package.
+Both previous focused reviews were conditional for design promotion. The present package reconciles their two P2 findings and wording conditions with the superseding owner direction. No additional conceptual P1/P2 is asserted here; per handoff, the next step is **separately authorized isolated replica-set feasibility**, with a narrow re-check only if a new conceptual P1/P2 emerges. D2/D5/D6 and material TTL/privacy/cutover choices remain recorded, not silently accepted. Keep issue #5 in design/review, not Ready-to-activate; no implementation PR is opened by this package.

@@ -1,20 +1,21 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {Sessions, fixtureClock, payloadHash} from './model.mjs';
+const transcript=()=>({version:'route-transcript-v1',commands:[{seq:1,dir:'right'}]});
 const actor = (profileId='profile-a', accountId='account-a') => ({accountId, profileId});
 function prepared(m, who=actor(), key='create', options) { return m.create(who, key, options); }
 function ready(m, s, options={}) { return m.ready(s.actor, s.id, {nonce:s.nonce, ifMatch:s.revision, ...options}); }
 function started(m, who=actor(), key='create', options) { const s=prepared(m,who,key,options); ready(m,s); return s; }
-function complete(m,s,options={}) { return m.complete(s.actor,s.id,{key:`complete-${s.id}`,ifMatch:s.revision,...options}); }
+function complete(m,s,options={}) { return m.complete(s.actor,s.id,{key:`complete-${s.id}`,ifMatch:s.revision,transcript:transcript(),...options}); }
 function decide(m,s,decision='accepted',options={}) { return m.decide(s.actor,s.id,decision,{expectedRevision:s.decisionRevision,...options}); }
 function finish(m,s,ms=5000) { m.tick(ms); const result=complete(m,s); decide(m,s); return result; }
 function clearHistory(m,who=actor(),date='fixture-date') { m.legacy(who,date,'clear'); }
 function abandon(m,s,options={}) { return m.abandon(s.actor,s.id,{ifMatch:s.revision,...options}); }
-function receipt(m,s) { return m.captureComplete(s.actor,s.id,{key:`complete-${s.id}`,ifMatch:s.revision}); }
+function receipt(m,s) { return m.captureComplete(s.actor,s.id,{key:`complete-${s.id}`,ifMatch:s.revision,transcript:transcript()}); }
 
 test('lost create ACK recovers same ID and canonical sorted ability payload',()=>{
-  const m=new Sessions(),s=prepared(m,actor(),'key',{abilityIds:['b','a']});
-  assert.strictEqual(prepared(m,actor(),'key',{abilityIds:['a','b']}),s);
+  const m=new Sessions(),s=prepared(m,actor(),'key',{abilityIds:['fixture-preview-v1','fixture-hint-v1']});
+  assert.strictEqual(prepared(m,actor(),'key',{abilityIds:['fixture-hint-v1','fixture-preview-v1']}),s);
   assert.equal(payloadHash({a:1,b:2}),payloadHash({b:2,a:1}));
   assert.throws(()=>prepared(m,actor(),'key',{date:'other'}),/KEY_CONFLICT/);
 });
@@ -88,7 +89,7 @@ for(const offset of [0,1]) test(`receipt at deadline+${offset} fails even withou
 test('receipt and guarded write before deadline may commit after deadline',()=>{
   const m=new Sessions(),s=started(m);m.tick(s.deadline-1);const request=receipt(m,s),guardAt=m.now;
   m.tick(2);const r=m.commitComplete(request,{guardAt,committedAt:m.now});
-  assert.equal(r.receivedAt,s.deadline-1);assert.equal(r.committedAt,s.deadline+1);
+  assert.equal(r.receivedAt,s.deadline-1);assert.equal(m.commitObservations[0].observedAt,s.deadline+1);
   assert.equal(m.status(s.actor,s.id).state,'COMPLETED');
 });
 test('receipt before deadline but guarded write at deadline loses',()=>{
@@ -100,10 +101,10 @@ test('cleanup committed first fences old predeadline receipt and preserves repla
   assert.equal(m.status(s.actor,s.id).state,'EXPIRED');const next=prepared(m,actor(),'next');
   assert.throws(()=>m.commitComplete(request,{guardAt}),/EXPIRED/);assert.deepEqual([...m.slots.values()],[next.id]);
 });
-test('failure before commit has no receipt/outbox/key effects; new HTTP retry charges later receipt',()=>{
+test('failure before final commit has no completed receipt/outbox effects; new HTTP retry charges later receipt',()=>{
   const m=new Sessions(),s=started(m);m.tick(5000);const request=receipt(m,s);
   assert.throws(()=>m.commitComplete(request,{commit:false}),/BEFORE_COMMIT/);
-  assert.equal(m.events.length,0);assert.equal(m.completionKeys.size,0);assert.equal(s.result,undefined);
+  assert.equal(m.events.length,0);assert.equal(m.completionKeys.size,0);assert.equal(s.result,undefined);assert.equal(m.intentKeys.size,1);
   m.tick(1500);assert.equal(complete(m,s).elapsedMs,6500);
 });
 test('internal transaction retry retains captured receipt while commit time moves',()=>{
@@ -153,10 +154,10 @@ test('excess uncertainty quarantines; adjudication authority/revision and repair
   assert.throws(()=>decide(m,s,'accepted',{expectedRevision:9}),/ADJUDICATION_REVISION/);
   assert.throws(()=>decide(m,s,'accepted',{authority:'reviewer',repair:{independentlyVerified:true,evidenceId:'repair',epoch:'fixture-epoch',uncertaintyMs:11}}),/CLOCK_REVIEW_REQUIRED/);
 });
-test('receipt-only acceptance cannot establish movement or a universal three-second floor',()=>{
+test('legal fabricated route does not establish real-time or human play or a cadence floor',()=>{
   const m=new Sessions(),s=started(m);m.tick(2400);const r=complete(m,s);assert.equal(m.project().length,0);
-  decide(m,s);assert.equal(m.project().length,1);assert.equal(r.integrityTier,'receipt-only-client-claimed-v1');
-  assert.equal(r.validationPolicyVersion,'receipt-policy-v1');
+  decide(m,s);assert.equal(m.project().length,1);assert.equal(r.integrityTier,'server-timed-legal-route-v1');
+  assert.equal(r.validationPolicyVersion,'route-replay-v1');
 });
 test('rejected first receipt does not deny a later accepted successful date',()=>{
   const m=new Sessions();clearHistory(m);const a=started(m);m.tick(5000);const frozen=complete(m,a);decide(m,a,'rejected');
@@ -205,14 +206,14 @@ for(const history of ['awarded','exhausted','unknown','absent']) test(`legacy ${
 });
 test('profiles and dates have independent eligibility; standard and assisted share same date entitlement',()=>{
   const m=new Sessions();clearHistory(m);clearHistory(m,actor('b'));clearHistory(m,actor(),'other-date');
-  finish(m,started(m));finish(m,started(m,actor(),'assisted',{abilityIds:['route-help']}));
+  finish(m,started(m));finish(m,started(m,actor(),'assisted',{abilityIds:['fixture-hint-v1']}));
   finish(m,started(m,actor('b'),'b'));finish(m,started(m,actor(),'other',{date:'other-date'}));
   assert.equal(m.entitlements.size,3);assert.equal(m.project().length,4);
 });
 test('ability grants/class locked at creation; access controls need no competitive grant',()=>{
   const m=new Sessions(),s=started(m);assert.equal(s.manifest.runClass,'standard');
-  assert.throws(()=>s.manifest.abilityIds.push('route-help'),TypeError);abandon(m,s);
-  const assisted=started(m,actor(),'new',{abilityIds:['route-help']});assert.equal(assisted.manifest.runClass,'assisted');
+  assert.throws(()=>s.manifest.abilityIds.push('fixture-hint-v1'),TypeError);abandon(m,s);
+  const assisted=started(m,actor(),'new',{abilityIds:['fixture-hint-v1']});assert.equal(assisted.manifest.runClass,'assisted');
 });
 test('reload abandons explicitly then allows fresh ranked replay from S',()=>{
   const m=new Sessions(),a=started(m);m.tick(12000);assert.equal(m.status(a.actor,a.id).startedAt,0);
@@ -241,7 +242,7 @@ test('stale projection cannot publish after invalidation, even after reading new
 });
 test('competition eras and assisted classes stay separate',()=>{
   const m=new Sessions();finish(m,started(m));finish(m,started(m,actor(),'era',{competition:'fixture-other-era'}));
-  finish(m,started(m,actor(),'assist',{abilityIds:['route-help']}));assert.equal(m.project().length,3);
+  finish(m,started(m,actor(),'assist',{abilityIds:['fixture-hint-v1']}));assert.equal(m.project().length,3);
 });
 test('same create intent retains original competition manifest after server policy changes',()=>{
   const m=new Sessions(),s=prepared(m);
@@ -277,4 +278,75 @@ test('create/ready replay after completion returns terminal state and original s
   const m=new Sessions(),s=started(m);finish(m,s);const revision=s.revision;m.tick(9000000);
   assert.equal(prepared(m).state,'COMPLETED');assert.equal(ready(m,s,{ifMatch:1}).state,'COMPLETED');
   assert.equal(s.startedAt,0);assert.equal(s.revision,revision);assert.equal(m.slots.size,0);
+});
+for(const offset of [-1,0,1])test(`receipt/guard UTC ordering at offset ${offset}`,()=>{
+  const m=new Sessions(),s=started(m);m.tick(5000);const request=receipt(m,s);m.tick(offset);
+  if(offset<0){
+    assert.throws(()=>m.commitComplete(request),error=>error.code==='CLOCK_UNAVAILABLE'&&error.status===503&&error.retrySameOperation&&error.commitOutcome==='aborted');
+    assert.equal(s.result,undefined);assert.equal(m.events.length,0);assert.equal(m.completionKeys.size,0);
+    m.tick(2);const r=m.commitComplete(request);assert.equal(r.receivedAt,5000);
+    assert.equal(r.clockEvidence.guardReversals.length,1);assert.equal(s.decision,'quarantined');
+    assert.throws(()=>decide(m,s),/CLOCK_REVIEW_REQUIRED/);
+  }else{assert.equal(m.commitComplete(request).receivedAt,5000);assert.equal(s.decision,'pending');}
+});
+for(const offset of [-1,0,1])test(`postcommit observation at guard offset ${offset} never changes receipt`,()=>{
+  const m=new Sessions(),s=started(m);m.tick(5000);const request=receipt(m,s);
+  const r=m.commitComplete(request,{guardAt:5000,committedAt:5000+offset});
+  assert.equal(r.receivedAt,5000);assert.equal(r.elapsedMs,5000);assert.equal(Object.hasOwn(r,'committedAt'),false);
+  assert.equal(m.commitObservations[0].clockReversed,offset<0);
+  m.tick(-2);assert.strictEqual(m.commitComplete(request,{guardAt:4998,committedAt:4997}),r);
+  assert.equal(m.events.length,1);
+});
+test('durable commit with unknown ACK wins over reversal, expired clock and claimed abort proof',()=>{
+  const m=new Sessions();clearHistory(m);const s=started(m);m.tick(5000);const request=receipt(m,s);
+  assert.throws(()=>m.commitComplete(request,{ackLost:true,committedAt:4999}),/COMMIT_UNKNOWN/);
+  const saved=s.result;assert.ok(saved);assert.equal(m.commitObservations[0].clockReversed,true);
+  assert.strictEqual(m.resolveCommit(s.actor,s.id,{provedAborted:true}),saved);
+  m.tick(-1);assert.strictEqual(m.commitComplete(request),saved);decide(m,s);
+  const token=m.entitlement(s.actor,s.manifest.date);m.consumeOpportunity(s.actor,s.manifest.date,token);
+  m.tick(9000000);assert.strictEqual(complete(m,s),saved);assert.equal(m.events.filter(e=>e.type==='receipt').length,1);
+  assert.equal(m.entitlement(s.actor,s.manifest.date).state,'consumed');
+});
+test('unknown no-commit cannot assign a new receipt until abort is proved',()=>{
+  const m=new Sessions(),s=started(m);m.tick(5000);const request=receipt(m,s);
+  assert.throws(()=>m.commitComplete(request,{commit:false,ackLost:true}),e=>e.code==='COMMIT_UNKNOWN'&&e.status===503&&e.retrySameOperation&&e.commitOutcome==='unknown');
+  assert.equal(s.result,undefined);m.tick(1500);
+  assert.throws(()=>receipt(m,s),/COMMIT_UNKNOWN/);assert.throws(()=>m.commitComplete(request),/COMMIT_UNKNOWN/);
+  assert.throws(()=>abandon(m,s),/COMMIT_UNKNOWN/);assert.throws(()=>m.resolveCommit(s.actor,s.id),/COMMIT_UNKNOWN/);
+  assert.equal(m.events.length,0);m.resolveCommit(s.actor,s.id,{provedAborted:true});
+  assert.throws(()=>m.commitComplete(request),/REVISION/);
+  assert.throws(()=>complete(m,s,{transcript:{version:'route-transcript-v1',commands:[{seq:1,dir:'left'},{seq:2,dir:'right'}]}}),/KEY_CONFLICT/);
+  assert.equal(complete(m,s).receivedAt,6500);
+});
+test('ready/abandon keys are session scoped, and bind different payloads within each attempt',()=>{
+  const m=new Sessions(),a=prepared(m);ready(m,a,{key:'shared'});
+  assert.throws(()=>ready(m,a,{key:'shared',nonce:'changed'}),/KEY_CONFLICT/);
+  abandon(m,a,{key:'shared',reason:'restart'});
+  assert.strictEqual(abandon(m,a,{key:'shared',reason:'restart',ifMatch:0}),a);
+  assert.throws(()=>abandon(m,a,{key:'shared',reason:'user-choice'}),/KEY_CONFLICT/);
+  const b=prepared(m,actor(),'second');ready(m,b,{key:'shared'});abandon(m,b,{key:'shared',reason:'restart'});
+  assert.equal(b.state,'ABANDONED');assert.equal(m.sessionKeys.size,4);
+  assert.throws(()=>m.abandon(actor('foreign'),b.id,{key:'shared'}),/NOT_FOUND/);
+});
+test('missing/illegal route cannot create a receipt, key, entitlement or outbox',()=>{
+  const m=new Sessions(),s=started(m);m.tick(2400);
+  assert.throws(()=>complete(m,s,{transcript:undefined}),/TRANSCRIPT_SCHEMA/);
+  assert.throws(()=>complete(m,s,{transcript:{version:'route-transcript-v1',commands:[{seq:1,dir:'left'}]}}),/TRANSCRIPT_INCOMPLETE/);
+  assert.equal(s.result,undefined);assert.equal(m.events.length,0);assert.equal(m.entitlements.size,0);
+  assert.equal(m.completionKeys.size,0);assert.equal(s.state,'STARTED');
+});
+test('completion key and immutable result bind full normalized transcript, not caller finish',()=>{
+  const m=new Sessions(),s=started(m);m.tick(5000);const r=complete(m,s);
+  const alternate={version:'route-transcript-v1',commands:[{seq:1,dir:'left'},{seq:2,dir:'right'}]};
+  assert.throws(()=>complete(m,s,{transcript:alternate}),/KEY_CONFLICT/);
+  assert.throws(()=>complete(m,s,{key:'different',transcript:alternate}),/KEY_CONFLICT/);
+  assert.strictEqual(complete(m,s,{transcript:{commands:[{dir:'right',seq:1}],version:'route-transcript-v1'}}),r);
+});
+test('route replay/guard work after receipt is excluded from score but still subject to expiry guard',()=>{
+  const m=new Sessions(),s=started(m);m.tick(5000);const request=receipt(m,s);m.tick(1000);
+  const r=m.commitComplete(request);assert.equal(r.elapsedMs,5000);assert.equal(r.guardAt,6000);
+});
+test('unknown competitive grants fail closed before session allocation',()=>{
+  const m=new Sessions();assert.throws(()=>prepared(m,actor(),'key',{abilityIds:['unimplemented-power']}),/POLICY_UNSUPPORTED/);
+  assert.equal(m.sessions.size,0);
 });

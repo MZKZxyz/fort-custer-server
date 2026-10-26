@@ -7,10 +7,12 @@
     "startedAt": 12000,
     "receivedAt": 18500,
     "guardAt": 18500,
-    "committedAt": 18500,
     "elapsedMs": 6500,
-    "integrityTier": "receipt-only-client-claimed-v1",
-    "validationPolicyVersion": "receipt-policy-v1",
+    "transcriptHash": "73828ffe742ef90f7d7968c554246656b076bd42ce506146a1fd4406012e6fa7",
+    "commandCount": 1,
+    "routeValidated": true,
+    "integrityTier": "server-timed-legal-route-v1",
+    "validationPolicyVersion": "route-replay-v1",
     "clockEvidence": {
       "start": {
         "epoch": "fixture-epoch",
@@ -24,6 +26,7 @@
         "uncertaintyMs": 1,
         "evidenceId": "fixture-monitor"
       },
+      "guardReversals": [],
       "maxUncertaintyMs": 10
     },
     "clockDisposition": "healthy",
@@ -42,17 +45,20 @@
       "abilityIds": [],
       "competitionVersion": "fixture-equal-window",
       "runClass": "standard",
-      "rulesVersion": "fixture-rules",
+      "rulesVersion": "cardinal-fire-v1",
+      "integrityTier": "server-timed-legal-route-v1",
+      "validationPolicyVersion": "route-replay-v1",
+      "publicLabel": "Server-timed · route validated",
       "scoringMethod": "playable-receipt-v2",
-      "integrityTier": "receipt-only-client-claimed-v1",
-      "validationPolicyVersion": "receipt-policy-v1",
       "id": "result-session-1",
       "attemptId": "session-1",
       "startedAt": 12000,
       "receivedAt": 18500,
       "guardAt": 18500,
-      "committedAt": 18500,
       "elapsedMs": 6500,
+      "transcriptHash": "73828ffe742ef90f7d7968c554246656b076bd42ce506146a1fd4406012e6fa7",
+      "commandCount": 1,
+      "routeValidated": true,
       "clockEvidence": {
         "start": {
           "epoch": "fixture-epoch",
@@ -66,6 +72,7 @@
           "uncertaintyMs": 1,
           "evidenceId": "fixture-monitor"
         },
+        "guardReversals": [],
         "maxUncertaintyMs": 10
       },
       "clockDisposition": "healthy",
