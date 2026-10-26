@@ -1,0 +1,890 @@
+{
+  "schemaVersion": 1,
+  "tests": 220,
+  "passed": 220,
+  "failed": 0,
+  "skipped": 0,
+  "todo": 0,
+  "results": [
+    {
+      "name": "lost create ACK recovers same ID and canonical sorted ability payload",
+      "outcome": "pass"
+    },
+    {
+      "name": "create key is account scoped across subprofiles, not profile scoped",
+      "outcome": "pass"
+    },
+    {
+      "name": "create slot linearization first/second",
+      "outcome": "pass"
+    },
+    {
+      "name": "create slot linearization second/first",
+      "outcome": "pass"
+    },
+    {
+      "name": "loading excluded; ready ACK and finish uplink charged",
+      "outcome": "pass"
+    },
+    {
+      "name": "lost ready ACK/status preserve start, deadline and revision",
+      "outcome": "pass"
+    },
+    {
+      "name": "prepare replay at deadline-1",
+      "outcome": "pass"
+    },
+    {
+      "name": "prepare replay at deadline+0",
+      "outcome": "pass"
+    },
+    {
+      "name": "prepare replay at deadline+1",
+      "outcome": "pass"
+    },
+    {
+      "name": "play replay at deadline-1",
+      "outcome": "pass"
+    },
+    {
+      "name": "play replay at deadline+0",
+      "outcome": "pass"
+    },
+    {
+      "name": "play replay at deadline+1",
+      "outcome": "pass"
+    },
+    {
+      "name": "nonce/grid and ownership checked; foreign completed result cannot replay",
+      "outcome": "pass"
+    },
+    {
+      "name": "completion rejects caller time and unstarted session",
+      "outcome": "pass"
+    },
+    {
+      "name": "stale If-Match blocks fresh ready/complete; exact replay bypasses stale revision",
+      "outcome": "pass"
+    },
+    {
+      "name": "fixed-revision ready/abandon race: ready",
+      "outcome": "pass"
+    },
+    {
+      "name": "fixed-revision ready/abandon race: abandon",
+      "outcome": "pass"
+    },
+    {
+      "name": "terminal CAS race: complete",
+      "outcome": "pass"
+    },
+    {
+      "name": "terminal CAS race: abandon",
+      "outcome": "pass"
+    },
+    {
+      "name": "explicit abandon replays and stale cleanup cannot release replacement slot",
+      "outcome": "pass"
+    },
+    {
+      "name": "receipt at deadline+0 fails even without cleanup",
+      "outcome": "pass"
+    },
+    {
+      "name": "receipt at deadline+1 fails even without cleanup",
+      "outcome": "pass"
+    },
+    {
+      "name": "receipt and guarded write before deadline may commit after deadline",
+      "outcome": "pass"
+    },
+    {
+      "name": "receipt before deadline but guarded write at deadline loses",
+      "outcome": "pass"
+    },
+    {
+      "name": "cleanup committed first fences old predeadline receipt and preserves replacement",
+      "outcome": "pass"
+    },
+    {
+      "name": "failure before final commit has no completed receipt/outbox effects; new HTTP retry charges later receipt",
+      "outcome": "pass"
+    },
+    {
+      "name": "internal transaction retry retains captured receipt while commit time moves",
+      "outcome": "pass"
+    },
+    {
+      "name": "unknown/lost commit ACK resolves winner after expiry and replacement start",
+      "outcome": "pass"
+    },
+    {
+      "name": "distinct completion keys share one immutable result; account key collision fails",
+      "outcome": "pass"
+    },
+    {
+      "name": "twenty serialized duplicates produce one receipt, no entitlement until acceptance",
+      "outcome": "pass"
+    },
+    {
+      "name": "irreparable clock evidence (negative) cannot be accepted",
+      "outcome": "pass"
+    },
+    {
+      "name": "irreparable clock evidence (epoch) cannot be accepted",
+      "outcome": "pass"
+    },
+    {
+      "name": "irreparable clock evidence (missing) cannot be accepted",
+      "outcome": "pass"
+    },
+    {
+      "name": "positive unhealthy start clock requires audited independent repair",
+      "outcome": "pass"
+    },
+    {
+      "name": "positive unhealthy receipt clock requires audited independent repair",
+      "outcome": "pass"
+    },
+    {
+      "name": "excess uncertainty quarantines; adjudication authority/revision and repair bounds enforced",
+      "outcome": "pass"
+    },
+    {
+      "name": "legal fabricated route does not establish real-time or human play or a cadence floor",
+      "outcome": "pass"
+    },
+    {
+      "name": "rejected first receipt does not deny a later accepted successful date",
+      "outcome": "pass"
+    },
+    {
+      "name": "pending first receipt cannot block accepted replay; late acceptance cannot double consume",
+      "outcome": "pass"
+    },
+    {
+      "name": "quarantined first receipt cannot block accepted replay; late acceptance cannot double consume",
+      "outcome": "pass"
+    },
+    {
+      "name": "concurrent accepted date claims linearization a/b",
+      "outcome": "pass"
+    },
+    {
+      "name": "concurrent accepted date claims linearization b/a",
+      "outcome": "pass"
+    },
+    {
+      "name": "accepted then rejected before consumption reassigns and fences old outbox token",
+      "outcome": "pass"
+    },
+    {
+      "name": "invalidation with no accepted fallback releases eligibility; reacceptance cannot reopen consumed date",
+      "outcome": "pass"
+    },
+    {
+      "name": "catalog exhausted consumes permanent opportunity; no later replay reroll",
+      "outcome": "pass"
+    },
+    {
+      "name": "legacy awarded blocks fresh opportunity without rewriting snapshot",
+      "outcome": "pass"
+    },
+    {
+      "name": "legacy exhausted blocks fresh opportunity without rewriting snapshot",
+      "outcome": "pass"
+    },
+    {
+      "name": "legacy unknown blocks fresh opportunity without rewriting snapshot",
+      "outcome": "pass"
+    },
+    {
+      "name": "legacy absent blocks fresh opportunity without rewriting snapshot",
+      "outcome": "pass"
+    },
+    {
+      "name": "profiles and dates have independent eligibility; standard and assisted share same date entitlement",
+      "outcome": "pass"
+    },
+    {
+      "name": "ability grants/class locked at creation; access controls need no competitive grant",
+      "outcome": "pass"
+    },
+    {
+      "name": "reload abandons explicitly then allows fresh ranked replay from S",
+      "outcome": "pass"
+    },
+    {
+      "name": "equal-duration tie uses receipt time despite adjudication order a/b",
+      "outcome": "pass"
+    },
+    {
+      "name": "equal-duration tie uses receipt time despite adjudication order b/a",
+      "outcome": "pass"
+    },
+    {
+      "name": "equal elapsed and receipt tie uses result ID, independent of acceptance order",
+      "outcome": "pass"
+    },
+    {
+      "name": "slower replay cannot replace best; invalidated winner falls back; empty board repairs",
+      "outcome": "pass"
+    },
+    {
+      "name": "stale projection cannot publish after invalidation, even after reading newer board revision",
+      "outcome": "pass"
+    },
+    {
+      "name": "competition eras and assisted classes stay separate",
+      "outcome": "pass"
+    },
+    {
+      "name": "same create intent retains original competition manifest after server policy changes",
+      "outcome": "pass"
+    },
+    {
+      "name": "rules version is bound at ready",
+      "outcome": "pass"
+    },
+    {
+      "name": "healthy uncertainty at approved fixture bound remains pending, not auto-accepted",
+      "outcome": "pass"
+    },
+    {
+      "name": "maze date, not midnight receipt day, determines entitlement",
+      "outcome": "pass"
+    },
+    {
+      "name": "reversed and duplicated adjudication notifications recompute current source state only",
+      "outcome": "pass"
+    },
+    {
+      "name": "create/ready replay after completion returns terminal state and original start",
+      "outcome": "pass"
+    },
+    {
+      "name": "receipt/guard UTC ordering at offset -1",
+      "outcome": "pass"
+    },
+    {
+      "name": "receipt/guard UTC ordering at offset 0",
+      "outcome": "pass"
+    },
+    {
+      "name": "receipt/guard UTC ordering at offset 1",
+      "outcome": "pass"
+    },
+    {
+      "name": "postcommit observation at guard offset -1 never changes receipt",
+      "outcome": "pass"
+    },
+    {
+      "name": "postcommit observation at guard offset 0 never changes receipt",
+      "outcome": "pass"
+    },
+    {
+      "name": "postcommit observation at guard offset 1 never changes receipt",
+      "outcome": "pass"
+    },
+    {
+      "name": "durable commit with unknown ACK wins over reversal, expired clock and claimed abort proof",
+      "outcome": "pass"
+    },
+    {
+      "name": "unknown no-commit cannot assign a new receipt until abort is proved",
+      "outcome": "pass"
+    },
+    {
+      "name": "ready/abandon keys are session scoped, and bind different payloads within each attempt",
+      "outcome": "pass"
+    },
+    {
+      "name": "missing/illegal route cannot create a receipt, key, entitlement or outbox",
+      "outcome": "pass"
+    },
+    {
+      "name": "completion key and immutable result bind full normalized transcript, not caller finish",
+      "outcome": "pass"
+    },
+    {
+      "name": "route replay/guard work after receipt is excluded from score but still subject to expiry guard",
+      "outcome": "pass"
+    },
+    {
+      "name": "unknown competitive grants fail closed before session allocation",
+      "outcome": "pass"
+    },
+    {
+      "name": "canonical start, cardinal movement and terminal tipi arrival",
+      "outcome": "pass"
+    },
+    {
+      "name": "out-of-bounds up is a no-op, never wraps",
+      "outcome": "pass"
+    },
+    {
+      "name": "out-of-bounds left is a no-op, never wraps",
+      "outcome": "pass"
+    },
+    {
+      "name": "out-of-bounds down is a no-op, never wraps",
+      "outcome": "pass"
+    },
+    {
+      "name": "walls block; a legal detour reaches the tipi",
+      "outcome": "pass"
+    },
+    {
+      "name": "cannot traverse wall or fire with no equipment merely by reporting finish",
+      "outcome": "pass"
+    },
+    {
+      "name": "pickup, stationary fire clear, then extra step into cleared cell",
+      "outcome": "pass"
+    },
+    {
+      "name": "equipment is one capacity; full pickup consumed; cannot clear two fires",
+      "outcome": "pass"
+    },
+    {
+      "name": "new pickup replenishes consumed equipment",
+      "outcome": "pass"
+    },
+    {
+      "name": "revisited pickup does not regenerate and original maze is never mutated",
+      "outcome": "pass"
+    },
+    {
+      "name": "loop/revisit of S is legal, repeated direction is a distinct new command",
+      "outcome": "pass"
+    },
+    {
+      "name": "any command after terminal arrival (right) is rejected",
+      "outcome": "pass"
+    },
+    {
+      "name": "any command after terminal arrival (left) is rejected",
+      "outcome": "pass"
+    },
+    {
+      "name": "any command after terminal arrival (up) is rejected",
+      "outcome": "pass"
+    },
+    {
+      "name": "unknown direction toString fails schema",
+      "outcome": "pass"
+    },
+    {
+      "name": "unknown direction constructor fails schema",
+      "outcome": "pass"
+    },
+    {
+      "name": "unknown direction __proto__ fails schema",
+      "outcome": "pass"
+    },
+    {
+      "name": "unknown direction diagonal fails schema",
+      "outcome": "pass"
+    },
+    {
+      "name": "unknown direction RIGHT fails schema",
+      "outcome": "pass"
+    },
+    {
+      "name": "unknown direction  fails schema",
+      "outcome": "pass"
+    },
+    {
+      "name": "unknown direction null fails schema",
+      "outcome": "pass"
+    },
+    {
+      "name": "unknown direction 1 fails schema",
+      "outcome": "pass"
+    },
+    {
+      "name": "command sequence 0 is rejected",
+      "outcome": "pass"
+    },
+    {
+      "name": "command sequence 2 is rejected",
+      "outcome": "pass"
+    },
+    {
+      "name": "command sequence 1,1 is rejected",
+      "outcome": "pass"
+    },
+    {
+      "name": "command sequence 1,3 is rejected",
+      "outcome": "pass"
+    },
+    {
+      "name": "command sequence 2,1 is rejected",
+      "outcome": "pass"
+    },
+    {
+      "name": "command sequence 1,1.5 is rejected",
+      "outcome": "pass"
+    },
+    {
+      "name": "client field position cannot set state or time",
+      "outcome": "pass"
+    },
+    {
+      "name": "client field elapsedMs cannot set state or time",
+      "outcome": "pass"
+    },
+    {
+      "name": "client field completed cannot set state or time",
+      "outcome": "pass"
+    },
+    {
+      "name": "client field equipment cannot set state or time",
+      "outcome": "pass"
+    },
+    {
+      "name": "client field at cannot set state or time",
+      "outcome": "pass"
+    },
+    {
+      "name": "no finish opcode, version fallback, empty route or partial route",
+      "outcome": "pass"
+    },
+    {
+      "name": "bad pinned grid [] is an operational failure",
+      "outcome": "pass"
+    },
+    {
+      "name": "bad pinned grid [\"S\"] is an operational failure",
+      "outcome": "pass"
+    },
+    {
+      "name": "bad pinned grid [\"SSE\"] is an operational failure",
+      "outcome": "pass"
+    },
+    {
+      "name": "bad pinned grid [\"S E\",\"#\"] is an operational failure",
+      "outcome": "pass"
+    },
+    {
+      "name": "bad pinned grid [\"S?E\"] is an operational failure",
+      "outcome": "pass"
+    },
+    {
+      "name": "bad pinned grid [\"E\"] is an operational failure",
+      "outcome": "pass"
+    },
+    {
+      "name": "bad pinned grid [\"SE                     is an operational failure",
+      "outcome": "pass"
+    },
+    {
+      "name": "immutable integrity tier, validator and public label must match manifest",
+      "outcome": "pass"
+    },
+    {
+      "name": "standard/assisted grants locked; unknown rule-changing ability is unsupported",
+      "outcome": "pass"
+    },
+    {
+      "name": "canonical property ordering yields identical transcript hash",
+      "outcome": "pass"
+    },
+    {
+      "name": "decoded wire byte bound is checked before parse, including whitespace",
+      "outcome": "pass"
+    },
+    {
+      "name": "maximum command count is accepted; next command is rejected without truncation",
+      "outcome": "pass"
+    },
+    {
+      "name": "representative paths agree with pinned client movement fixture",
+      "outcome": "pass"
+    },
+    {
+      "name": "simple path, blocked goal, and boundary rejection",
+      "outcome": "pass"
+    },
+    {
+      "name": "invalid and inherited property directions are rejected",
+      "outcome": "pass"
+    },
+    {
+      "name": "fire needs an extinguisher and an extra stationary input",
+      "outcome": "pass"
+    },
+    {
+      "name": "a legal detour beats a blocked geometric shortcut, without mutating input",
+      "outcome": "pass"
+    },
+    {
+      "name": "inventory does not stack, pickups disappear even when full",
+      "outcome": "pass"
+    },
+    {
+      "name": "state-dependent detour revisits a position with inventory and cleared fire",
+      "outcome": "pass"
+    },
+    {
+      "name": "multiple equal shortest routes and exact geometry",
+      "outcome": "pass"
+    },
+    {
+      "name": "limits are inconclusive; malformed grids fail explicitly",
+      "outcome": "pass"
+    },
+    {
+      "name": "missing and inaccessible items are reported independently of solvability",
+      "outcome": "pass"
+    },
+    {
+      "name": "all reachable transitions agree with pinned client rules",
+      "outcome": "pass"
+    },
+    {
+      "name": "seed adapter matches unchanged generator with the same RNG stream",
+      "outcome": "pass"
+    },
+    {
+      "name": "deterministic batch replay, generated paths agree with client",
+      "outcome": "pass"
+    },
+    {
+      "name": "CLI JSON/JSONL/CSV are parseable, deterministic and reject bad options",
+      "outcome": "pass"
+    },
+    {
+      "name": "large batches run in a 64 MiB V8 heap and streaming output is bounded",
+      "outcome": "pass"
+    },
+    {
+      "name": "rejects malformed dates and profile identifiers on both endpoints",
+      "outcome": "pass"
+    },
+    {
+      "name": "missing users and profiles return 404",
+      "outcome": "pass"
+    },
+    {
+      "name": "completion requires an existing attempt and minimum duration",
+      "outcome": "pass"
+    },
+    {
+      "name": "completion records progress and awards a reward only once",
+      "outcome": "pass"
+    },
+    {
+      "name": "concurrent completion requests replay one committed result",
+      "outcome": "pass"
+    },
+    {
+      "name": "a new attempt after completion is playable",
+      "outcome": "pass"
+    },
+    {
+      "name": "stable attempt retries replay the exact response even after another start and reward catalog changes",
+      "outcome": "pass"
+    },
+    {
+      "name": "many concurrent identical IDs return one persisted result and one reward",
+      "outcome": "pass"
+    },
+    {
+      "name": "response lost after persistence is recoverable without another reward",
+      "outcome": "pass"
+    },
+    {
+      "name": "error before persistence leaves all effects absent and the same attempt retryable",
+      "outcome": "pass"
+    },
+    {
+      "name": "invalid, expired and foreign attempts never mutate progress or inventory",
+      "outcome": "pass"
+    },
+    {
+      "name": "legacy active attempts can finish; historical completed attempts cannot award again",
+      "outcome": "pass"
+    },
+    {
+      "name": "legacy progress endpoint cannot inject client times into leaderboard",
+      "outcome": "pass"
+    },
+    {
+      "name": "distinct concurrent attempts keep both results and consistent reward inventory",
+      "outcome": "pass"
+    },
+    {
+      "name": "a saved result replays after expiration and does not change the latest daily score",
+      "outcome": "pass"
+    },
+    {
+      "name": "missing document versions fail safely without silently rewriting imported player data",
+      "outcome": "pass"
+    },
+    {
+      "name": "missing and invalid versions cannot be initialized by maze start or profile saves",
+      "outcome": "pass"
+    },
+    {
+      "name": "raw legacy records retain old progress, reward quantities and retired inventory on completion and replay",
+      "outcome": "pass"
+    },
+    {
+      "name": "historical completed records and saved snapshots are read-only even without a version",
+      "outcome": "pass"
+    },
+    {
+      "name": "test/fixtures/client-movement.js",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 unique indexes enforce the exact operation/session/profile scopes",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 two processes race create keys and the profile active slot",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 two-process alternative keys recover one intent; hash/owner/account collisions fail",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 process death at intake:before leaves no partial body/intent/key/fence after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 process death at intake:body leaves no partial body/intent/key/fence after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 process death at intake:intent leaves no partial body/intent/key/fence after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 process death at intake:session leaves no partial body/intent/key/fence after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 process death at intake:key leaves no partial body/intent/key/fence after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 lost intake acknowledgment recovers the original durable body/generation/time after restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 create crash after session rolls back session/slot/account key together",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 create crash after slot rolls back session/slot/account key together",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 create crash after key rolls back session/slot/account key together",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 ready crash after session rolls back all transition effects",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 ready crash after key rolls back all transition effects",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 abandon crash after session rolls back all transition effects",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 abandon crash after slot rolls back all transition effects",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 abandon crash after key rolls back all transition effects",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 lost create ACK replays effective state without reallocating or restarting",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 lost ready ACK replays effective state without reallocating or restarting",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 fixed revision ready/abandon race with ready first",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 fixed revision ready/abandon race with abandon first",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 guard at receipt -1ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 guard at receipt +0ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 guard at receipt +1ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 negative elapsed receipt is retained as irreparable rather than silently accepted timing",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 prepare deadline -1ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 intake at play deadline -1ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 final guard at play deadline -1ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 prepare deadline +0ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 intake at play deadline +0ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 final guard at play deadline +0ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 prepare deadline +1ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 intake at play deadline +1ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 final guard at play deadline +1ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 commit/ACK after synthetic deadline preserves predeadline guard and original receipt",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 backward post-commit observation plus lost ACK/app+DB restart never discards winner",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 private post-commit diagnostic write failure leaves exact receipt recoverable",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 abandon wins against a paused predeadline intake and prevents late receipt",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 expire wins against a paused predeadline intake and prevents late receipt",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 resolver-first fences an older transaction; empty read, time and abandon cannot replace intent",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 completion-first forces an older resolver snapshot to recover the committed winner",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 competing resolvers serialize one abort and leave no old transaction able to commit",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 aborted alias keys rejoin a new generation without retaining stale pending bindings",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 transient server transaction failure retries body with the original receipt",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2/T3 transient retry rechecks deadline instead of reserving a terminal win",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 failCommand unknown commit outcome retries COMMIT, not the transaction body",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 closed commit connections exhaust bounded recovery; app restart resolves the pending generation",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 durable commit with lost write-concern ACK returns COMMIT_UNKNOWN then winner after restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 resolver crash after session cannot leave partial abort proof",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 resolver crash after intent cannot leave partial abort proof",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 resolver crash after key cannot leave partial abort proof",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 actual primary stepdown invalidates paused transaction and preserves intent recovery",
+      "outcome": "pass"
+    },
+    {
+      "name": "T4 SIGKILL after finish:read before commit rolls back every final effect after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T4 SIGKILL after finish:result before commit rolls back every final effect after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T4 SIGKILL after finish:intent before commit rolls back every final effect after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T4 SIGKILL after finish:session before commit rolls back every final effect after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T4 SIGKILL after finish:slot before commit rolls back every final effect after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T4 SIGKILL after finish:key before commit rolls back every final effect after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T4 SIGKILL after finish:outbox before commit rolls back every final effect after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T4 two completion processes recover one immutable receipt and one outbox event",
+      "outcome": "pass"
+    },
+    {
+      "name": "T4 stale cleanup snapshot cannot remove a successor profile slot",
+      "outcome": "pass"
+    },
+    {
+      "name": "report validator accepts different host measurements but rejects deterministic drift",
+      "outcome": "pass"
+    }
+  ]
+}

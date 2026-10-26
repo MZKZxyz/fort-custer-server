@@ -1,0 +1,254 @@
+{
+  "schemaVersion": 1,
+  "tests": 61,
+  "passed": 61,
+  "failed": 0,
+  "skipped": 0,
+  "todo": 0,
+  "results": [
+    {
+      "name": "T1 unique indexes enforce the exact operation/session/profile scopes",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 two processes race create keys and the profile active slot",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 two-process alternative keys recover one intent; hash/owner/account collisions fail",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 process death at intake:before leaves no partial body/intent/key/fence after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 process death at intake:body leaves no partial body/intent/key/fence after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 process death at intake:intent leaves no partial body/intent/key/fence after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 process death at intake:session leaves no partial body/intent/key/fence after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 process death at intake:key leaves no partial body/intent/key/fence after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 lost intake acknowledgment recovers the original durable body/generation/time after restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 create crash after session rolls back session/slot/account key together",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 create crash after slot rolls back session/slot/account key together",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 create crash after key rolls back session/slot/account key together",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 ready crash after session rolls back all transition effects",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 ready crash after key rolls back all transition effects",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 abandon crash after session rolls back all transition effects",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 abandon crash after slot rolls back all transition effects",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 abandon crash after key rolls back all transition effects",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 lost create ACK replays effective state without reallocating or restarting",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 lost ready ACK replays effective state without reallocating or restarting",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 fixed revision ready/abandon race with ready first",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1 fixed revision ready/abandon race with abandon first",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 guard at receipt -1ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 guard at receipt +0ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 guard at receipt +1ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 negative elapsed receipt is retained as irreparable rather than silently accepted timing",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 prepare deadline -1ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 intake at play deadline -1ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 final guard at play deadline -1ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 prepare deadline +0ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 intake at play deadline +0ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 final guard at play deadline +0ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 prepare deadline +1ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 intake at play deadline +1ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 final guard at play deadline +1ms",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 commit/ACK after synthetic deadline preserves predeadline guard and original receipt",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 backward post-commit observation plus lost ACK/app+DB restart never discards winner",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 private post-commit diagnostic write failure leaves exact receipt recoverable",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 abandon wins against a paused predeadline intake and prevents late receipt",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2 expire wins against a paused predeadline intake and prevents late receipt",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 resolver-first fences an older transaction; empty read, time and abandon cannot replace intent",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 completion-first forces an older resolver snapshot to recover the committed winner",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 competing resolvers serialize one abort and leave no old transaction able to commit",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 aborted alias keys rejoin a new generation without retaining stale pending bindings",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 transient server transaction failure retries body with the original receipt",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2/T3 transient retry rechecks deadline instead of reserving a terminal win",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 failCommand unknown commit outcome retries COMMIT, not the transaction body",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 closed commit connections exhaust bounded recovery; app restart resolves the pending generation",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 durable commit with lost write-concern ACK returns COMMIT_UNKNOWN then winner after restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 resolver crash after session cannot leave partial abort proof",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 resolver crash after intent cannot leave partial abort proof",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 resolver crash after key cannot leave partial abort proof",
+      "outcome": "pass"
+    },
+    {
+      "name": "T3 actual primary stepdown invalidates paused transaction and preserves intent recovery",
+      "outcome": "pass"
+    },
+    {
+      "name": "T4 SIGKILL after finish:read before commit rolls back every final effect after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T4 SIGKILL after finish:result before commit rolls back every final effect after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T4 SIGKILL after finish:intent before commit rolls back every final effect after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T4 SIGKILL after finish:session before commit rolls back every final effect after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T4 SIGKILL after finish:slot before commit rolls back every final effect after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T4 SIGKILL after finish:key before commit rolls back every final effect after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T4 SIGKILL after finish:outbox before commit rolls back every final effect after DB restart",
+      "outcome": "pass"
+    },
+    {
+      "name": "T4 two completion processes recover one immutable receipt and one outbox event",
+      "outcome": "pass"
+    },
+    {
+      "name": "T4 stale cleanup snapshot cannot remove a successor profile slot",
+      "outcome": "pass"
+    }
+  ]
+}
