@@ -4,22 +4,72 @@
   "saved": {
     "id": "result-session-1",
     "attemptId": "session-1",
+    "startedAt": 12000,
     "receivedAt": 18500,
+    "guardAt": 18500,
+    "committedAt": 18500,
     "elapsedMs": 6500,
-    "eligibilityReserved": true,
-    "reward": "held"
+    "integrityTier": "receipt-only-client-claimed-v1",
+    "validationPolicyVersion": "receipt-policy-v1",
+    "clockEvidence": {
+      "start": {
+        "epoch": "fixture-epoch",
+        "healthy": true,
+        "uncertaintyMs": 1,
+        "evidenceId": "fixture-monitor"
+      },
+      "receipt": {
+        "epoch": "fixture-epoch",
+        "healthy": true,
+        "uncertaintyMs": 1,
+        "evidenceId": "fixture-monitor"
+      },
+      "maxUncertaintyMs": 10
+    },
+    "clockDisposition": "healthy",
+    "entitlementStatus": "unresolved-at-receipt"
   },
   "retrySameSnapshot": true,
+  "entitlement": {
+    "state": "eligible",
+    "resultId": "result-session-1",
+    "revision": 1
+  },
   "board": [
     {
-      "actor": "synthetic-profile",
+      "profile": "[\"synthetic-account\",\"synthetic-profile\"]",
+      "date": "fixture-date",
+      "abilityIds": [],
+      "competitionVersion": "fixture-equal-window",
       "runClass": "standard",
+      "rulesVersion": "fixture-rules",
+      "scoringMethod": "playable-receipt-v2",
+      "integrityTier": "receipt-only-client-claimed-v1",
+      "validationPolicyVersion": "receipt-policy-v1",
       "id": "result-session-1",
       "attemptId": "session-1",
+      "startedAt": 12000,
       "receivedAt": 18500,
+      "guardAt": 18500,
+      "committedAt": 18500,
       "elapsedMs": 6500,
-      "eligibilityReserved": true,
-      "reward": "held"
+      "clockEvidence": {
+        "start": {
+          "epoch": "fixture-epoch",
+          "healthy": true,
+          "uncertaintyMs": 1,
+          "evidenceId": "fixture-monitor"
+        },
+        "receipt": {
+          "epoch": "fixture-epoch",
+          "healthy": true,
+          "uncertaintyMs": 1,
+          "evidenceId": "fixture-monitor"
+        },
+        "maxUncertaintyMs": 10
+      },
+      "clockDisposition": "healthy",
+      "entitlementStatus": "unresolved-at-receipt"
     }
   ]
 }
