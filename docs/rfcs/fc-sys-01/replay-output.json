@@ -1,0 +1,82 @@
+{
+  "loadingExcludedMs": 12000,
+  "startAckDelayChargedMs": 600,
+  "saved": {
+    "id": "result-session-1",
+    "attemptId": "session-1",
+    "startedAt": 12000,
+    "receivedAt": 18500,
+    "guardAt": 18500,
+    "elapsedMs": 6500,
+    "transcriptHash": "73828ffe742ef90f7d7968c554246656b076bd42ce506146a1fd4406012e6fa7",
+    "commandCount": 1,
+    "routeValidated": true,
+    "integrityTier": "server-timed-legal-route-v1",
+    "validationPolicyVersion": "route-replay-v1",
+    "clockEvidence": {
+      "start": {
+        "epoch": "fixture-epoch",
+        "healthy": true,
+        "uncertaintyMs": 1,
+        "evidenceId": "fixture-monitor"
+      },
+      "receipt": {
+        "epoch": "fixture-epoch",
+        "healthy": true,
+        "uncertaintyMs": 1,
+        "evidenceId": "fixture-monitor"
+      },
+      "guardReversals": [],
+      "maxUncertaintyMs": 10
+    },
+    "clockDisposition": "healthy",
+    "entitlementStatus": "unresolved-at-receipt"
+  },
+  "retrySameSnapshot": true,
+  "entitlement": {
+    "state": "eligible",
+    "resultId": "result-session-1",
+    "revision": 1
+  },
+  "board": [
+    {
+      "profile": "[\"synthetic-account\",\"synthetic-profile\"]",
+      "date": "fixture-date",
+      "abilityIds": [],
+      "competitionVersion": "fixture-equal-window",
+      "runClass": "standard",
+      "rulesVersion": "cardinal-fire-v1",
+      "integrityTier": "server-timed-legal-route-v1",
+      "validationPolicyVersion": "route-replay-v1",
+      "publicLabel": "Server-timed · route validated",
+      "scoringMethod": "playable-receipt-v2",
+      "id": "result-session-1",
+      "attemptId": "session-1",
+      "startedAt": 12000,
+      "receivedAt": 18500,
+      "guardAt": 18500,
+      "elapsedMs": 6500,
+      "transcriptHash": "73828ffe742ef90f7d7968c554246656b076bd42ce506146a1fd4406012e6fa7",
+      "commandCount": 1,
+      "routeValidated": true,
+      "clockEvidence": {
+        "start": {
+          "epoch": "fixture-epoch",
+          "healthy": true,
+          "uncertaintyMs": 1,
+          "evidenceId": "fixture-monitor"
+        },
+        "receipt": {
+          "epoch": "fixture-epoch",
+          "healthy": true,
+          "uncertaintyMs": 1,
+          "evidenceId": "fixture-monitor"
+        },
+        "guardReversals": [],
+        "maxUncertaintyMs": 10
+      },
+      "clockDisposition": "healthy",
+      "entitlementStatus": "unresolved-at-receipt"
+    }
+  ]
+}
