@@ -11,6 +11,7 @@ const scope = (actor, op, key, attemptId = '') => ({ accountId: actor.accountId,
   operation: op, key, scope: ['ready', 'abandon'].includes(op) ? attemptId : '' });
 const slot = actor => ({ accountId: actor.accountId, profileId: actor.profileId });
 const check = (prior, hash) => { if (prior && prior.hash !== hash) fail('KEY_CONFLICT'); };
+const matched = result => { if (result.matchedCount !== 1) fail('FENCED'); };
 
 export async function initialize(db) {
   for (const name of collections) await db.createCollection(name);
@@ -29,7 +30,7 @@ export class Store {
     this.stats = { transactions: 0, transientRetries: 0, commitRetries: 0 };
   }
   c(name) { return this.db.collection(name); }
-  async tx(body) {
+  async tx(body, { notifyCommit = true } = {}) {
     for (let attempt = 0; attempt < this.transactionAttempts; attempt++) {
       const session = this.client.startSession();
       session.startTransaction({ readConcern: { level: 'snapshot' },
@@ -48,7 +49,7 @@ export class Store {
             if (n + 1 >= this.commitAttempts) fail('COMMIT_UNKNOWN');
           }
         }
-        await this.hook('afterCommit');
+        if (notifyCommit) await this.hook('afterCommit');
         return value;
       } catch (error) {
         // An unknown commit must never be treated as a known abort or rerun body.
@@ -71,12 +72,23 @@ export class Store {
     if (!s) fail('NOT_FOUND');
     return s;
   }
+  async effective(s, now, session) {
+    // Uncertain completion retains the slot and takes precedence over wall time.
+    if (s.pending) return { ...s, saveStatus: 'resolving' };
+    if (!['PREPARED', 'STARTED'].includes(s.state) || now < s.deadline) return s;
+    await this.hook('replay:read');
+    matched(await this.c('sessions').updateOne({ _id: s._id, revision: s.revision }, {
+      $set: { state: 'EXPIRED' }, $inc: { revision: 1 },
+    }, { session }));
+    await this.c('slots').deleteOne({ accountId: s.accountId, profileId: s.profileId, attemptId: s._id }, { session });
+    return { ...s, state: 'EXPIRED', revision: s.revision + 1 };
+  }
   async create(actor, key, { now = 0, prepareMs = 100, date = 'synthetic-date' } = {}) {
     const binding = scope(actor, 'create', key), hash = digest({ profileId: actor.profileId, date });
     const id = randomUUID();
     return this.tx(async session => {
       const prior = await this.c('keys').findOne(binding, { session }); check(prior, hash);
-      if (prior) return this.owned(actor, prior.attemptId, session);
+      if (prior) return this.effective(await this.owned(actor, prior.attemptId, session), now, session);
       if (await this.c('slots').findOne(slot(actor), { session })) fail('ACTIVE_SESSION');
       await this.hook('create:read');
       const value = { _id: id, ...slot(actor), date, state: 'PREPARED', revision: 1,
@@ -88,14 +100,14 @@ export class Store {
       return value;
     });
   }
-  async transition(actor, id, operation, key, { now, ifMatch, playMs = 100,
+  async transition(actor, id, operation, key, { now = 0, ifMatch, playMs = 100,
     nonce = 'synthetic-nonce', gridHash = digest(['SE']), rulesVersion = 'synthetic-v1', reason = 'user-choice' } = {}) {
     const payload = operation === 'ready' ? { nonce, gridHash, rulesVersion } : { reason };
     const binding = scope(actor, operation, key, id), hash = digest({ profileId: actor.profileId, ...payload });
     return this.tx(async session => {
       const s = await this.owned(actor, id, session);
       const prior = await this.c('keys').findOne(binding, { session }); check(prior, hash);
-      if (prior) return s;
+      if (prior) return this.effective(s, now, session);
       if (s.pending) fail('COMMIT_UNKNOWN');
       if (now >= s.deadline) fail('EXPIRED');
       if (s.revision !== ifMatch) fail('REVISION');
@@ -159,42 +171,96 @@ export class Store {
     });
   }
   async finish(actor, id, intentId) {
+    const checkId = randomUUID(), checkPath = `guardChecks.${checkId}`;
+    const reversals = new Set();
+    // Admit an unresolved observation BEFORE consulting a process-local clock.
+    // A failed evidence transaction or dead process cannot erase this durable hold.
+    const winner = await this.tx(async session => {
+      const s = await this.owned(actor, id, session);
+      const result = await this.c('results').findOne({ attemptId: id }, { session });
+      if (result) return result;
+      const intent = await this.c('intents').findOne({ _id: intentId, attemptId: id }, { session });
+      if (!intent || intent.state !== 'pending' || s.pending !== intentId || s.revision !== intent.expectedRevision) fail('FENCED');
+      matched(await this.c('sessions').updateOne({ _id: id, revision: s.revision }, { $inc: { revision: 1 } }, { session }));
+      await this.hook('guard:session');
+      matched(await this.c('intents').updateOne({ _id: intentId, expectedRevision: s.revision, state: 'pending' }, {
+        $set: { [checkPath]: { state: 'unresolved' } }, $inc: { expectedRevision: 1 },
+      }, { session }));
+      await this.hook('guard:intent');
+      return null;
+    }, { notifyCommit: false });
+    if (winner) return winner;
+    await this.hook('finish:admitted');
     try {
-      return await this.tx(async session => {
+      const outcome = await this.tx(async session => {
         const s = await this.owned(actor, id, session);
         const result = await this.c('results').findOne({ attemptId: id }, { session });
-        if (result) return result;
         const intent = await this.c('intents').findOne({ _id: intentId, attemptId: id }, { session });
+        if (result) {
+          // A competing winner is immutable. Locally captured reversals survive
+          // transaction retries as private evidence; its frozen timing hold stays.
+          if (reversals.size) await this.recordReversal(s, intent, checkPath, reversals, session, result);
+          return result;
+        }
         if (!intent || intent.state !== 'pending' || s.pending !== intentId || s.revision !== intent.expectedRevision) fail('FENCED');
         await this.hook('finish:read');
         const guardAt = await this.guard(intent.receivedAt);
-        if (guardAt < intent.receivedAt) throw Object.assign(new Error('CLOCK_UNAVAILABLE'), { code: 'CLOCK_UNAVAILABLE', guardAt });
+        if (guardAt < intent.receivedAt) reversals.add(guardAt);
+        if (reversals.size) {
+          await this.recordReversal(s, intent, checkPath, reversals, session);
+          return { clockFailure: true };
+        }
         if (s.state !== 'STARTED' || guardAt >= s.deadline || intent.receivedAt >= s.deadline) fail('EXPIRED');
+        const guardChecks = { ...intent.guardChecks, [checkId]: { state: 'healthy', guardAt } };
+        const held = Object.values(guardChecks).some(check => check.state !== 'healthy');
         const receipt = { _id: `result:${id}`, attemptId: id, intentId, transcriptHash: intent.transcriptHash,
           receivedAt: intent.receivedAt, startedAt: s.startedAt, guardAt, elapsedMs: intent.receivedAt - s.startedAt,
-          guardReversals: intent.guardReversals,
+          guardReversals: intent.guardReversals, guardChecks,
           clockDisposition: intent.receivedAt < s.startedAt ? 'irreparable'
-            : intent.guardReversals.length ? 'review-required' : 'healthy',
+            : held || intent.guardReversals.length ? 'review-required' : 'healthy',
           entitlementStatus: 'unresolved-at-receipt' };
         await this.c('results').insertOne(receipt, { session }); await this.hook('finish:result');
-        await this.c('intents').updateOne({ _id: intentId, state: 'pending' }, { $set: { state: 'completed', resultId: receipt._id } }, { session }); await this.hook('finish:intent');
-        await this.c('sessions').updateOne({ _id: id, revision: intent.expectedRevision }, {
+        matched(await this.c('intents').updateOne({ _id: intentId, expectedRevision: s.revision, state: 'pending' }, {
+          $set: { state: 'completed', resultId: receipt._id, guardChecks },
+        }, { session })); await this.hook('finish:intent');
+        matched(await this.c('sessions').updateOne({ _id: id, revision: intent.expectedRevision }, {
           $set: { state: 'COMPLETED', resultId: receipt._id }, $unset: { pending: '' }, $inc: { revision: 1 },
-        }, { session }); await this.hook('finish:session');
+        }, { session })); await this.hook('finish:session');
         await this.c('slots').deleteOne({ ...slot(actor), attemptId: id }, { session }); await this.hook('finish:slot');
         await this.c('keys').updateMany({ intentId }, { $set: { state: 'completed', resultId: receipt._id } }, { session }); await this.hook('finish:key');
         await this.c('outbox').insertOne({ _id: receipt._id, resultId: receipt._id, type: 'receipt' }, { session }); await this.hook('finish:outbox');
         return receipt;
       });
+      if (outcome.clockFailure) fail('CLOCK_UNAVAILABLE');
+      return outcome;
     } catch (error) {
-      if (error.code === 'CLOCK_UNAVAILABLE') {
-        // The final tx aborted. Persist private evidence on the same intent fence.
-        await this.c('intents').updateOne({ _id: intentId, state: 'pending' }, {
-          $push: { guardReversals: error.guardAt },
-        }, { writeConcern: { w: 'majority', j: true } });
+      if (reversals.size) {
+        // A failed late evidence write must not reject an already durable winner.
+        // Its admitted check is already frozen as a timing hold in that receipt.
+        let result;
+        try { result = await this.c('results').findOne({ attemptId: id }, { readConcern: { level: 'majority' } }); }
+        catch { fail('COMMIT_UNKNOWN'); }
+        if (result) return result;
       }
+      if (reversals.size && !['CLOCK_UNAVAILABLE', 'COMMIT_UNKNOWN', 'FENCED'].includes(error.code)) fail('CLOCK_EVIDENCE_UNAVAILABLE');
       throw error;
     }
+  }
+  async recordReversal(s, intent, checkPath, reversals, session, winner) {
+    if (!intent || !intent.guardChecks?.[checkPath.slice('guardChecks.'.length)]) fail('FENCED');
+    // Both writes use the same aggregate fences as finalization and resolution.
+    // Failed/unknown commit leaves the pre-admitted unresolved check in place.
+    await this.hook('clock:beforeEvidence');
+    matched(await this.c('sessions').updateOne({ _id: s._id, revision: s.revision }, { $inc: { revision: 1 } }, { session }));
+    await this.hook('clock:session');
+    matched(await this.c('intents').updateOne({ _id: intent._id, state: intent.state }, {
+      $set: { [checkPath]: { state: 'reversed', samples: [...reversals] }, expectedRevision: s.revision + 1 },
+      $addToSet: { guardReversals: { $each: [...reversals] } },
+    }, { session }));
+    await this.hook('clock:intent');
+    if (winner) await this.c('observations').updateOne({ _id: checkPath }, {
+      $setOnInsert: { attemptId: s._id, resultId: winner._id, reversals: [...reversals], type: 'late-precommit-evidence' },
+    }, { session, upsert: true });
   }
   async resolve(actor, id) {
     return this.tx(async session => {

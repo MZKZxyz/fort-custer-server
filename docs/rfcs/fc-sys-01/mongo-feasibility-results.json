@@ -1,253 +1,337 @@
 {
-  "schemaVersion": 1,
-  "tests": 61,
-  "passed": 61,
+  "schemaVersion": 2,
+  "tests": 82,
+  "passed": 82,
   "failed": 0,
   "skipped": 0,
   "todo": 0,
   "results": [
     {
-      "name": "T1 unique indexes enforce the exact operation/session/profile scopes",
+      "name": "T1:c67a9d395b921053b4f4",
       "outcome": "pass"
     },
     {
-      "name": "T1 two processes race create keys and the profile active slot",
+      "name": "T1:5029ce883e3dc4b31e94",
       "outcome": "pass"
     },
     {
-      "name": "T1 two-process alternative keys recover one intent; hash/owner/account collisions fail",
+      "name": "T1:ac1bac0044ee0182ad33",
       "outcome": "pass"
     },
     {
-      "name": "T1 process death at intake:before leaves no partial body/intent/key/fence after DB restart",
+      "name": "T1:1ca1e0703e83a90f23b4",
       "outcome": "pass"
     },
     {
-      "name": "T1 process death at intake:body leaves no partial body/intent/key/fence after DB restart",
+      "name": "T1:96d0f66c48ec4eb86d08",
       "outcome": "pass"
     },
     {
-      "name": "T1 process death at intake:intent leaves no partial body/intent/key/fence after DB restart",
+      "name": "T1:273bf65f161fbbcb0e4d",
       "outcome": "pass"
     },
     {
-      "name": "T1 process death at intake:session leaves no partial body/intent/key/fence after DB restart",
+      "name": "T1:5b95f7009a95a9bf9e04",
       "outcome": "pass"
     },
     {
-      "name": "T1 process death at intake:key leaves no partial body/intent/key/fence after DB restart",
+      "name": "T1:19ce6154319a6f0111b0",
       "outcome": "pass"
     },
     {
-      "name": "T1 lost intake acknowledgment recovers the original durable body/generation/time after restart",
+      "name": "T1:ee4ada0b4c0f34a7b43c",
       "outcome": "pass"
     },
     {
-      "name": "T1 create crash after session rolls back session/slot/account key together",
+      "name": "T1:a04ca91a25d73b64e300",
       "outcome": "pass"
     },
     {
-      "name": "T1 create crash after slot rolls back session/slot/account key together",
+      "name": "T1:662c3eebedc5cf516d03",
       "outcome": "pass"
     },
     {
-      "name": "T1 create crash after key rolls back session/slot/account key together",
+      "name": "T1:fd6be3fe62fb7c0ba2dc",
       "outcome": "pass"
     },
     {
-      "name": "T1 ready crash after session rolls back all transition effects",
+      "name": "T1:548429ec73363d2ddce8",
       "outcome": "pass"
     },
     {
-      "name": "T1 ready crash after key rolls back all transition effects",
+      "name": "T1:20fe6ab23d6d443786dd",
       "outcome": "pass"
     },
     {
-      "name": "T1 abandon crash after session rolls back all transition effects",
+      "name": "T1:49efa76016812f0218ff",
       "outcome": "pass"
     },
     {
-      "name": "T1 abandon crash after slot rolls back all transition effects",
+      "name": "T1:adb40dcdd3985033359a",
       "outcome": "pass"
     },
     {
-      "name": "T1 abandon crash after key rolls back all transition effects",
+      "name": "T1:999a1df4a8292ab670c6",
       "outcome": "pass"
     },
     {
-      "name": "T1 lost create ACK replays effective state without reallocating or restarting",
+      "name": "T1:8cbaef1a30015a85ca7f",
       "outcome": "pass"
     },
     {
-      "name": "T1 lost ready ACK replays effective state without reallocating or restarting",
+      "name": "T1:94ddcde33d31b562e3d8",
       "outcome": "pass"
     },
     {
-      "name": "T1 fixed revision ready/abandon race with ready first",
+      "name": "T1:aa22ccdafa15cdc42732",
       "outcome": "pass"
     },
     {
-      "name": "T1 fixed revision ready/abandon race with abandon first",
+      "name": "T1:3a504fcda08fbfaab69a",
       "outcome": "pass"
     },
     {
-      "name": "T2 guard at receipt -1ms",
+      "name": "T2:52be3e770d593fe08cf7",
       "outcome": "pass"
     },
     {
-      "name": "T2 guard at receipt +0ms",
+      "name": "T2:5b5f0c3a65e64ddfa11a",
       "outcome": "pass"
     },
     {
-      "name": "T2 guard at receipt +1ms",
+      "name": "T2:1cac15a886f6e0d3aea5",
       "outcome": "pass"
     },
     {
-      "name": "T2 negative elapsed receipt is retained as irreparable rather than silently accepted timing",
+      "name": "T2:6fa86500adda3831dbde",
       "outcome": "pass"
     },
     {
-      "name": "T2 prepare deadline -1ms",
+      "name": "T2:7113e359bdb2e99b27ef",
       "outcome": "pass"
     },
     {
-      "name": "T2 intake at play deadline -1ms",
+      "name": "T2:e40732c9b729c3b753b5",
       "outcome": "pass"
     },
     {
-      "name": "T2 final guard at play deadline -1ms",
+      "name": "T2:92d949d4ae7e6d7aada0",
       "outcome": "pass"
     },
     {
-      "name": "T2 prepare deadline +0ms",
+      "name": "T2:9e8a4d7b6891b62d5621",
       "outcome": "pass"
     },
     {
-      "name": "T2 intake at play deadline +0ms",
+      "name": "T2:cbfa4172b1860def0685",
       "outcome": "pass"
     },
     {
-      "name": "T2 final guard at play deadline +0ms",
+      "name": "T2:2cc074502db4d24513ff",
       "outcome": "pass"
     },
     {
-      "name": "T2 prepare deadline +1ms",
+      "name": "T2:91b3b26f680b6d471df3",
       "outcome": "pass"
     },
     {
-      "name": "T2 intake at play deadline +1ms",
+      "name": "T2:d0b023616afc45346570",
       "outcome": "pass"
     },
     {
-      "name": "T2 final guard at play deadline +1ms",
+      "name": "T2:2d2e8a69aad2fd0a2a2f",
       "outcome": "pass"
     },
     {
-      "name": "T2 commit/ACK after synthetic deadline preserves predeadline guard and original receipt",
+      "name": "T2:3a16b7c7c2e49e9d8b0b",
       "outcome": "pass"
     },
     {
-      "name": "T2 backward post-commit observation plus lost ACK/app+DB restart never discards winner",
+      "name": "T2:3131fbcaa8f38a9b9964",
       "outcome": "pass"
     },
     {
-      "name": "T2 private post-commit diagnostic write failure leaves exact receipt recoverable",
+      "name": "T2:fa224f2a98ab4c72112e",
       "outcome": "pass"
     },
     {
-      "name": "T2 abandon wins against a paused predeadline intake and prevents late receipt",
+      "name": "T2:aaeaa3408e574e9e6816",
       "outcome": "pass"
     },
     {
-      "name": "T2 expire wins against a paused predeadline intake and prevents late receipt",
+      "name": "T2:6296f2e0dbdc2fe2c781",
       "outcome": "pass"
     },
     {
-      "name": "T3 resolver-first fences an older transaction; empty read, time and abandon cannot replace intent",
+      "name": "T3:31867abfc44696dfe32d",
       "outcome": "pass"
     },
     {
-      "name": "T3 completion-first forces an older resolver snapshot to recover the committed winner",
+      "name": "T3:47ef68c38bdc07ffdddc",
       "outcome": "pass"
     },
     {
-      "name": "T3 competing resolvers serialize one abort and leave no old transaction able to commit",
+      "name": "T3:46d510229e16f07a2788",
       "outcome": "pass"
     },
     {
-      "name": "T3 aborted alias keys rejoin a new generation without retaining stale pending bindings",
+      "name": "T3:f440b3cf497e5ecb96c5",
       "outcome": "pass"
     },
     {
-      "name": "T3 transient server transaction failure retries body with the original receipt",
+      "name": "T3:86ac671dd13c726d9799",
       "outcome": "pass"
     },
     {
-      "name": "T2/T3 transient retry rechecks deadline instead of reserving a terminal win",
+      "name": "T2/T3:01237f813ab3f1862b9e",
       "outcome": "pass"
     },
     {
-      "name": "T3 failCommand unknown commit outcome retries COMMIT, not the transaction body",
+      "name": "T3:8f5a0982edc7c97beb8e",
       "outcome": "pass"
     },
     {
-      "name": "T3 closed commit connections exhaust bounded recovery; app restart resolves the pending generation",
+      "name": "T3:cfec4f25e252ad7ea0a4",
       "outcome": "pass"
     },
     {
-      "name": "T3 durable commit with lost write-concern ACK returns COMMIT_UNKNOWN then winner after restart",
+      "name": "T3:f2281ea803fcf60f4eb5",
       "outcome": "pass"
     },
     {
-      "name": "T3 resolver crash after session cannot leave partial abort proof",
+      "name": "T3:19eba23fd6c8a5074e20",
       "outcome": "pass"
     },
     {
-      "name": "T3 resolver crash after intent cannot leave partial abort proof",
+      "name": "T3:16f6b4645af40f04bd0e",
       "outcome": "pass"
     },
     {
-      "name": "T3 resolver crash after key cannot leave partial abort proof",
+      "name": "T3:b637f40f96ade4efbda2",
       "outcome": "pass"
     },
     {
-      "name": "T3 actual primary stepdown invalidates paused transaction and preserves intent recovery",
+      "name": "T3:a30e61558110dd0fa565",
       "outcome": "pass"
     },
     {
-      "name": "T4 SIGKILL after finish:read before commit rolls back every final effect after DB restart",
+      "name": "T4:410ff25f1066426bda1e",
       "outcome": "pass"
     },
     {
-      "name": "T4 SIGKILL after finish:result before commit rolls back every final effect after DB restart",
+      "name": "T4:394a23bcaedf318c2fc8",
       "outcome": "pass"
     },
     {
-      "name": "T4 SIGKILL after finish:intent before commit rolls back every final effect after DB restart",
+      "name": "T4:c2f720e04408cbd75741",
       "outcome": "pass"
     },
     {
-      "name": "T4 SIGKILL after finish:session before commit rolls back every final effect after DB restart",
+      "name": "T4:35d175d889c951645864",
       "outcome": "pass"
     },
     {
-      "name": "T4 SIGKILL after finish:slot before commit rolls back every final effect after DB restart",
+      "name": "T4:7cbd036420045d12c6cf",
       "outcome": "pass"
     },
     {
-      "name": "T4 SIGKILL after finish:key before commit rolls back every final effect after DB restart",
+      "name": "T4:3aa49d189fddc64f40d9",
       "outcome": "pass"
     },
     {
-      "name": "T4 SIGKILL after finish:outbox before commit rolls back every final effect after DB restart",
+      "name": "T4:b4ff2fcbbf45d537af59",
       "outcome": "pass"
     },
     {
-      "name": "T4 two completion processes recover one immutable receipt and one outbox event",
+      "name": "T4:f71b583728259974fe6b",
       "outcome": "pass"
     },
     {
-      "name": "T4 stale cleanup snapshot cannot remove a successor profile slot",
+      "name": "T4:62590b037c0bb4dcdf66",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2:af2feaea1bc8e53792d8",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2:44c244fbb214d82a3899",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2:e1497ad45a831b974c0b",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2:33a7b1d4ba4ab77c6c7e",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2:f25495f17e9071b92d6d",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2:722a7e63c2ec2f334909",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2:93154ff8a393b46405d2",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2:f6b8692ab7457ec3a190",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2:ee4fc440a993c33a2a23",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2:49ece517a86938b8d1b6",
+      "outcome": "pass"
+    },
+    {
+      "name": "T2:ece813d3404fb7394fa0",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1:b7f5651a552b4f85b468",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1:e26503d8aa28503e1504",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1:eac183271860da013c02",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1:d293313aa38946fab551",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1:b7227e742a8156fc93c2",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1:03c45c2b82467da69c33",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1:516c76dd606552666dd3",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1:b36fd57dc66c8a1eee9b",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1:9014f82d90afc00e71a9",
+      "outcome": "pass"
+    },
+    {
+      "name": "T1:549239387003c79a37de",
       "outcome": "pass"
     }
   ]

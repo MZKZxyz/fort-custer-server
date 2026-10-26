@@ -54,6 +54,7 @@ async function finalInvariant(id, expected = 1) {
       assert.equal(await rs.db.collection('slots').countDocuments({ attemptId: id }, options), 0);
       assert.equal(result.transcriptHash, digest(body));
       assert.equal(result.elapsedMs, result.receivedAt - s.startedAt);
+      if (Object.values(result.guardChecks).some(check => check.state !== 'healthy')) assert.notEqual(result.clockDisposition, 'healthy');
     } else {
       assert.equal(s.state, 'STARTED'); assert.equal(s.resultId, undefined);
       assert.equal(intents.filter(i => i.state === 'completed').length, 0);
@@ -306,7 +307,7 @@ test('T3 resolver-first fences an older transaction; empty read, time and abando
   await code(store.transition(actor, s._id, 'abandon', 'a', { now: 999, ifMatch: 3 }), 'COMMIT_UNKNOWN');
   await code(store.expire(actor, s._id, 999), 'COMMIT_UNKNOWN');
   const resolution = (await ok(b.run('resolve', [actor, s._id]))).value;
-  assert.equal(resolution.outcome, 'aborted'); assert.equal(resolution.revision, intent.expectedRevision + 1);
+  assert.equal(resolution.outcome, 'aborted'); assert.equal(resolution.revision, intent.expectedRevision + 2);
   a.resume();
   assert.equal((await old).error.code, 'FENCED');
   await finalInvariant(s._id, 0);
@@ -363,19 +364,22 @@ test('T2/T3 transient retry rechecks deadline instead of reserving a terminal wi
 });
 test('T3 failCommand unknown commit outcome retries COMMIT, not the transaction body', async () => {
   const { s, intent } = await pending();
-  const guarded = new Store(rs.client);
-  await rs.fail({ failCommands: ['commitTransaction'], errorCode: 91, errorLabels: ['UnknownTransactionCommitResult'] });
+  const guarded = new Store(rs.client, { hook: async stage => {
+    if (stage === 'finish:admitted') await rs.fail({ failCommands: ['commitTransaction'], errorCode: 91, errorLabels: ['UnknownTransactionCommitResult'] });
+  } });
   const result = await guarded.finish(actor, s._id, intent._id);
-  assert.ok(guarded.stats.commitRetries >= 1); assert.equal(guarded.stats.transactions, 1);
+  assert.ok(guarded.stats.commitRetries >= 1); assert.equal(guarded.stats.transactions, 2);
   assert.equal(result.receivedAt, 30); await finalInvariant(s._id);
 });
 test('T3 closed commit connections exhaust bounded recovery; app restart resolves the pending generation', async () => {
   const { s, intent } = await pending();
+  const w = worker();
+  const finishing = w.run('finish', [actor, s._id, intent._id], { commitAttempts: 1, pause: 'finish:admitted' });
+  await w.paused(finishing);
   // Driver retries commit once internally, then the experiment has one explicit attempt.
   await rs.client.db('admin').command({ configureFailPoint: 'failCommand', mode: { times: 2 },
     data: { failCommands: ['commitTransaction'], closeConnection: true } });
-  const w = worker();
-  const response = await w.run('finish', [actor, s._id, intent._id], { commitAttempts: 1 });
+  w.resume(); const response = await finishing;
   assert.equal(response.error.code, 'COMMIT_UNKNOWN');
   assert.equal((await store.intake(actor, s._id, 'complete', { receivedAt: 60 })).receivedAt, 30);
   await w.close(); await rs.restart();
@@ -387,12 +391,14 @@ test('T3 closed commit connections exhaust bounded recovery; app restart resolve
 });
 test('T3 durable commit with lost write-concern ACK returns COMMIT_UNKNOWN then winner after restart', async () => {
   const { s, intent } = await pending();
+  const w = worker();
+  const finishing = w.run('finish', [actor, s._id, intent._id], { commitAttempts: 1, pause: 'finish:admitted' });
+  await w.paused(finishing);
   // failCommand appends this error AFTER executing commit, unlike closeConnection.
   await rs.client.db('admin').command({ configureFailPoint: 'failCommand', mode: { times: 2 },
     data: { failCommands: ['commitTransaction'], writeConcernError: { code: 64, errmsg: 'synthetic lost acknowledgment' },
       errorLabels: ['UnknownTransactionCommitResult'] } });
-  const w = worker();
-  const response = await w.run('finish', [actor, s._id, intent._id], { commitAttempts: 1 });
+  w.resume(); const response = await finishing;
   assert.equal(response.error.code, 'COMMIT_UNKNOWN');
   await rs.failOff();
   // Injected WCE bypasses the normal durability wait: local visibility alone
@@ -428,13 +434,15 @@ test('T3 actual primary stepdown invalidates paused transaction and preserves in
 
 for (const stage of ['read', ...finalStages]) {
   test(`T4 SIGKILL after finish:${stage} before commit rolls back every final effect after DB restart`, async () => {
-    const { s, intent } = await pending(), before = await snapshot(), w = worker();
-    assert.equal((await w.run('finish', [actor, s._id, intent._id], { crash: `finish:${stage}` })).error.code, 'WORKER_EXIT');
+    const { s, intent } = await pending(), w = worker();
+    const finishing = w.run('finish', [actor, s._id, intent._id], { pause: 'finish:admitted', crash: `finish:${stage}` });
+    await w.paused(finishing); const before = await snapshot(); w.resume();
+    assert.equal((await finishing).error.code, 'WORKER_EXIT');
     await rs.restart();
     assert.deepEqual(await snapshot(), before); await finalInvariant(s._id, 0);
     const recovery = worker();
     const result = (await ok(recovery.run('finish', [actor, s._id, intent._id]))).value;
-    assert.equal(result.receivedAt, 30); await finalInvariant(s._id);
+    assert.equal(result.receivedAt, 30); assert.equal(result.clockDisposition, 'review-required'); await finalInvariant(s._id);
   });
 }
 test('T4 two completion processes recover one immutable receipt and one outbox event', async () => {
@@ -454,4 +462,184 @@ test('T4 stale cleanup snapshot cannot remove a successor profile slot', async (
   w.resume(); await ok(cleanup);
   assert.equal((await rs.db.collection('slots').findOne({ ...actor })).attemptId, successor._id);
   assert.equal((await rs.db.collection('sessions').findOne({ _id: s._id })).state, 'ABANDONED');
+});
+
+test('T2 QA A failed reversal evidence update retains a durable unresolved hold through retry and restart', async () => {
+  const { s, intent } = await pending(), a = worker();
+  const reversing = a.run('finish', [actor, s._id, intent._id], { guards: [29], pause: 'clock:beforeEvidence' });
+  await a.paused(reversing);
+  await rs.fail({ failCommands: ['update'], errorCode: 2 });
+  a.resume(); assert.equal((await reversing).error.code, 'CLOCK_EVIDENCE_UNAVAILABLE');
+  const admitted = await rs.db.collection('intents').findOne({ _id: intent._id }, { readConcern: { level: 'majority' } });
+  assert.deepEqual(admitted.guardReversals, []);
+  assert.deepEqual(Object.values(admitted.guardChecks), [{ state: 'unresolved' }]);
+  await finalInvariant(s._id, 0);
+  const b = worker();
+  const result = (await ok(b.run('finish', [actor, s._id, intent._id], { guards: [30] }))).value;
+  assert.equal(result.receivedAt, 30); assert.equal(result.clockDisposition, 'review-required');
+  await rs.restart(); assert.deepEqual(await store.resolve(actor, s._id), result);
+  await finalInvariant(s._id);
+});
+
+test('T2 QA B delayed reversal evidence update cannot let a competing finalizer certify healthy', async () => {
+  const { s, intent } = await pending(), a = worker(), b = worker();
+  await ok(b.run('owned', [actor, s._id])); // Warm the competing process before the 1500ms schedule.
+  const reversing = a.run('finish', [actor, s._id, intent._id], { guards: [29], pause: 'clock:beforeEvidence' });
+  await a.paused(reversing);
+  const point = await rs.fail({ failCommands: ['update'], blockConnection: true, blockTimeMS: 1500 });
+  a.resume();
+  await rs.client.db('admin').command({ waitForFailPoint: 'failCommand', timesEntered: point.count + 1, maxTimeMS: 5000 });
+  const winner = (await ok(b.run('finish', [actor, s._id, intent._id], { guards: [30] }))).value;
+  assert.equal(winner.receivedAt, 30); assert.equal(winner.clockDisposition, 'review-required');
+  assert.ok(Object.values(winner.guardChecks).some(check => check.state === 'unresolved'));
+  assert.deepEqual((await ok(reversing)).value, winner);
+  const admitted = await rs.db.collection('intents').findOne({ _id: intent._id }, { readConcern: { level: 'majority' } });
+  assert.deepEqual(admitted.guardReversals, [29]);
+  const observation = await rs.db.collection('observations').findOne({ resultId: winner._id });
+  assert.deepEqual(observation.reversals, [29]);
+  await rs.restart(); assert.deepEqual(await store.resolve(actor, s._id), winner);
+  await finalInvariant(s._id);
+});
+test('T2 failed late reversal evidence write returns the majority winner with its unresolved hold intact', async () => {
+  const { s, intent } = await pending(), a = worker(), b = worker();
+  const reversing = a.run('finish', [actor, s._id, intent._id], { guards: [29], pause: 'clock:beforeEvidence' });
+  await a.paused(reversing);
+  const winner = (await ok(b.run('finish', [actor, s._id, intent._id], { guards: [30] }))).value;
+  assert.equal(winner.clockDisposition, 'review-required');
+  await rs.fail({ failCommands: ['update'], errorCode: 2 });
+  a.resume(); assert.deepEqual((await ok(reversing)).value, winner);
+  assert.deepEqual((await rs.db.collection('intents').findOne({ _id: intent._id })).guardReversals, []);
+  assert.ok(Object.values(winner.guardChecks).some(check => check.state === 'unresolved'));
+  await rs.restart(); assert.deepEqual(await store.resolve(actor, s._id), winner);
+  await finalInvariant(s._id);
+});
+
+for (const stage of ['session', 'intent']) {
+  test(`T2 crash after guard admission ${stage} admits no observation or partial fence`, async () => {
+    const { s, intent } = await pending(), before = await snapshot(), w = worker();
+    assert.equal((await w.run('finish', [actor, s._id, intent._id], { crash: `guard:${stage}` })).error.code, 'WORKER_EXIT');
+    await rs.restart(); assert.deepEqual(await snapshot(), before);
+    const result = await store.finish(actor, s._id, intent._id);
+    assert.equal(result.clockDisposition, 'healthy'); await finalInvariant(s._id);
+  });
+  test(`T2 crash after reversal ${stage} preserves unresolved timing until recovery`, async () => {
+    const { s, intent } = await pending(), w = worker();
+    assert.equal((await w.run('finish', [actor, s._id, intent._id], { guards: [29], crash: `clock:${stage}` })).error.code, 'WORKER_EXIT');
+    await rs.restart();
+    const result = await store.finish(actor, s._id, intent._id);
+    assert.equal(result.clockDisposition, 'review-required'); assert.equal(result.receivedAt, 30);
+    await finalInvariant(s._id);
+  });
+}
+test('T2 unknown clock-admission commit never samples clock and remains timing-held on recovery', async () => {
+  const { s, intent } = await pending(); let sampled = false;
+  const guarded = new Store(rs.client, { commitAttempts: 1, guard: () => { sampled = true; return 30; } });
+  await rs.client.db('admin').command({ configureFailPoint: 'failCommand', mode: { times: 2 }, data: {
+    failCommands: ['commitTransaction'], writeConcernError: { code: 64, errmsg: 'synthetic admission acknowledgment' },
+    errorLabels: ['UnknownTransactionCommitResult'],
+  } });
+  await code(guarded.finish(actor, s._id, intent._id), 'COMMIT_UNKNOWN'); assert.equal(sampled, false);
+  await rs.failOff();
+  await until(async () => Object.keys((await rs.db.collection('intents').findOne({ _id: intent._id }, {
+    readConcern: { level: 'majority' },
+  }))?.guardChecks || {}).length === 1);
+  await rs.restart();
+  const result = await store.finish(actor, s._id, intent._id);
+  assert.equal(result.clockDisposition, 'review-required'); await finalInvariant(s._id);
+});
+test('T2 already durable winner precedes later clock sampling and remains immutable', async () => {
+  const { s, intent } = await pending(), result = await store.finish(actor, s._id, intent._id);
+  const before = await snapshot();
+  const late = new Store(rs.client, { guard: () => { assert.fail('durable winner must precede clock sampling'); } });
+  assert.deepEqual(await late.finish(actor, s._id, intent._id), result);
+  assert.deepEqual(await snapshot(), before); assert.equal(result.clockDisposition, 'healthy');
+});
+test('T2 unknown reversal-evidence commit retains admitted timing hold and receipt on restart', async () => {
+  const { s, intent } = await pending(), w = worker();
+  const reversing = w.run('finish', [actor, s._id, intent._id], {
+    guards: [29], pause: 'clock:beforeEvidence', commitAttempts: 1,
+  });
+  await w.paused(reversing);
+  await rs.client.db('admin').command({ configureFailPoint: 'failCommand', mode: { times: 2 }, data: {
+    failCommands: ['commitTransaction'], writeConcernError: { code: 64, errmsg: 'synthetic evidence acknowledgment' },
+    errorLabels: ['UnknownTransactionCommitResult'],
+  } });
+  w.resume(); assert.equal((await reversing).error.code, 'COMMIT_UNKNOWN'); await rs.failOff();
+  await until(async () => (await rs.db.collection('intents').findOne({ _id: intent._id }, {
+    readConcern: { level: 'majority' },
+  })).guardReversals.includes(29));
+  await rs.restart();
+  const result = await store.finish(actor, s._id, intent._id);
+  assert.equal(result.receivedAt, 30); assert.equal(result.clockDisposition, 'review-required');
+  assert.deepEqual(result.guardReversals, [29]); await finalInvariant(s._id);
+});
+test('T2 resolver fencing a locally detected reversal requires a new generation and later receipt', async () => {
+  const { s, intent } = await pending(), w = worker();
+  const reversing = w.run('finish', [actor, s._id, intent._id], { guards: [29], pause: 'clock:beforeEvidence' });
+  await w.paused(reversing); assert.equal((await store.resolve(actor, s._id)).outcome, 'aborted');
+  w.resume(); assert.equal((await reversing).error.code, 'FENCED');
+  const old = await rs.db.collection('intents').findOne({ _id: intent._id });
+  assert.equal(old.state, 'aborted'); assert.ok(Object.values(old.guardChecks).some(check => check.state === 'unresolved'));
+  await rs.restart();
+  const fresh = await store.intake(actor, s._id, 'complete', { receivedAt: 50 });
+  assert.equal(fresh.generation, 2);
+  const result = await store.finish(actor, s._id, fresh._id);
+  assert.equal(result.receivedAt, 50); assert.equal(result.clockDisposition, 'healthy');
+  await finalInvariant(s._id);
+});
+
+for (const operation of ['create', 'ready']) for (const offset of [-1, 0, 1]) {
+  test(`T1 ${operation} exact replay at deadline ${offset} preserves identity and trusted start`, async () => {
+    const s = operation === 'create' ? await store.create(actor, 'create') : await started();
+    const replay = operation === 'create' ? await store.create(actor, 'create', { now: s.deadline + offset })
+      : await store.transition(actor, s._id, 'ready', 'ready', { now: s.deadline + offset });
+    assert.equal(replay._id, s._id); assert.equal(replay.startedAt, s.startedAt); assert.equal(replay.deadline, s.deadline);
+    assert.equal(replay.state, offset < 0 ? s.state : 'EXPIRED');
+    assert.equal((await counts()).sessions, 1); assert.equal((await counts()).slots, offset < 0 ? 1 : 0);
+    await rs.restart();
+    const persisted = await rs.db.collection('sessions').findOne({ _id: s._id });
+    assert.equal(persisted.state, replay.state); assert.equal(persisted.startedAt, s.startedAt);
+  });
+}
+test('T1 create replay after ready uses the play deadline without restarting the trusted start', async () => {
+  const s = await started();
+  assert.equal((await store.create(actor, 'create', { now: 109 })).state, 'STARTED');
+  const expired = await store.create(actor, 'create', { now: 110 });
+  assert.equal(expired.state, 'EXPIRED'); assert.equal(expired.startedAt, 10); assert.equal(expired._id, s._id);
+  const successor = await store.create(actor, 'successor', { now: 111 });
+  assert.notEqual(successor._id, s._id);
+  assert.equal((await store.transition(actor, s._id, 'ready', 'ready', { now: 112 })).state, 'EXPIRED');
+  assert.equal((await rs.db.collection('slots').findOne({ ...actor })).attemptId, successor._id);
+});
+test('T1 expired create and ready replays retain pending uncertainty and its slot', async () => {
+  const { s } = await pending();
+  for (const now of [109, 110, 111]) {
+    const replies = [await store.create(actor, 'create', { now }), await store.transition(actor, s._id, 'ready', 'ready', { now })];
+    for (const replay of replies) {
+      assert.equal(replay.state, 'STARTED'); assert.equal(replay.saveStatus, 'resolving');
+      assert.equal(replay._id, s._id); assert.equal(replay.startedAt, 10);
+    }
+    assert.equal((await counts()).slots, 1);
+  }
+  await store.resolve(actor, s._id);
+  assert.equal((await store.create(actor, 'create', { now: 111 })).state, 'EXPIRED');
+  assert.equal((await counts()).slots, 0);
+});
+test('T1 expiry replay snapshot loses to concurrent intake and retains pending slot', async () => {
+  const s = await started(), w = worker();
+  const replay = w.run('create', [actor, 'create', { now: 110 }], { pause: 'replay:read' });
+  await w.paused(replay);
+  await store.intake(actor, s._id, 'complete', { receivedAt: 109 });
+  w.resume();
+  const result = (await ok(replay)).value;
+  assert.equal(result.state, 'STARTED'); assert.equal(result.saveStatus, 'resolving');
+  assert.equal((await counts()).slots, 1); await finalInvariant(s._id, 0);
+});
+test('T1 stale expiry replay cannot remove a successor slot after concurrent cleanup', async () => {
+  const s = await started(), w = worker();
+  const replay = w.run('transition', [actor, s._id, 'ready', 'ready', { now: 110 }], { pause: 'replay:read' });
+  await w.paused(replay); await store.expire(actor, s._id, 110);
+  const successor = await store.create(actor, 'successor', { now: 111 });
+  w.resume(); assert.equal((await ok(replay)).value.state, 'EXPIRED');
+  assert.equal((await rs.db.collection('slots').findOne({ ...actor })).attemptId, successor._id);
 });

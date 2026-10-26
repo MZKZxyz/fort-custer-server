@@ -1,9 +1,17 @@
-# Sprint 1.3D — isolated MongoDB transaction feasibility
+# Sprint 1.3F — corrected isolated MongoDB transaction feasibility
 
 Design baseline: `904bc79d81fa8b67a7973ff18ef1f1bb70908835`.
 Scope: [issue #5 handoff 6416631314](https://github.com/MZKZxyz/fort-custer-server/issues/5#issuecomment-6416631314),
 [implementation-plan.md T1–T4](implementation-plan.md#minimum-isolated-mongodb-feasibility-matrix-before-runtime-promotionrollout).
 This is executable storage evidence, not a production v2 implementation or rollout approval.
+
+Correction baseline: `c0ffad6a4adebc6c0c453eb299e1008105e05b83`, on the same
+`feasibility/fc-sys-01-mongo-t1-t4` branch. This focused correction addresses
+[independent QA 6417630513](https://github.com/MZKZxyz/fort-custer-server/issues/5#issuecomment-6417630513)
+and [consolidated handoff 6418441510](https://github.com/MZKZxyz/fort-custer-server/issues/5#issuecomment-6418441510).
+The former 61/220 green runs did **not** close T1–T4: QA reproduced missing
+anomaly holds, stale expired replay and a reporter path leak. Claims below are
+limited to the corrected schedules; targeted independent revalidation is still required.
 
 ## Reproduce
 
@@ -18,6 +26,7 @@ export MONGOD_BINARY=/path/to/mongod
 
 # Dedicated experiment, with ordinary failure diagnostics.
 node --test test/mongo-feasibility.test.js
+node --test test/evidence-reporter.test.js
 
 # Full automatic discovery, including all existing tests and offline RFC models.
 npm test
@@ -58,25 +67,35 @@ Validated with Node **24.19.0**, Mongoose **8.14.1**, its existing MongoDB drive
 journaling. No new package installation was needed for execution.
 
 The committed [dedicated results](mongo-feasibility-results.json) and
-[full regression results](mongo-regression-results.json) record each test name and
-outcome. The reporter only emits an allowlist of names, outcomes and counts; it
-omits stack traces, filesystem paths, hosts, ports, process IDs, account IDs,
-environment values and raw database logs. Fixtures contain synthetic identities.
+[full regression results](mongo-regression-results.json) record stable test
+identifiers and outcomes. Reporter schema **2** treats even test names as untrusted:
+ordinary titles become a fixed T1–T8/test category plus the first 20 hexadecimal
+digits of their SHA-256 digest (`safeName(title)`); file-level failure names become
+the fixed label `file-level failure`. No free-form title, exception, diagnostic,
+file/host/process/account field, stdout or stderr is emitted. This sacrifices
+file-level identity to avoid publishing paths. Identifiers can be matched to source
+titles using the exported `safeName` helper without publishing those titles.
+Regression coverage includes POSIX, Windows, UNC, relative and file-URL failure
+names, arbitrary private strings, and a real child Node import-time exception
+with private stderr. Fixtures contain synthetic identities.
 The final runs supplied an intentionally unusable loopback `MONGO_URI` to confirm
 that the suites continue to own their database connections.
 
 | Check | Outcome |
 | --- | --- |
-| Dedicated MongoDB feasibility | 61 passed, 0 failed/skipped/todo |
-| Full `npm test`, automatic discovery | 220 passed, 0 failed/skipped/todo |
-| Existing tests within that full run | 159 passed, including 124 offline RFC fixtures |
+| Dedicated MongoDB feasibility | 82 passed, 0 failed/skipped/todo |
+| Full `npm test`, automatic discovery | 243 passed, 0 failed/skipped/todo |
+| Existing tests plus reporter regressions within that full run | 159 unchanged tests (including 124 offline RFC fixtures), plus 2 reporter tests, passed |
 | All tracked and new JS/MJS syntax | Passed |
 | RFC replay reproduction | Byte-identical to pinned replay output |
-| Existing CI CLI smoke and deterministic report checks | Seed, 1,000-seed batch, 10,000-seed benchmark and report validator passed locally |
+| Existing CI CLI smoke and deterministic report checks | Passed in Sprint 1.3D; analyzer code/reports unchanged; not rerun for this correction |
 | Whitespace and unchanged application/manifests | Passed |
 
-The application, existing test files, manifests and lockfile are byte-unchanged
-from the design baseline. No CI run was polled. No PR, merge or deployment was made.
+Production application code, pre-feasibility regression test files, manifests
+and lockfile are byte-unchanged from the design baseline. The synthetic feasibility
+tests were extended and the reporter regression file was added. No CI run was
+polled. No PR, merge or deployment was made. The correction commit is local;
+publication requires explicit owner authorization.
 
 ## What the experiment exercises
 
@@ -105,10 +124,73 @@ expiration, or clock reversal cannot authorize a new receipt. Expiry and abandon
 block on pending intents; cleanup before intake wins through the same session
 write conflict. Slot deletion always includes the old attempt selector.
 
+### Corrected clock ordering and failure policy
+
+Before sampling a local clock, each finalizer commits an **unresolved check token**
+on the intent and advances both session revision and expected intent revision in
+one majority/journaled transaction. No clock is sampled if this admission is
+failed or commit-unknown. A matching durable result is checked first and returned
+without a new token or clock observation.
+
+The next transaction reads that admission and the shared fences. A backward sample
+commits the token's reversed state, exact sample, and both revision updates
+together; it returns `CLOCK_UNAVAILABLE` only **after** that evidence transaction
+commits, with no final receipt effects. Matched updates are checked. Transaction
+retries retain local reversal samples so a later healthy sample cannot erase them.
+A non-unknown evidence-write failure returns `CLOCK_EVIDENCE_UNAVAILABLE`; an
+unknown evidence commit returns `COMMIT_UNKNOWN`. In either case the pre-admitted
+token remains unresolved or reversed. A later finalizer cannot remove another
+worker's token: the immutable receipt is `review-required` whenever any admitted
+check is unresolved/reversed, even if its own sample is healthy.
+
+Local detection and durable evidence are distinct. A process may die before its
+numeric sample is persisted; the guarantee is **a durable timing hold**. Recovery
+of the numeric sample requires a successful evidence write. A crash after admission can conservatively hold
+timing even if no reversal actually occurred. This extra admission transaction
+and possible false-positive hold are deliberate costs, not production policy or
+performance certification. The synthetic check map has no production growth cap
+or authorized hold-release/repair worker; those remain implementation work.
+
+If another finalizer wins during an evidence-write delay, its receipt already
+contains the admitted unresolved check and stays timing-held. The delayed worker
+retries under the same fences, records the exact late reversal on the completed
+intent and private observation, and returns that unchanged winner. It never
+rewrites its timestamps/disposition or emits another receipt event. If the late
+evidence write fails, a majority lookup returns the durable winner with its
+unresolved hold intact; the numeric sample is not claimed as persisted. A failed
+winner lookup returns COMMIT_UNKNOWN, not abort proof. This extra failed-write
+schedule is tested through restart. If a resolver
+instead proves abort first, the old worker is fenced; the old generation retains
+its check and only a new generation with a later receipt can proceed. Expiry or
+an empty lookup alone cannot clear it. Unknown admission/evidence commits and both
+write-boundary crash cases are exercised, not just sequential success.
+
+The original final-write crash tests now capture their comparison snapshot
+**after durable clock admission**: all final effects roll back, while the earlier
+unresolved timing check intentionally survives. Recovery of that original receipt
+therefore stays review-required. Separate crash tests show admission's two writes
+are themselves atomic and cannot admit a clock sample before durable completion.
+
+### Corrected effective replay
+
+After ownership and payload/key checks, exact create/ready replay evaluates the
+stored session's current prepare/play deadline. With no pending intent, equality
+or later atomically changes the session to EXPIRED and releases only that attempt's
+slot; the reply preserves attempt ID, trusted start and original deadline. Exact
+replay tests cover deadline −1/0/+1 and actual DB restart. Create replay after
+ready uses the play deadline, not the old preparation boundary. Replay after
+expiry cannot restart time or delete a replacement slot.
+
+A pending generation takes precedence: replay reports stored STARTED plus
+`saveStatus: resolving` and retains the slot even after the deadline. A competing
+intake/resolver/cleanup uses the same session fence. Tests pause expired replays
+on old snapshots, then commit intake or cleanup/successor allocation; retries
+observe the pending generation or terminal winner instead of deleting its slot.
+
 | Matrix row | Real database schedules and assertions |
 | --- | --- |
 | T1 | Two independent processes pause on snapshots before competing writes. Same-profile creates serialize; same account/create or complete key across subprofiles conflicts. Another account has its own namespace. Ready/abandon reuse keys across attempts, reject changed nonce/grid/rules/reason within an attempt, enforce ownership before replay, and race at one fixed revision in both orders. Alternate completion keys retain one body/generation/time; changed transcript hashes and foreign ownership fail. SIGKILL before intake writes and after every intake/create/ready/abandon statement leaves no partial effects after DB restart. Lost create/ready/intake ACKs retain original IDs/start/receipt. |
-| T2 | Guard at receipt −1/0/+1ms; prepare, intake and final guard at deadline −1/0/+1ms. Reversal aborts final effects, persists anomaly evidence, and recovery of that receipt stays review-required. Negative elapsed is retained as irreparable. Guard before deadline allows a later commit/ACK; retry at the deadline fails. Backward post-commit observations and failed diagnostic writes cannot discard a saved winner. Abandon/expiry can beat paused intake; neither can bypass a pending uncertain generation. |
+| T2 | Guard at receipt −1/0/+1ms; prepare, intake and final guard at deadline −1/0/+1ms. QA's exact failed-update error-2 schedule retains an unresolved hold; its exact 1500ms delayed-update vs competing-finalizer schedule returns one timing-held immutable winner and retains late evidence. Admission/evidence SIGKILL and unknown commits preserve holds; resolver-first fences the old generation; an already durable winner is never re-sampled. Negative elapsed is irreparable. Guard before deadline allows a later commit/ACK; retry at the deadline fails. Post-commit diagnostic failures cannot discard a saved winner. |
 | T3 | Both completion/resolver snapshot orderings, two competing resolvers, stale completion fencing, new later receipt only after durable abort proof, and atomic resolver crash recovery. Real `failCommand` write conflicts retry the body and recheck the guard; injected unknown commit errors retry commit without replacing the receipt. Closed commit connections produce an unknown/no-winner recovery schedule. Post-execution write-concern errors produce an unknown/durable-winner schedule after majority visibility is established. Actual single-member forced primary stepdown invalidates the old transaction; worker restart recovers intent or winner. |
 | T4 | SIGKILL before first final write and after **each** result/intent/session/slot/key/outbox statement, followed by actual MongoDB SIGKILL/restart, compares the complete pre/post collection snapshots. Recovery completes exactly once. SIGKILL after acknowledged majority commit preserves exact structured receipt/digest/elapsed and one event. Concurrent finalizers return the same winner. A stale cleanup snapshot cannot delete a successor slot. |
 
@@ -120,7 +202,9 @@ No date eligibility or inventory grant is implemented in this receipt experiment
 
 ## Findings and limits
 
-The candidate shared-fence design is feasible on the tested topology. Snapshot
+The corrected shared-fence schedules pass on the tested topology; these author
+passes are not independent QA sign-off. In particular, original green counts did
+not establish the three guarantees corrected here. Snapshot
 reads alone would not prove an absent result was aborted: the resolver's writes
 make a stale finalizer conflict/retry and then observe the winning state. Multiple
 operation keys cannot open a second pending generation; neither clock catch-up
@@ -146,7 +230,10 @@ The following remain **UNVERIFIED**, not implicitly covered by these passes:
 * Real clock monitors, drift/uncertainty bounds, clock epochs across machines,
   authorized repair/adjudication and service health. All timestamps and health
   disposition inputs here are trusted fixtures. Guard/receipt and expiration
-  ordering is demonstrated; actual time quality is not.
+  ordering and conservative admitted-check holds are demonstrated; actual time
+  quality, bounded check retention, authorized hold release and liveness during
+  indefinite storage failure are not. Numeric process-local samples cannot be
+  recovered after death without a successful evidence commit; the prior hold survives.
 * Authentication/HTTP envelopes, authorization against real accounts, canonical
   ingress parsing, quotas, transcript validation/admission/storage limits,
   browser reload/accessibility behavior and exact HTTP-byte serialization.
@@ -163,7 +250,9 @@ The following remain **UNVERIFIED**, not implicitly covered by these passes:
 
 ## Recommended next implementation step
 
-Keep issue #5 in design/review. Resolve D2's disclosed no-pause/server-receipt
+Keep issue #5 OPEN/in design-review. Obtain targeted independent QA revalidation
+of the pinned correction SHA for the two P2 findings and reporter P3; do not treat
+these author passes as closing that gate. Resolve D2's disclosed no-pause/server-receipt
 metric and D5/D6 timing-only/untimed core-completion credit and legacy reward UX.
 Then authorize the planned cohesive, OFF/shadow session/replay/outcome-recovery
 package with compatible all-writer date ledger/SYS-03 boundary and necessary
