@@ -7,11 +7,14 @@ import dotenv from 'dotenv';
 import userRoutes from './routes/userRoutes.js';
 import leaderboardRoutes from './routes/leaderboardRoutes.js';
 import mazeRoutes from './routes/mazeRoutes.js';
+import { installPlayableRuntime } from './services/playable/runtime.js';
 dotenv.config();
 
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+// OFF by default; enabling before all-writer compatibility fails before DB access.
+installPlayableRuntime(app);
 
 // Middleware
 app.use(cors());

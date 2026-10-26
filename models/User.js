@@ -4,6 +4,8 @@ const SubProfileSchema = new mongoose.Schema({
   name: { type: String, required: true },
   avatar: { type: String },
   age: { type: Number },
+  // No default/backfill: only the compatible lifecycle/grant transaction sets it.
+  collectibleWriterVersion: { type: String, enum: ['shared-date-v1'] },
   progress: { type: Map, of: Object, default: {} }, // e.g., {"2025-05-26": { completed: true, time: 132 }}
   rewards: {
     type: Map,
