@@ -4,7 +4,8 @@ import { fail, matched, PlayableError } from './errors.js';
 
 export const hash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 export const COLLECTIONS = Object.freeze(['sessions', 'slots', 'keys', 'intents', 'transcripts', 'results',
-  'outbox', 'observations', 'dateHistory', 'dateLedger', 'progress']);
+  'outbox', 'observations', 'dateHistory', 'dateLedger', 'progress', 'writerEpochs',
+  'profileOrigins', 'mazeOrigins', 'grants', 'deliveries', 'legacyIntents', 'legacyReceipts']);
 export const operationScope = (actor, operation, key, id = '') => ({ accountId: actor.accountId,
   operation, key, scope: ['ready', 'abandon'].includes(operation) ? id : '' });
 export const identity = actor => ({ accountId: actor.accountId, profileId: actor.profileId });
@@ -35,6 +36,10 @@ export class PlayableRepository {
     for (const name of ['dateLedger', 'dateHistory', 'progress']) {
       await this.c(name).createIndex({ accountId: 1, profileId: 1, date: 1 }, { unique: true });
     }
+    await this.c('profileOrigins').createIndex({ accountId: 1, profileId: 1 }, { unique: true });
+    await this.c('mazeOrigins').createIndex({ date: 1 }, { unique: true });
+    await this.c('grants').createIndex({ accountId: 1, profileId: 1, date: 1 }, { unique: true });
+    await this.c('deliveries').createIndex({ eventId: 1, consumer: 1 }, { unique: true });
   }
   async tx(body, { notify = true } = {}) {
     for (let n = 0; n < this.attempts; n++) {
@@ -57,7 +62,12 @@ export class PlayableRepository {
       } catch (error) {
         if (error.code === 'COMMIT_UNKNOWN') throw error;
         if (!committing || error.hasErrorLabel?.('TransientTransactionError')) await session.abortTransaction().catch(() => {});
-        if ((error.hasErrorLabel?.('TransientTransactionError') || error.code === 11000) && n + 1 < this.attempts) continue;
+        if ((error.hasErrorLabel?.('TransientTransactionError') || error.code === 11000) && n + 1 < this.attempts) {
+          // Let the winning writer release epoch/profile locks instead of burning
+          // all bounded attempts in a tight contention loop.
+          await new Promise(resolve => setTimeout(resolve, Math.min(5 * 2 ** n, 100)));
+          continue;
+        }
         if (error instanceof PlayableError) throw error;
         fail('SAVE_UNAVAILABLE', 503);
       } finally { await session.endSession(); }

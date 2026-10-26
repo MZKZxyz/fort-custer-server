@@ -7,6 +7,7 @@ import Maze from '../models/Maze.js'; // make sure this is imported
 import RewardItem from '../models/RewardItem.js';
 import { protect } from '../middleware/authMiddleware.js';
 
+export function createMazeRouter({ complete = completeAttempt, compatible = false } = {}) {
 const router = express.Router();
 
 // Reject invalid dates instead of normalizing overflow dates or throwing in handlers.
@@ -32,6 +33,9 @@ router.post('/start', protect, validateAttempt, async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' });
     const sub = user.subProfiles.id(subProfileId);
     if (!sub) return res.status(404).json({ error: 'Sub-profile not found' });
+    if (!compatible && sub.collectibleWriterVersion !== undefined) return res.status(409).json({
+      error: 'This profile requires the compatible completion writer.', code: 'COMPATIBLE_WRITER_REQUIRED',
+    });
 
     assertUserVersion(user);
     const maze = await Maze.findOne({ date });
@@ -74,7 +78,7 @@ router.post('/start', protect, validateAttempt, async (req, res) => {
 // POST /maze/complete
 router.post('/complete', protect, validateAttempt, async (req, res) => {
   try {
-    const result = await completeAttempt(req.user.id, req.body);
+    const result = await complete(req.user.id, req.body);
     res.json(result);
   } catch (err) {
     if (!err.status) console.error('Maze completion error:', err);
@@ -118,4 +122,6 @@ router.get('/rewards/all', async (req, res) => {
   }
 });
 
-export default router;
+return router;
+}
+export default createMazeRouter();

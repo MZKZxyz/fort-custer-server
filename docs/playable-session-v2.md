@@ -1,5 +1,11 @@
 # Sprint 1.4A: OFF-by-default playable-session runtime
 
+Sprint 1.4C continuation: [shared collectible integration](shared-collectibles.md)
+now supplies compatible v1/v2 inline atomic grants and trusted profile/date
+provenance. The startup interlock is unchanged. The 1.4A counts and missing-writer
+statements below describe the independently reviewed starting slice; current
+integration evidence and remaining rollout requirements are in that continuation.
+
 Owner authorization/policies: issue #5 comment 6426752068. Freshly fetched main
 baseline: `d82c272b47486161bf9f37508b69fe3240678655`. Technical reference:
 independently accepted feasibility `fd797b607a833bc6bc1029e4c159d1474ef9ec31`,

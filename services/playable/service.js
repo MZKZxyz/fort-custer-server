@@ -12,9 +12,10 @@ const revision = (s, expected) => {
 };
 
 export class PlayableService {
-  constructor(repository, { clock = systemClock, policy = {}, validator = new RouteValidator(), admissionEnabled = false } = {}) {
+  constructor(repository, { clock = systemClock, policy = {}, validator = new RouteValidator(), admissionEnabled = false, rewards = null } = {}) {
     this.repo = repository; this.clock = clock; this.policy = Object.freeze({ ...POLICY, ...policy });
     this.validator = validator; this.admissionEnabled = admissionEnabled;
+    this.rewards = rewards;
   }
   c(name) { return this.repo.c(name); }
   now() { const value = sample(this.clock); if (!value) fail('CLOCK_UNAVAILABLE', 503); return value; }
@@ -219,7 +220,8 @@ export class PlayableService {
           guardChecks: checks, guardReversals: intent.guardReversals, timing: clockDisposition };
         // Serialize against existing version-checked User/profile mutations too.
         await this.repo.fenceAccount(actor, session);
-        const collectible = await recordAcceptedDate(this.repo, actor, result, session);
+        const collectible = this.rewards ? (await this.rewards.accept(actor, result, session)).view
+          : await recordAcceptedDate(this.repo, actor, result, session);
         result.response = { protocol: PROTOCOL, attemptId: id, date: s.date, status: 'accepted',
           routeValidated: true, progress: { completed: true }, timing: clockDisposition, collectible,
           integrity: { tier: s.manifest.integrityTier, validator: s.manifest.validationPolicyVersion,

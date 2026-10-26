@@ -5,16 +5,24 @@ import { PlayableRepository } from '../../services/playable/repository.js';
 import { PlayableService } from '../../services/playable/service.js';
 import { createPlayableRouter } from '../../routes/playableRoutes.js';
 let client, server;
-process.once('message', async ({ uri, secret, at, crash }) => {
+process.once('message', async ({ uri, secret, at, crash, compatible = false, epochId, ackEventId }) => {
   if (!/^mongodb:\/\/127\.0\.0\.1:\d+\/fc_synthetic\?replicaSet=fcSynthetic$/.test(uri)) throw new Error('Unsafe test database');
-  client = new mongoose.mongo.MongoClient(uri);
-  await client.connect();
+  if (compatible) { process.env.JWT_SECRET = secret; await mongoose.connect(uri); client = mongoose.connection.getClient(); }
+  else { client = new mongoose.mongo.MongoClient(uri); await client.connect(); }
   const repo = new PlayableRepository(client, client.db(), { hook: async stage => {
     if (stage === crash) process.kill(process.pid, 'SIGKILL');
   } });
-  const service = new PlayableService(repo, { admissionEnabled: true,
-    clock: { sample: () => ({ at, epoch: 'test-epoch', healthy: true, uncertaintyMs: 1, evidenceId: 'synthetic-monitor' }) } });
-  const app = express(); app.use('/api/v2', createPlayableRouter({ service, secret, enabled: true }));
+  const clock = { sample: () => ({ at, epoch: 'test-epoch', healthy: true, uncertaintyMs: 1, evidenceId: 'synthetic-monitor' }) };
+  const app = express();
+  if (compatible) {
+    const { createCompatibleBundle } = await import('../../services/collectibles/bundle.js');
+    const bundle = createCompatibleBundle({ repository: repo, epochId, secret, clock, choose: () => 0, admissionEnabled: true });
+    if (ackEventId) { await bundle.rewards.acknowledge(ackEventId); process.send({ acked: true }); return; }
+    app.use('/api/v2', bundle.v2); app.use(express.json()); app.use('/users', bundle.users); app.use('/maze', bundle.maze);
+  } else {
+    const service = new PlayableService(repo, { admissionEnabled: true, clock });
+    app.use('/api/v2', createPlayableRouter({ service, secret, enabled: true }));
+  }
   server = app.listen(0, '127.0.0.1', () => process.send({ port: server.address().port }));
 });
 process.on('disconnect', async () => { server?.close(); await client?.close(); process.exit(); });

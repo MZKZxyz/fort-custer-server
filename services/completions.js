@@ -28,6 +28,11 @@ export async function completeAttempt(userId, { subProfileId, date, attemptId },
       // Historical reward attribution cannot safely be reconstructed.
       throw fail(409, 'This older attempt is already saved. View your results in the maze collection.', 'LEGACY_COMPLETED');
     }
+    // Saved snapshots above remain readable after a compatibility drain/rollback.
+    // An adopted profile must never fall back to per-attempt awards.
+    if (sub.collectibleWriterVersion !== undefined) {
+      throw fail(409, 'This profile requires the compatible completion writer.', 'COMPATIBLE_WRITER_REQUIRED');
+    }
     // Mongoose omits its version predicate for documents without __v.
     // Never complete such imported/corrupt records with an unguarded write.
     assertUserVersion(user);

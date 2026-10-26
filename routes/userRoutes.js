@@ -7,6 +7,7 @@ import { protect } from '../middleware/authMiddleware.js';
 
 dotenv.config();
 
+export function createUserRouter({ lifecycle = null } = {}) {
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET
 
@@ -15,9 +16,10 @@ router.post('/register', async (req, res) => {
   const { email, password } = req.body;
   try {
     const hashed = await bcrypt.hash(password, 10);
-    const user = await User.create({ email, password: hashed });
+    const user = lifecycle ? await lifecycle.register({ email, password: hashed }) : await User.create({ email, password: hashed });
     res.status(201).json({ message: 'User created' });
   } catch (err) {
+    if (lifecycle && err.status) return res.status(err.status).json({ error: err.code });
     res.status(400).json({ error: err.message });
   }
 });
@@ -44,11 +46,12 @@ router.post('/subprofile', protect, async (req, res) => {
   const { name, avatar, age } = req.body;
 
   try {
-    const user = await User.findById(req.user.id);
-    user.subProfiles.push({ name, avatar, age });
-    await user.save();
+    let user;
+    if (lifecycle) user = await lifecycle.addProfile(req.user.id, { name, avatar, age });
+    else { user = await User.findById(req.user.id); user.subProfiles.push({ name, avatar, age }); await user.save(); }
     res.status(201).json(user.subProfiles);
   } catch (err) {
+    if (lifecycle && err.status) return res.status(err.status).json({ error: err.code });
     res.status(400).json({ error: err.message });
   }
 });
@@ -140,4 +143,6 @@ router.post('/subprofile/:id/progress', protect, async (req, res) => {
   }
 });
 
-export default router;
+return router;
+}
+export default createUserRouter();
