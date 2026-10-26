@@ -1,0 +1,25 @@
+{
+  "loadingExcludedMs": 12000,
+  "startAckDelayChargedMs": 600,
+  "saved": {
+    "id": "result-session-1",
+    "attemptId": "session-1",
+    "receivedAt": 18500,
+    "elapsedMs": 6500,
+    "eligibilityReserved": true,
+    "reward": "held"
+  },
+  "retrySameSnapshot": true,
+  "board": [
+    {
+      "actor": "synthetic-profile",
+      "runClass": "standard",
+      "id": "result-session-1",
+      "attemptId": "session-1",
+      "receivedAt": 18500,
+      "elapsedMs": 6500,
+      "eligibilityReserved": true,
+      "reward": "held"
+    }
+  ]
+}
