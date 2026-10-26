@@ -7,6 +7,36 @@ import { recordAcceptedDate } from '../playable/date-ledger.js';
 
 export const WRITER_VERSION = 'shared-date-v1';
 const MAX_CATALOG = 4096, MAX_INVENTORY = 4096;
+const reservedKeys = new Set(['__proto__', 'constructor', 'prototype']);
+function storedInventory(value) {
+  // Absence retains the User model's empty-map default; explicit null is data
+  // corruption, not absence. Inspect native BSON values before any model casts.
+  const rewards = value === undefined ? {} : value;
+  if (!rewards || ![Object.prototype, null].includes(Object.getPrototypeOf(rewards))
+    || Object.keys(rewards).length > MAX_INVENTORY
+    || Object.entries(rewards).some(([key, quantity]) => !key || key.startsWith('$') || key.includes('.')
+      || key.includes('\0') || reservedKeys.has(key) || !Number.isSafeInteger(quantity) || quantity < 0)) {
+    fail('INVENTORY_REVIEW_REQUIRED', 503);
+  }
+  return rewards;
+}
+function catalogSnapshot(record) {
+  if (typeof record.id !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(record.id) || reservedKeys.has(record.id)
+    || Buffer.byteLength(JSON.stringify(record)) > 65536) fail('CATALOG_REVIEW_REQUIRED', 503);
+  // Hydration alone casts malformed stored values and does not run validators.
+  // Check raw scalar types first; use the actual schema for required/enums and
+  // defaults. In particular only a missing marketValue receives its default.
+  for (const [key, path] of Object.entries(RewardItem.schema.paths)) {
+    if (!Object.hasOwn(record, key)) continue;
+    if ((path.instance === 'String' && typeof record[key] !== 'string')
+      || (path.instance === 'Number' && (typeof record[key] !== 'number' || !Number.isFinite(record[key])))) {
+      fail('CATALOG_REVIEW_REQUIRED', 503);
+    }
+  }
+  const document = RewardItem.hydrate(record);
+  if (document.validateSync()) fail('CATALOG_REVIEW_REQUIRED', 503);
+  return document.toObject();
+}
 const validDate = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
   && Number.isFinite(Date.parse(`${value}T00:00:00Z`)) && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
 const certified = (epoch, states) => epoch?.version === WRITER_VERSION && states.includes(epoch.state)
@@ -61,17 +91,16 @@ export class SharedRewards {
     const changes = { [`subProfiles.${index}.collectibleWriterVersion`]: WRITER_VERSION };
     let grant = ledger.grantId && await this.repo.c('grants').findOne({ _id: ledger.grantId }, { session });
     if (ledger.state === 'claimed' && !grant) {
-      const rewards = profile.rewards ?? {};
-      if (!rewards || typeof rewards !== 'object' || Array.isArray(rewards) || Object.keys(rewards).length > MAX_INVENTORY) fail('INVENTORY_REVIEW_REQUIRED', 503);
-      const catalog = await this.repo.db.collection('rewarditems').find({}, { session }).sort({ id: 1 }).limit(MAX_CATALOG + 1).toArray();
-      if (catalog.length > MAX_CATALOG || new Set(catalog.map(r => r.id)).size !== catalog.length || catalog.some(r => typeof r.id !== 'string'
-        || !/^[A-Za-z0-9_-]{1,128}$/.test(r.id) || ['__proto__', 'constructor', 'prototype'].includes(r.id)
-        || Buffer.byteLength(JSON.stringify(r)) > 65536)) fail('CATALOG_REVIEW_REQUIRED', 503);
+      const rewards = storedInventory(profile.rewards);
+      const records = await this.repo.db.collection('rewarditems').find({}, { session }).sort({ id: 1 }).limit(MAX_CATALOG + 1).toArray();
+      if (records.length > MAX_CATALOG || new Set(records.map(r => r.id)).size !== records.length) fail('CATALOG_REVIEW_REQUIRED', 503);
+      // Validate the entire catalog, including owned/unselected candidates, before
+      // deciding award or exhaustion. Never persist repaired catalog data here.
+      const catalog = records.map(catalogSnapshot);
       const available = catalog.filter(r => !Object.hasOwn(rewards, r.id));
       const selected = available.length ? this.choose(available.length) : null;
       if (selected !== null && (!Number.isSafeInteger(selected) || selected < 0 || selected >= available.length)) fail('SELECTION_UNAVAILABLE', 503);
-      // Match legacy model hydration/defaults in the frozen old-client snapshot.
-      const reward = selected === null ? null : RewardItem.hydrate(available[selected]).toObject();
+      const reward = selected === null ? null : available[selected];
       if (reward && Object.keys(rewards).length >= MAX_INVENTORY) fail('INVENTORY_REVIEW_REQUIRED', 503);
       if (reward) changes[`subProfiles.${index}.rewards.${reward.id}`] = 1;
       grant = { _id: ledger.grantId, ...scope, version: 'date-grant-v1', sourceResultId: ledger.firstResultId,

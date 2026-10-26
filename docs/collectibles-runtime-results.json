@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "tests": 51,
-  "passed": 51,
+  "tests": 77,
+  "passed": 77,
   "failed": 0,
   "skipped": 0,
   "todo": 0,
@@ -208,6 +208,110 @@
     },
     {
       "name": "test:7e907741fed89c64f495",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:c0c511a863a9a7c70cb0",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:3e51b230dbc94829a99c",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:e59ab48e6582fb712c76",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:064ed4caf6286be42745",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:3b6d5dc166f832a6f589",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:24a67b596eb61a294541",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:6cd1a315df0b395dda0b",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:acd628c576bf658446bc",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:0739e70b55c1adb660a2",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:e117fb0be82ee96be533",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:5dd0edc322834123987f",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:465686cf3594fcc4b33d",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:23742ba3dc95e027ad6c",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:ded1090f533acadb9133",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:e3dca8c771666cecb1b4",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:84a7cdc84f2b87429c09",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:b64be815eded937994fb",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:a11ed353422d350d51be",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:d37c983fd6b26c3b7294",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:10f98d7cb9e97d1701eb",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:b7ec738d86552fd2d92d",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:9682013f5286ce3134c8",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:f5020096d5b001e360b0",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:cfe29df04944d48d4a1b",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:435469b0a3d5695069ac",
+      "outcome": "pass"
+    },
+    {
+      "name": "test:e8a01b981202f972a458",
       "outcome": "pass"
     }
   ]

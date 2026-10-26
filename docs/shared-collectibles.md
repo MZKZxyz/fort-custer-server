@@ -1,4 +1,4 @@
-# Sprint 1.4C: compatible v1/v2 collectible settlement
+# Compatible v1/v2 collectible settlement (Sprints 1.4C and 1.4F)
 
 Continuation of draft PR #8 at independently reviewed
 `d59738d587f82c27a3028bb98930fef6c59d9544`. Authority: issue #7 handoff
@@ -6,6 +6,13 @@ Continuation of draft PR #8 at independently reviewed
 The new-profile condition from QA is addressed by trusted lifecycle provenance.
 The production startup interlock is unchanged: this code is not activation,
 migration, deployment or release approval.
+
+Sprint 1.4F corrects the two P2 stored-data validation defects independently
+reported at `8f6f9a5c80a1422bcea3c72c8dfa938037e88163` in PR #8 comment
+6428507575, following issue #7 handoff 6428582042. The earlier 51/51 and 378/378
+results did not demonstrate malformed catalog/inventory rejection. That QA gate
+remains FAIL until independent targeted revalidation of this correction; author
+results below do not change the independent verdict.
 
 ## One integrated source path, no separate grant switch
 
@@ -62,6 +69,41 @@ Sorting only stabilizes candidate order; it does not change probabilities. Tests
 inject deterministic index selection to force collisions. Max catalog/inventory
 keys are 4096; each catalog snapshot is capped at 64KiB. Invalid/oversized data fails
 closed for review, without normalizing inventory or consuming an opportunity.
+
+## Stored-data validation before a new settlement
+
+Every stored catalog candidate is checked before selection or exhaustion,
+including already-owned and unselected rows. Raw string/number types are checked
+before hydration so casting cannot conceal malformed imports. The actual
+`RewardItem` schema then validates required fields and category/rarity enums.
+Present numeric schema fields must be finite numbers; missing optional
+`marketValue` still defaults to zero in the frozen snapshot. Finite fractional
+market values remain supported by the existing Number schema. The ID grammar,
+uniqueness, 4096-item bound and 64KiB record bound remain unchanged. An invalid
+record returns `CATALOG_REVIEW_REQUIRED` / 503, never a partial reward snapshot.
+This path neither saves defaults back to the catalog nor edits historical grants.
+
+Inventory is inspected from the native stored User record, not a hydrated map.
+Missing inventory retains the model's empty-map default; explicit null, arrays,
+strings and other non-map containers are rejected. Each quantity must be a native
+number representing a nonnegative safe integer (0 through Number.MAX_SAFE_INTEGER).
+Numeric strings, objects/arrays, booleans, null, nonfinite, negative, fractional
+and unsafe values return `INVENTORY_REVIEW_REQUIRED` / 503 without normalization.
+Valid multiples and retired entries remain byte-for-value unchanged. Zero-valued
+entries remain owned by key presence, preserving the original selection rule.
+Historical safe map keys, including spaces/Unicode, are retained; they need not
+match today's narrower catalog-ID grammar. Empty keys, dollar-prefixed keys,
+dots, NUL and reserved prototype properties are refused as unsafe update/map keys.
+
+Validation runs inside the existing completion/claim/grant transaction and before
+new inventory, award or exhaustion effects. A rejection rolls back date history
+created for this attempt, accepted-date progress, claim, grant, embedded source
+completion or v2 result and all final outbox effects. Pending durable intake is
+allowed to remain. Once the synthetic stored data is corrected, retrying the same
+attempt/key uses its original intake receipt/generation and settles once. Saved
+terminal receipts/grants bypass new selection/validation and remain immutable,
+even if the current catalog later becomes malformed. This correction does not
+retroactively repair invalid awards committed by the earlier implementation.
 
 ## Receipt and exhaustion semantics
 
@@ -179,11 +221,11 @@ ignoring an unusable environment MONGO_URI. No persistent/production service is 
 Privacy-filtered evidence is in `collectibles-runtime-results.json` and
 `collectibles-regression-results.json`; test identifiers use schema 2 digests.
 
-Final author results: **51/51 shared collectible tests PASS**, **378/378 complete
+Final 1.4F author results: **77/77 shared collectible tests PASS**, **404/404 complete
 repository tests PASS**, zero failures/skips/todo. All JS/MJS syntax and whitespace
-checks pass; the RFC replay remains byte-identical. The original 327 tests are
-retained unchanged. An earlier full-run sibling race exposed a tight retry spin;
-the bounded backoff above corrects it, and the final full run includes that race.
+checks pass; the RFC replay remains byte-identical. All original 378 tests are
+retained; 26 validation/recovery tests are added. The bounded contention retry
+budget and backoff from 1.4C remain unchanged.
 The startup interlock/entrypoint, manifests, CI, middleware and seed/generator
 scripts remain byte-unchanged from the starting runtime SHA. These results are
 implementation evidence, not independent QA or release certification.
@@ -198,11 +240,35 @@ stepdown, rollback at logical grant writes, application SIGKILL/MongoDB restart,
 and delivery loss/duplicate/stale acknowledgments. Syntax, whitespace and byte-exact
 RFC replay checks are also required.
 
-Next independent QA should pin the updated SHA and re-run the complete suites,
-then challenge provenance certificate/ceiling trust, imported/prepublished dates,
-cross-process v1/v2 winners, interrupted birth/publication transactions, unknown
-grant commit versus majority durability, exhausted expansion and stale delivery.
-Verify default-off and attempted-enable interlocks against the actual entrypoint.
+The new tests first reproduced four HTTP 200 counterexamples before the fix:
+QA's incomplete catalog record on both v1/v2 and nested invalid inventory on both
+v1/v2 (including QA's original three cases). The corrected real authenticated
+paths return the named 503 errors and assert raw inventory/profile/version/catalog
+preservation, no accepted source result/final outbox/date claim, and pending intake.
+Tests cover each required field, enums, types, nonfinite prices, unsafe IDs, owned/
+unselected invalid candidates, quantity ranges, unsafe keys/containers and valid
+defaults. Corrected data permits same-operation retry with original receipt and
+generation. The four exact counterexamples then verify MongoDB SIGKILL/restart,
+a fresh application process, immutable replay and later cross-version same-date
+completion without duplication. Empty-catalog rejection/repair also verifies
+permanent exhaustion through restart and expansion. These are synthetic repair
+fixtures, not operator repair tooling or live data reconciliation.
+
+Reproduce with Node 24 and MongoDB 8.0.16 (set MONGOD_BINARY to the executable):
+
+```sh
+MONGO_URI=mongodb://127.0.0.1:1/do-not-use node --test test/shared-collectibles.test.js
+MONGO_URI=mongodb://127.0.0.1:1/do-not-use npm test
+git ls-files -z '*.js' '*.mjs' | xargs -0 -n1 node --check
+node docs/rfcs/fc-sys-01/replay.mjs | cmp - docs/rfcs/fc-sys-01/replay-output.json
+git diff --check
+```
+
+Request narrowly scoped independent QA at the published correction SHA: revalidate
+these two P2s, raw rollback, repair/same-operation retry, restart/immutable receipt,
+legacy default/retired-quantity compatibility and exhaustion. Re-run dedicated and
+full regressions and verify the unchanged activation safeguards. Existing RFC,
+movement and provenance design are not reopened by this correction.
 
 Still **UNVERIFIED / not release-approved**: multi-member failures/partitions and
 physical durability; production capacity/catalog sizes and external writer/drain

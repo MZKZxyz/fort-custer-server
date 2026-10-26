@@ -382,3 +382,162 @@ test('malformed retired certification cannot confer known-clear birth provenance
   const id=await v1Start();assert.equal((await v1Complete(id)).body.reward,null);assert.equal((await repo.c('dateLedger').findOne()).state,'legacy-held');
   assert.equal(await repo.c('grants').countDocuments(),0);
 });
+
+// Malformed rows are inserted through the native driver: model hydration must
+// never cast, default or hide the stored counterexamples being asserted here.
+async function rawProfile() {
+  return (await User.collection.findOne({ _id: user._id })).subProfiles.find(p => p._id.toString() === actor.profileId);
+}
+async function completion(source) {
+  const id = source === 'v1' ? await v1Start() : await v2Start();
+  return { id, send: options => source === 'v1' ? v1Complete(id, date, options) : v2Complete(id, options),
+    intent: () => repo.c(source === 'v1' ? 'legacyIntents' : 'intents').findOne(),
+    receipt: () => repo.c(source === 'v1' ? 'legacyReceipts' : 'results').findOne() };
+}
+async function rejectedSettlement(op, code, expectedInventory) {
+  const before = await rawProfile(), catalog = await RewardItem.collection.find({}).toArray();
+  const version = (await User.collection.findOne({ _id: user._id })).__v, response = await op.send();
+  assert.equal(response.status, 503, JSON.stringify(response.body));
+  assert.equal(response.body.code ?? response.body.error, code);
+  for (const name of ['dateHistory', 'dateLedger', 'grants', 'outbox', 'progress', 'results', 'legacyReceipts', 'deliveries']) {
+    assert.equal(await repo.c(name).countDocuments(), 0, `No final effects in ${name}`);
+  }
+  const saved = await rawProfile();
+  assert.deepEqual(saved.rewards, expectedInventory);
+  assert.deepEqual(saved, before, 'No embedded attempt, inventory or progress mutation');
+  assert.equal((await User.collection.findOne({ _id: user._id })).__v, version);
+  assert.deepEqual(await RewardItem.collection.find({}).toArray(), catalog, 'No automatic catalog repair');
+  const intent = await op.intent(); assert.equal(intent.state, 'pending');
+  const session = await repo.c('sessions').findOne();
+  if (session) {
+    assert.equal(session.state, 'STARTED'); assert.equal(session.resultId, undefined);
+    assert.equal((await repo.c('slots').findOne()).attemptId, session._id);
+    assert.equal((await repo.c('keys').findOne({ operation: 'complete' })).state, 'pending');
+  }
+  return intent;
+}
+async function repairedSettlement(op, original, expectedInventory, expectedReward = 'alpha') {
+  const response = await op.send(); assert.equal(response.status, 200, JSON.stringify(response.body));
+  assert.equal((response.body.collectible?.reward ?? response.body.reward)?.id ?? null, expectedReward);
+  assert.deepEqual((await rawProfile()).rewards, expectedInventory);
+  const receipt = await op.receipt();
+  assert.equal(receipt.receiptAt ?? receipt.receipt.at, original.receiptAt ?? original.receipt.at);
+  assert.equal((await op.intent()).generation, original.generation);
+  assert.equal(await repo.c('grants').countDocuments(), 1); await invariants();
+  return response;
+}
+for (const source of ['v1', 'v2']) {
+  test(`${source} QA incomplete catalog counterexample rolls back and repaired same-operation award survives restart`, async () => {
+    const op = await completion(source); await RewardItem.deleteMany({});
+    await RewardItem.collection.insertOne({ id: 'malformed' });
+    const original = await rejectedSettlement(op, 'CATALOG_REVIEW_REQUIRED', {});
+    await RewardItem.collection.updateOne({ id: 'malformed' }, { $set: item('malformed') });
+    const winner = await repairedSettlement(op, original, { malformed: 1 }, 'malformed');
+    await rs.restart(); const app = await childApp();
+    // Frozen receipts remain readable even after the catalog regresses again.
+    await RewardItem.collection.updateOne({ id: 'malformed' }, { $unset: { name: '' } });
+    assert.deepEqual((await op.send({ url: app.url })).body, winner.body);
+    const later = source === 'v1' ? await v2Start() : await v1Start();
+    const repeated = source === 'v1' ? await v2Complete(later, { url: app.url }) : await v1Complete(later, date, { url: app.url });
+    assert.equal(repeated.status, 200); assert.equal((repeated.body.collectible?.reward ?? repeated.body.reward).id, 'malformed');
+    assert.deepEqual((await rawProfile()).rewards, { malformed: 1 }); await invariants();
+  });
+  test(`${source} QA nested inventory counterexample rolls back and repaired same-operation award survives restart`, async () => {
+    const op = await completion(source), invalid = { retired: { invalid: true } };
+    await User.collection.updateOne({ _id: user._id }, { $set: { 'subProfiles.0.rewards': invalid } });
+    const original = await rejectedSettlement(op, 'INVENTORY_REVIEW_REQUIRED', invalid);
+    await User.collection.updateOne({ _id: user._id }, { $set: { 'subProfiles.0.rewards': { retired: 7 } } });
+    const winner = await repairedSettlement(op, original, { retired: 7, alpha: 1 });
+    await rs.restart(); const app = await childApp();
+    assert.deepEqual((await op.send({ url: app.url })).body, winner.body);
+    const later = source === 'v1' ? await v2Start() : await v1Start();
+    const repeated = source === 'v1' ? await v2Complete(later, { url: app.url }) : await v1Complete(later, date, { url: app.url });
+    assert.equal(repeated.status, 200); assert.equal((repeated.body.collectible?.reward ?? repeated.body.reward).id, 'alpha');
+    assert.deepEqual((await rawProfile()).rewards, { retired: 7, alpha: 1 }); await invariants();
+  });
+
+  for (const field of ['name', 'image', 'description', 'category', 'rarity']) {
+    test(`${source} catalog required ${field} rejects missing empty null and coercible types before retry`, async () => {
+      const op = await completion(source); let original;
+      for (const value of [undefined, '', null, 42, ['common'], { invalid: true }]) {
+        const row = item('alpha'); if (value === undefined) delete row[field]; else row[field] = value;
+        await RewardItem.collection.replaceOne({ id: 'alpha' }, row);
+        original = await rejectedSettlement(op, 'CATALOG_REVIEW_REQUIRED', {});
+      }
+      await RewardItem.collection.replaceOne({ id: 'alpha' }, item('alpha'));
+      await repairedSettlement(op, original, { alpha: 1 });
+    });
+  }
+  test(`${source} catalog enforces schema enums and finite numeric market values without coercion`, async () => {
+    const op = await completion(source); let original;
+    const patches = [{ category: 'unknown' }, { rarity: 'unknown' },
+      ...['12', null, NaN, Infinity, -Infinity, [], {}, true].map(marketValue => ({ marketValue }))];
+    for (const patch of patches) {
+      await RewardItem.collection.replaceOne({ id: 'alpha' }, { ...item('alpha'), ...patch });
+      original = await rejectedSettlement(op, 'CATALOG_REVIEW_REQUIRED', {});
+    }
+    await RewardItem.collection.replaceOne({ id: 'alpha' }, { ...item('alpha'), marketValue: 12.5 });
+    const valid = await repairedSettlement(op, original, { alpha: 1 });
+    assert.equal((valid.body.collectible?.reward ?? valid.body.reward).marketValue, 12.5);
+  });
+  test(`${source} validates unsafe catalog IDs and every candidate including owned or unselected records`, async () => {
+    const op = await completion(source); let original;
+    await User.collection.updateOne({ _id: user._id }, { $set: { 'subProfiles.0.rewards': { retired: 7 } } });
+    for (const id of [undefined, 42, '', 'bad.path', '$bad', '__proto__', 'constructor', 'prototype', 'x'.repeat(129), 'retired', 'z-unselected']) {
+      const row = { id }; if (id === undefined) delete row.id;
+      await RewardItem.collection.insertOne(row);
+      original = await rejectedSettlement(op, 'CATALOG_REVIEW_REQUIRED', { retired: 7 });
+      await RewardItem.collection.deleteOne({ _id: row._id });
+    }
+    await repairedSettlement(op, original, { retired: 7, alpha: 1 });
+  });
+  test(`${source} rejects raw inventory quantities without casting or normalizing and preserves valid multiples`, async () => {
+    const op = await completion(source); let original;
+    for (const value of [{ invalid: true }, [], '7', null, true, NaN, Infinity, -Infinity, -1, 1.5, Number.MAX_SAFE_INTEGER + 1]) {
+      const rewards = { retired: value };
+      await User.collection.updateOne({ _id: user._id }, { $set: { 'subProfiles.0.rewards': rewards } });
+      original = await rejectedSettlement(op, 'INVENTORY_REVIEW_REQUIRED', rewards);
+    }
+    // Historical safe map keys need not match the narrower current catalog-ID
+    // grammar. Zero is retained as an owned entry, matching legacy key presence.
+    const preserved = { alpha: 5, retired: Number.MAX_SAFE_INTEGER, zero: 0, 'Retired item 🧭': 7 };
+    await User.collection.updateOne({ _id: user._id }, { $set: { 'subProfiles.0.rewards': preserved } });
+    await repairedSettlement(op, original, { ...preserved, beta: 1 }, 'beta');
+  });
+  test(`${source} rejects unsafe raw inventory keys without losing retired entries or consuming the date`, async () => {
+    const op = await completion(source); let original;
+    for (const key of ['bad.path', '$bad', '__proto__', 'constructor', 'prototype', '']) {
+      const rewards = Object.fromEntries([['retired', 7], [key, 1]]);
+      await User.collection.updateOne({ _id: user._id }, { $set: { 'subProfiles.0.rewards': rewards } });
+      original = await rejectedSettlement(op, 'INVENTORY_REVIEW_REQUIRED', rewards);
+    }
+    await User.collection.updateOne({ _id: user._id }, { $set: { 'subProfiles.0.rewards': { retired: 7 } } });
+    await repairedSettlement(op, original, { retired: 7, alpha: 1 });
+  });
+  test(`${source} rejects malformed inventory containers even with an empty catalog then safely exhausts after repair`, async () => {
+    const op = await completion(source); let original; await RewardItem.deleteMany({});
+    for (const rewards of [null, [], 'invalid', 7, new Date(0)]) {
+      await User.collection.updateOne({ _id: user._id }, { $set: { 'subProfiles.0.rewards': rewards } });
+      original = await rejectedSettlement(op, 'INVENTORY_REVIEW_REQUIRED', rewards);
+    }
+    await User.collection.updateOne({ _id: user._id }, { $set: { 'subProfiles.0.rewards': { retired: 7 } } });
+    const winner = await repairedSettlement(op, original, { retired: 7 }, null);
+    assert.equal((await repo.c('grants').findOne()).status, 'exhausted');
+    await rs.restart(); await RewardItem.create(item('new-after-repair'));
+    assert.deepEqual((await op.send()).body, winner.body);
+    const later = source === 'v1' ? await v2Start() : await v1Start();
+    const repeated = source === 'v1' ? await v2Complete(later) : await v1Complete(later);
+    assert.equal(repeated.status, 200); assert.equal((await repo.c('grants').findOne()).status, 'exhausted');
+    assert.equal(repeated.body.collectible?.reward ?? repeated.body.reward ?? null, null);
+    assert.deepEqual((await rawProfile()).rewards, { retired: 7 }); await invariants();
+  });
+  test(`${source} preserves legitimate missing inventory and market-value defaults without repairing catalog rows`, async () => {
+    const op = await completion(source);
+    await User.collection.updateOne({ _id: user._id }, { $unset: { 'subProfiles.0.rewards': '' } });
+    await RewardItem.collection.updateOne({ id: 'alpha' }, { $unset: { marketValue: '' } });
+    const response = await op.send(); assert.equal(response.status, 200, JSON.stringify(response.body));
+    assert.equal((response.body.collectible?.reward ?? response.body.reward).marketValue, 0);
+    assert.equal(Object.hasOwn(await RewardItem.collection.findOne({ id: 'alpha' }), 'marketValue'), false);
+    assert.deepEqual((await rawProfile()).rewards, { alpha: 1 }); await invariants();
+  });
+}
