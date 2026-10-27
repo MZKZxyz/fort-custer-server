@@ -22,7 +22,6 @@ jobs:
     env:
       NODE_ENV: test
       # No production secrets or environment binding. Integration tests own their DB.
-      MONGO_URI: mongodb://127.0.0.1:1/unused_ci_database
       JWT_SECRET: synthetic-ci-only-signing-key
     steps:
       - uses: actions/checkout@v4
@@ -51,7 +50,11 @@ jobs:
           echo "MONGOD_BINARY=$RUNNER_TEMP/mongodb/bin/mongod" >> "$GITHUB_ENV"
       - name: Run all tests (analyzer, reports, and MongoDB completion integration)
         # Keep automatic discovery: do not replace this with only test:analyzer.
+        shell: bash
         run: |
+          set -euo pipefail
+          # Also remove selectors inherited from the runner; empty strings are defined.
+          unset MONGO_URI MONGODB_URI MONGO_URL DATABASE_URL
           test -f test/analyzer.test.js
           test -f test/report-validation.test.js
           test -f test/completions.test.js
