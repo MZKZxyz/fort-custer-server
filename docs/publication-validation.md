@@ -11,7 +11,88 @@ MongoDB 8.0.16. All MongoDB writes and fault injection were against disposable
 synthetic loopback fixtures. No live URI, player data, legacy seeder, production
 publish/deploy, migration, scheduler, merge, or v2 activation was used.
 
-## Commands and outcomes
+## RSS-monitor remediation and independent re-QA handoff
+
+Repairs the P2 reported at `afa4bae89b45758ba372988280aef95b328da82d` in PR #18.
+The original validation below is retained as historical evidence; the current
+results for this correction are:
+
+| Check | Current observed result |
+| --- | --- |
+| Full Node 24 discovery | **505 passed; zero failed/cancelled/skipped/todo**, 65,734.846981 ms |
+| Publication/API suites | **32 passed; zero failed/cancelled/skipped/todo**, 4,541.830304 ms |
+| Daily generator suite | **12 passed; zero failed/cancelled/skipped/todo**, 2,677.779597 ms |
+| Analyzer suite | **14 passed; zero failed/cancelled/skipped/todo**, 1,924.317016 ms |
+| Original QA persistent ENOENT hook through real disposable publisher | **WORKER_RSS_MONITOR_UNAVAILABLE; storedRows:0**, one failed monitor read |
+| Original QA EACCES control through real disposable publisher | **WORKER_RSS_MONITOR_UNAVAILABLE; storedRows:0**, one failed monitor read |
+| Direct repeated faults and recovery | ENOENT twice and EACCES once refused; **6/6 children closed**, **3/3 healthy requests after faults** |
+| Healthy short-worker stress | **100/100 accepted**, zero false monitor failures |
+| Frozen contract, 1,000/10,000-seed legacy report validator | **FROZEN_CONTRACT_MATCH**, validator exit **0**, unchanged deterministic fields |
+| Syntax / whitespace / protected source scope | **86 JS/MJS syntax checks passed**, whitespace and protected-path diff checks exit **0** |
+| Poisoned-env constrained CLI under parent import/write guard | Exit **0**, correct approved grid hash, empty stderr; no model/writer/network import |
+
+All suite commands used Node v24.19.0, the provisioned disposable MongoDB 8.0.16
+binary, and the four external database selectors unset. No production URI or
+credentials were used. The current full suite adds twelve regressions to the
+original 493 tests: one real-worker fault/reuse test, ten lifecycle cases and
+one real disposable publisher test. The publisher test verifies zero inserts
+and unchanged existing rows on both faults, followed by two successful healthy
+publications in that disposable fixture only.
+
+The executor now requires a valid active RSS sample before dispatching input.
+An unavailable monitor while the process remains alive fails closed and sends
+SIGKILL; returning a response is not evidence of process exit. Node exit/close,
+OS zombie status or OS ESRCH must confirm exit before missing process information
+is tolerated. A cleanup reconciliation waits at most one existing 10 ms sampling
+interval without extending the 1,500 ms watchdog. Pending reads race against
+confirmed exit and are aborted on cleanup, so late errors cannot affect a later
+slot. The independent final child peak check and all timeout/RSS/heap/IPC/
+concurrency bounds are retained.
+
+An intermediate repair run exposed Linux releasing a worker's memory map while
+its proc state still reports R, just before exit notification. Treating that
+transitional snapshot as an immediate active failure caused false negatives.
+The bounded reconciliation plus confirmed-exit requirement fixes that race
+without exempting persistent ENOENT for a live worker. Only the final passing
+results above are the current handoff evidence.
+
+The lifecycle regressions cover fast exit after the initial sample, a pending
+read that later rejects ENOENT, a read that never settles after confirmed exit,
+zombie cleanup, memory-map release before exit, OS ESRCH before Node's exit event,
+active ENOENT/EACCES, missing active VM fields even after a result message, and
+refusal of an apparently successful result without any active RSS sample.
+Every scenario subsequently runs a healthy real worker to prove slot recovery.
+
+Targeted direct reproduction (no MongoDB connection):
+
+```sh
+node tools/test-support/publication-monitor.mjs direct
+node tools/test-support/publication-monitor.mjs exit-enoent
+node tools/test-support/publication-monitor.mjs exiting-mm-release
+node tools/test-support/publication-monitor.mjs no-active-sample
+```
+
+The real publisher regression is included in `npm run test:publication`; its
+fixture receives only the owned replica set's named loopback URI over IPC and
+explicitly refuses external URIs. The original independent QA resolve hook was
+also rerun unchanged against the corrected executor and real disposable publisher:
+ENOENT refused after 14.441198 ms and EACCES after 3.390547 ms, both with zero rows.
+Measurements vary. The 366-day 2028 preview remains 366 accepted / 262 rejected
+attempts and aggregate `691e6bf5bf7b21be93c9d6b8feaab2f4c42976f4060c0f230a3e1685f3be376b`.
+
+Node 24 permission flags **do not prevent TCP/network connections**. The current
+computation graph has no network/database/writer imports, but is not an OS
+network-denial sandbox. Real network/egress isolation, deployment-wide resource
+ownership and OS memory containment remain separately reviewed live-publisher
+rollout requirements. The default-empty legacy inventory remains an independent
+deployment blocker; no publication evidence or production wiring was invented.
+
+The correction stays on existing PR #18. Its new exact head is recorded in the
+PR/issue handoff after pushing, for independent re-QA. Passing engineering tests
+does not replace that review or grant merge/deployment/publishing authorization.
+No scheduler, live database access, seeder, deployment or CI polling occurred.
+
+## Original implementation commands and outcomes
 
 Commands run from the repository root. `MONGOD_BINARY` was set by the invocation
 environment to the provisioned local binary; its machine-specific location is

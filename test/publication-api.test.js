@@ -337,3 +337,23 @@ test('actual insert connection loss leaves no partial row; exact-identity retry 
   assert.equal(recovered.created, true); assert.ok(isPublished(recovered.maze, new Date(clock)));
   assert.equal(await Maze.countDocuments({}), 1);
 });
+
+test('real disposable publisher inserts nothing on ENOENT/EACCES and publishes after monitoring recovers', { timeout: 15000 }, async () => {
+  const child = fork(new URL('../tools/test-support/publication-monitor.mjs', import.meta.url), ['publisher'], {
+    stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
+  });
+  children.push(child);
+  let stderr = '';
+  child.stderr.on('data', chunk => { stderr += chunk; });
+  const done = new Promise((resolve, reject) => {
+    let reported = false;
+    child.once('message', message => { reported = true; resolve(message.report); });
+    child.once('error', reject);
+    child.once('exit', code => { if (!reported) reject(Error(`monitor fixture exited ${code}: ${stderr}`)); });
+  });
+  child.send({ uri: rs.uri.replace('/fc_synthetic?', '/fc_publication_synthetic_monitor?') });
+  const report = await done;
+  assert.deepEqual(report.failures, [{ code: 'ENOENT', inserted: 0 }, { code: 'EACCES', inserted: 0 }]);
+  assert.equal(report.healthyPublications, 2); assert.equal(report.allChildrenClosed, true);
+  assert.equal(await rs.client.db('fc_publication_synthetic_monitor').collection('mazes').countDocuments({}), 2);
+});

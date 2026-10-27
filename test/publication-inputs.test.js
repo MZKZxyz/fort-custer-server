@@ -99,3 +99,25 @@ test('operator CLI is always dry-run, fails closed, and ignores every ambient da
     const child = run(bad); assert.notEqual(child.status, 0); assert.equal(child.stdout, '');
   }
 });
+
+test('persistent ENOENT/EACCES kill real workers, clear the busy slot and permit healthy reuse', () => {
+  const child = spawnSync(process.execPath, ['tools/test-support/publication-monitor.mjs', 'direct'], {
+    encoding: 'utf8', timeout: 15000,
+  });
+  assert.equal(child.status, 0, child.stderr);
+  const report = JSON.parse(child.stdout);
+  assert.deepEqual(report.failures, ['ENOENT', 'ENOENT', 'EACCES']);
+  assert.equal(report.healthyAfterEach, 3); assert.equal(report.closedChildren, 6);
+});
+
+for (const kind of ['fast-exit', 'exit-enoent', 'exit-pending-read', 'zombie-exit', 'exiting-mm-release', 'os-exit-before-event',
+  'active-enoent', 'active-eacces', 'active-missing-rss', 'no-active-sample']) {
+  test(`monitor lifecycle ${kind} settles once and preserves healthy worker reuse`, () => {
+    const child = spawnSync(process.execPath, ['tools/test-support/publication-monitor.mjs', kind], {
+      encoding: 'utf8', timeout: 10000,
+    });
+    assert.equal(child.status, 0, child.stderr);
+    const report = JSON.parse(child.stdout);
+    assert.equal(report.kind, kind); assert.equal(report.recovered, true);
+  });
+}

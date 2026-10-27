@@ -202,9 +202,22 @@ slot, no waiting queue and GENERATOR_BUSY refusal. Limits:
 128 MiB process RSS ceiling, 10 ms Linux /proc high-water sampling and 256 KiB IPC
 message cap. Limits may only be tightened. The child also reports OS peak RSS;
 over-budget results are refused before any insert, even if the monitor missed a
-short peak. Linux monitoring unavailable -> fail closed. The child has a minimal
-environment, no Mongo credentials/NODE_OPTIONS, denied filesystem writes/process
-spawning via Node permissions, and no model/network/writer imports.
+short peak. Before dispatching generation, the parent must obtain a valid active
+RSS sample. Missing/inaccessible procfs while the child remains alive terminates
+the worker with `WORKER_RSS_MONITOR_UNAVAILABLE`, including persistent `ENOENT`
+and `EACCES`; no result can reach insertion. Only confirmed process exit (Node
+exit/close, OS zombie status or an OS `ESRCH` liveness check) permits missing
+process information during cleanup. Pending reads are aborted/raced against
+confirmed exit so late cleanup callbacks cannot retain or poison the execution
+slot. An active reply alone is not proof that the process has exited.
+
+The child has a minimal environment, no Mongo credentials/NODE_OPTIONS, denied
+filesystem writes/process spawning via Node permissions, and no model/network/
+writer imports. **Node 24 permission flags do not deny TCP/network connections.**
+The current computation graph does not import a network client, but this is not
+OS-enforced network isolation. A live publisher requires separately reviewed
+network/egress containment; the absence of credentials or imports is not a
+network-denial sandbox.
 
 The RSS watchdog is sampled, not an OS hard cgroup limit; a process can transiently
 overshoot between samples. Heap limits alone are not an RSS guarantee. SIGKILL,
@@ -265,7 +278,8 @@ the disposable-only capability with explicit scoped authorization, fixed identit
 and operator-approved date list. Review production connection timeouts from real
 latency and topology rather than copying fixture settings. Measure current/total
 connections, checkout waits/failures and command latency before changing pool size.
-Set a deployment-wide worker count, OS/container memory containment and monitoring;
+Set a deployment-wide worker count, OS/container memory containment, explicit
+network/egress isolation and monitoring;
 verify backup/read-only inventory access and least-privilege insert/read authority.
 Each live publish/backfill execution needs owner authorization. There is no
 environment flag here that grants it. Scheduling and automatic backfill need a
