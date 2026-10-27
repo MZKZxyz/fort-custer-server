@@ -1,8 +1,10 @@
 {
   "metadata": {
     "schemaVersion": 1,
-    "generatorHash": "cf0c29029b3ea8c17a6247a7aec46ab589246d48ec5afadbcc2b4646348dafe1",
+    "generatorHash": "2a38fdb1782f47f9ca44ee8185c8f853808b26942266039c4ee926246aca4198",
     "rngVersion": "sha256-mulberry32-v1",
+    "algorithmVersion": "legacy-analyzer-v1",
+    "legacySourceHash": "cf0c29029b3ea8c17a6247a7aec46ab589246d48ec5afadbcc2b4646348dafe1",
     "options": {
       "count": 10000,
       "prefix": "sprint4",
@@ -26,7 +28,7 @@
   "solved": 5706,
   "errors": 4294,
   "maxStates": 281,
-  "elapsedMs": 26806.783767,
-  "peakRssKiB": 201580,
-  "heapUsedBytes": 16921648
+  "elapsedMs": 1904.048584,
+  "peakRssKiB": 55936,
+  "heapUsedBytes": 9836672
 }

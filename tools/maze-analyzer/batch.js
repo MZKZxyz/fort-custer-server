@@ -1,4 +1,4 @@
-import { generate, generatorHash, rngVersion } from './generator.js';
+import { generate, generatorHash, rngVersion, algorithmVersion, legacySourceHash } from './generator.js';
 import { analyze } from './analyzer.js';
 
 // Stream one compact record at a time; never retain grids, paths, or search states across seeds.
@@ -20,7 +20,7 @@ export function* batch({ prefix = 'sprint4', start = 0, count = 1000, ...options
 }
 
 export function metadata(options) {
-  return { schemaVersion: 1, generatorHash, rngVersion, options,
+  return { schemaVersion: 1, generatorHash, rngVersion, algorithmVersion, legacySourceHash, options,
     rules: 'client-single-slot-fire-input-v1', thresholds: { shortMoves: 25, longMovesPerCell: 2,
       difficultyOutlier: 'score < 25 or score > 175 (fixed experimental thresholds)' } };
 }
