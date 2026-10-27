@@ -10,7 +10,9 @@
     "analyze": "node tools/maze-analyzer/cli.js",
     "test:analyzer": "node --test test/analyzer.test.js",
     "maze:preview": "node tools/daily-maze/cli.js",
-    "test:daily-maze": "node --test test/daily-maze.test.js"
+    "test:daily-maze": "node --test test/daily-maze.test.js",
+    "test:publication": "node --test test/publication-inputs.test.js test/publication-api.test.js",
+    "maze:publication-preview": "node tools/maze-publisher/cli.js"
   },
   "keywords": [],
   "type": "module",

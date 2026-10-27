@@ -6,18 +6,26 @@ import User, { assertUserVersion } from '../models/User.js';
 import Maze from '../models/Maze.js'; // make sure this is imported
 import RewardItem from '../models/RewardItem.js';
 import { protect } from '../middleware/authMiddleware.js';
+import { createArchiveRouter } from './archiveRoutes.js';
+import { createCatalog } from '../services/publication/catalog.js';
+import { legacyPolicy } from '../services/publication/policy.js';
+import { trustedInstant } from '../services/publication/ingress.js';
+import { validateDate, utcDate } from '../lib/maze/dates.js';
 
-export function createMazeRouter({ complete = completeAttempt, compatible = false } = {}) {
+export function createMazeRouter({ complete = completeAttempt, compatible = false, now = () => new Date(), legacy = legacyPolicy } = {}) {
 const router = express.Router();
+const catalog = createCatalog({ MazeModel: Maze, legacy });
+router.use(createArchiveRouter({ now, legacy }));
+router.use(['/start', '/complete'], (req, res, next) => { res.set('Cache-Control', 'private, no-store'); next(); });
 
 // Reject invalid dates instead of normalizing overflow dates or throwing in handlers.
 const validateAttempt = (req, res, next) => {
   const { subProfileId, date } = req.body || {};
-  const parsed = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
-    ? new Date(`${date}T00:00:00Z`) : null;
-  if (!mongoose.isObjectIdOrHexString(subProfileId) || !parsed ||
-      !Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date) {
-    return res.status(400).json({ error: 'A valid subProfileId and YYYY-MM-DD date are required' });
+  let valid = true;
+  try { validateDate(date); } catch { valid = false; }
+  if (!mongoose.isObjectIdOrHexString(subProfileId) || !valid) {
+    return res.status(400).json({ error: 'A valid subProfileId and YYYY-MM-DD date are required',
+      code: !mongoose.isObjectIdOrHexString(subProfileId) ? 'INVALID_PROFILE_ID' : 'INVALID_DATE' });
   }
   next();
 };
@@ -25,21 +33,22 @@ const validateAttempt = (req, res, next) => {
 // POST /maze/start
 router.post('/start', protect, validateAttempt, async (req, res) => {
   const { subProfileId, date } = req.body;
-  const today = new Date().toISOString().split('T')[0];
-  const now = new Date();
+  res.set('Cache-Control', 'private, no-store');
 
   try {
+    const sampledNow = trustedInstant(now());
+    const today = utcDate(sampledNow);
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
     const sub = user.subProfiles.id(subProfileId);
     if (!sub) return res.status(404).json({ error: 'Sub-profile not found' });
+    const maze = await catalog.published(date, sampledNow);
+    if (!maze) return res.status(404).json({ error: 'No published maze is available for this date.', code: 'MAZE_NOT_PUBLISHED' });
     if (!compatible && sub.collectibleWriterVersion !== undefined) return res.status(409).json({
       error: 'This profile requires the compatible completion writer.', code: 'COMPATIBLE_WRITER_REQUIRED',
     });
 
     assertUserVersion(user);
-    const maze = await Maze.findOne({ date });
-    if (!maze) return res.status(404).json({ error: `Maze not found for ${date}` });
 
     // Ensure date key exists
     if (!sub.attempts.has(date)) {
@@ -47,7 +56,7 @@ router.post('/start', protect, validateAttempt, async (req, res) => {
     }
 
     // Add new attempt
-    const attempt = { attemptId: randomUUID(), started: now, completed: false };
+    const attempt = { attemptId: randomUUID(), started: sampledNow, completed: false };
     sub.attempts.get(date).push(attempt);
     user.markModified(`subProfiles.${user.subProfiles.indexOf(sub)}.attempts`);
 

@@ -7,6 +7,8 @@ import dotenv from 'dotenv';
 import { PlayableRepository } from '../../services/playable/repository.js';
 import { PlayableError } from '../../services/playable/errors.js';
 import { systemClock } from '../../services/playable/policy.js';
+import { fixturePublications } from '../test-support/legacy-publications.mjs';
+import { date, alternateDate, grid } from './fixtures.mjs';
 
 let server, repo, fault, clockAt = null, release;
 const requests = new AsyncLocalStorage();
@@ -41,6 +43,7 @@ process.on('message', async ({ id, op, args = {} }) => {
       ]);
       await Promise.all([User.init(), Maze.init(), RewardItem.init()]);
       const bundle = createCompatibleBundle({ repository: repo, epochId: args.epochId, secret: args.secret,
+        publicationPolicy: fixturePublications([[date, grid], [alternateDate, grid]]),
         admissionEnabled: true, clock: { sample: () => ({ ...systemClock.sample(), ...(clockAt === null ? {} : { at: clockAt }) }) } });
       const app = express(); app.disable('x-powered-by');
       app.use((req, res, next) => {

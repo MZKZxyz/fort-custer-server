@@ -8,13 +8,13 @@ import { createPlayableRouter } from '../../routes/playableRoutes.js';
 
 // One assembly boundary: compatible lifecycle, v1 and v2 always share one service.
 // The production installer still refuses activation; this creates no collections.
-export function createCompatibleBundle({ repository, epochId, secret, clock, choose, admissionEnabled = false }) {
+export function createCompatibleBundle({ repository, epochId, secret, clock, choose, admissionEnabled = false, publicationPolicy }) {
   const rewards = new SharedRewards(repository, { epochId, choose });
   const lifecycle = new CompatibleLifecycle(rewards);
   const legacy = new CompatibleLegacyCompletion(rewards);
   const playable = new PlayableService(repository, { clock, rewards, admissionEnabled });
   return { rewards, lifecycle, legacy, playable,
     users: createUserRouter({ lifecycle }),
-    maze: createMazeRouter({ compatible: true, complete: legacy.complete.bind(legacy) }),
+    maze: createMazeRouter({ compatible: true, complete: legacy.complete.bind(legacy), legacy: publicationPolicy }),
     v2: createPlayableRouter({ service: playable, secret, enabled: true }) };
 }
