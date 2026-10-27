@@ -8,7 +8,9 @@
     "dev": "nodemon index.js",
     "test": "node --test",
     "analyze": "node tools/maze-analyzer/cli.js",
-    "test:analyzer": "node --test test/analyzer.test.js"
+    "test:analyzer": "node --test test/analyzer.test.js",
+    "maze:preview": "node tools/daily-maze/cli.js",
+    "test:daily-maze": "node --test test/daily-maze.test.js"
   },
   "keywords": [],
   "type": "module",

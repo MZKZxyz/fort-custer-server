@@ -5,7 +5,7 @@ import { mkdtempSync, rmSync, openSync, closeSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import vm from 'node:vm';
+import { createHash } from 'node:crypto';
 import { compile, initialState, transition, solve, coordinate, stateKey, directions } from '../tools/maze-analyzer/solver.js';
 import { analyze } from '../tools/maze-analyzer/analyzer.js';
 import { generate, seededRandom } from '../tools/maze-analyzer/generator.js';
@@ -104,12 +104,13 @@ function compareClient(rows) {
 test('all reachable transitions agree with pinned client rules', () => {
   for (const rows of [['SXXFFE'], ['SXFXFE'], ['S F E', ' X#X ', '     '], ['S ', ' E']]) compareClient(rows);
 });
-test('seed adapter matches unchanged generator with the same RNG stream', () => {
-  const source = readFileSync(new URL('../scripts/generateMazes.js', import.meta.url), 'utf8');
-  const fn = source.slice(source.indexOf('const placeFireAndExtinguisher ='), source.indexOf('const run = async'));
-  const random = seededRandom('sprint4-0'), math = Object.create(Math); math.random = random;
-  const expected = vm.runInNewContext(`${fn}\ngenerateDummyMaze('sprint4-0');`, { Math: math });
-  assert.deepEqual(JSON.parse(JSON.stringify(generate('sprint4-0'))), JSON.parse(JSON.stringify(expected)));
+test('extracted legacy engine matches pre-extraction hashes and rejection streams', () => {
+  for (const [seed, expected] of [
+    ['sprint4-0', '4e28125ac515a8a703ec44e9742015a9157c0fe6d29d7905a20fbbab6f746915'],
+    ['sprint4-2', '53daf25014c06ab04f5cbb3ed2ed79eeee85880cdb1468f15095305ab94abf51'],
+  ]) assert.equal(createHash('sha256').update(JSON.stringify(generate(seed).grid)).digest('hex'), expected);
+  const random = seededRandom('sprint4-0');
+  assert.equal(typeof random(), 'number');
   assert.equal(JSON.stringify(generate('sprint4-0')), JSON.stringify(generate('sprint4-0')));
   assert.throws(() => generate('sprint4-42'), /unreachable/);
   assert.throws(() => generate('a', { width: 4 }));

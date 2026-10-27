@@ -1,0 +1,246 @@
+{
+  "schemaVersion": 1,
+  "algorithmVersion": "daily-dfs-v1",
+  "accepted": [
+    {
+      "input": {
+        "date": "2025-05-26"
+      },
+      "gridHash": "f5fb0ee1c059099908589f6f46af096bec06362962f415b5b7741f631b1587d2",
+      "identityHash": "2cd1456f97b16a00309670b9d17c1f27e7d30d201d1f1de3e4402ffaa6a15920",
+      "attempts": [
+        {
+          "attempt": 0,
+          "code": "LEGACY_REACHABILITY_REJECTED"
+        },
+        {
+          "attempt": 1,
+          "code": "LEGACY_REACHABILITY_REJECTED"
+        },
+        {
+          "attempt": 2,
+          "code": "LEGACY_REACHABILITY_REJECTED"
+        },
+        {
+          "attempt": 3,
+          "code": "ACCEPTED"
+        }
+      ],
+      "grid": [
+        "#############",
+        "# #   #     #",
+        "# ### ##### #",
+        "#   #E#   # #",
+        "### # # # # #",
+        "# #     # # #",
+        "# ####### # #",
+        "#S      #   #",
+        "# ### ##### #",
+        "#   #   X   #",
+        "### #########",
+        "#   #   F   #",
+        "# ##### ### #",
+        "#       #   #",
+        "######### ###",
+        "#         ###",
+        "#############"
+      ]
+    },
+    {
+      "input": {
+        "date": "2025-09-01"
+      },
+      "gridHash": "9f2e86cf6b82e815cc503a98eb5c7888ab6546587c810cdbe0e369236fc5eda1",
+      "identityHash": "8f85e4372647c879a9392a326e22a776c10f8dcc2c8436fc5de98bf0dc47fe5b",
+      "attempts": [
+        {
+          "attempt": 0,
+          "code": "LEGACY_REACHABILITY_REJECTED"
+        },
+        {
+          "attempt": 1,
+          "code": "ACCEPTED"
+        }
+      ]
+    },
+    {
+      "input": {
+        "date": "2026-01-01"
+      },
+      "gridHash": "fc5413118e048c759f16f708c5448bf8cdd740a90eb15e7c2d426e15cc8e589c",
+      "identityHash": "a6ca7ce081921d77873e2e3b035a752eecfab467f6aeb38346ab76dc4140cb53",
+      "attempts": [
+        {
+          "attempt": 0,
+          "code": "LEGACY_REACHABILITY_REJECTED"
+        },
+        {
+          "attempt": 1,
+          "code": "ACCEPTED"
+        }
+      ]
+    },
+    {
+      "input": {
+        "date": "2028-02-29"
+      },
+      "gridHash": "911eaeaf2c56a066c7300ac793b51c0260255899ababbe49db1e568c66949221",
+      "identityHash": "b2d1483169f4f0309f6cd89b0da6a8095885cd55ae4968864a0d4537c0247247",
+      "attempts": [
+        {
+          "attempt": 0,
+          "code": "LEGACY_REACHABILITY_REJECTED"
+        },
+        {
+          "attempt": 1,
+          "code": "ACCEPTED"
+        }
+      ]
+    },
+    {
+      "input": {
+        "date": "2026-01-01",
+        "config": {
+          "width": 21,
+          "height": 21
+        }
+      },
+      "gridHash": "606e7189aad8d484a33cda9615adf25b2c53ec58dc152b0f712aaecc44d54fe1",
+      "identityHash": "16e2b73ffda861a2f7f2138f2e4c86d1f6e7cb55d94bda9ed96e1e06f72eda84",
+      "attempts": [
+        {
+          "attempt": 0,
+          "code": "ACCEPTED"
+        }
+      ],
+      "grid": [
+        "#####################",
+        "# #   #       # #   #",
+        "# # ### ##### # # # #",
+        "# #     #     #   # #",
+        "# ##### # ##### ### #",
+        "# #   # #     X   # #",
+        "# # # ### ######### #",
+        "# # # E # # #     # #",
+        "# # ### # # # ### # #",
+        "#   # # #   # #     #",
+        "##### # ##### # #####",
+        "# #     #     # #   #",
+        "# # ##### ##### # # #",
+        "# #   #   #       # #",
+        "# ### # ########### #",
+        "#   # #  F  #     # #",
+        "# ### ##### # ##### #",
+        "#     #     #     # #",
+        "# ##### ######### # #",
+        "#       #          S#",
+        "#####################"
+      ]
+    },
+    {
+      "input": {
+        "date": "2026-01-01",
+        "seed": "sprint4-42"
+      },
+      "gridHash": "166137ed5591d474bbbcbe8b20d24d811cb1bac1c0be07abbfd1de4fbfc99376",
+      "identityHash": "5090213ad1572c4bd0f0647275dd140e18df781e568acba4dcbeeaaef29208fb",
+      "attempts": [
+        {
+          "attempt": 0,
+          "code": "ACCEPTED"
+        }
+      ]
+    },
+    {
+      "input": {
+        "date": "2026-03-01"
+      },
+      "gridHash": "34c8e3c3b8a29b2d3c61a72028d19d5a7782097045a0814d04ab259a084f1cb7",
+      "identityHash": "522b3819db31079ea43580105d79f3d08f0701018621c48bb2551cf560d6edf2",
+      "attempts": [
+        {
+          "attempt": 0,
+          "code": "LEGACY_REACHABILITY_REJECTED"
+        },
+        {
+          "attempt": 1,
+          "code": "ACCEPTED"
+        }
+      ]
+    }
+  ],
+  "exhausted": [
+    {
+      "input": {
+        "date": "2026-01-01",
+        "config": {
+          "minDistance": 10201,
+          "maxAttempts": 3
+        }
+      },
+      "attempts": [
+        {
+          "attempt": 0,
+          "code": "ENDPOINT_DISTANCE_REJECTED"
+        },
+        {
+          "attempt": 1,
+          "code": "ENDPOINT_DISTANCE_REJECTED"
+        },
+        {
+          "attempt": 2,
+          "code": "ENDPOINT_DISTANCE_REJECTED"
+        }
+      ]
+    },
+    {
+      "input": {
+        "date": "2026-01-01",
+        "config": {
+          "maxStates": 1,
+          "maxAttempts": 2
+        }
+      },
+      "attempts": [
+        {
+          "attempt": 0,
+          "code": "SOLVER_LIMIT"
+        },
+        {
+          "attempt": 1,
+          "code": "SOLVER_LIMIT"
+        }
+      ]
+    },
+    {
+      "input": {
+        "date": "2026-01-01",
+        "config": {
+          "maxAttempts": 1
+        }
+      },
+      "attempts": [
+        {
+          "attempt": 0,
+          "code": "LEGACY_REACHABILITY_REJECTED"
+        }
+      ]
+    }
+  ],
+  "legacyRejected": [
+    {
+      "seed": "sprint4-42",
+      "message": "Maze invalid: extinguisher or exit unreachable"
+    },
+    {
+      "seed": "sprint4-1",
+      "message": "Maze invalid: extinguisher or exit unreachable"
+    }
+  ],
+  "year": {
+    "start": "2028-01-01",
+    "end": "2028-12-31",
+    "hash": "691e6bf5bf7b21be93c9d6b8feaab2f4c42976f4060c0f230a3e1685f3be376b",
+    "rejections": 262
+  }
+}

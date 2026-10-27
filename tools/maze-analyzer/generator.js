@@ -1,26 +1,17 @@
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import vm from 'node:vm';
+import { carveCandidate } from '../../lib/maze/candidate-v1.js';
+import { seededRandom } from '../../lib/maze/random-v1.js';
+export { seededRandom, rngVersion } from '../../lib/maze/random-v1.js';
 
-// Execute only the existing pure generator declarations, never the seeder/imports.
-const source = readFileSync(new URL('../../scripts/generateMazes.js', import.meta.url), 'utf8');
-const begin = source.indexOf('const placeFireAndExtinguisher =');
-const end = source.indexOf('const run = async');
-if (begin < 0 || end <= begin) throw new Error('Generator layout changed; review the offline adapter');
-const script = new vm.Script(`(() => { ${source.slice(begin, end)}\nreturn generateDummyMaze(seed, width, height, minDistance); })()`);
-const math = Object.create(Math);
-const context = vm.createContext({ Math: math });
-export const generatorHash = createHash('sha256').update(source).digest('hex');
-export const rngVersion = 'sha256-mulberry32-v1';
-export function seededRandom(seed) {
-  let state = createHash('sha256').update(seed).digest().readUInt32LE(0);
-  return () => {
-    state = (state + 0x6D2B79F5) >>> 0;
-    let t = Math.imul(state ^ (state >>> 15), 1 | state);
-    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
+export const algorithmVersion = 'legacy-analyzer-v1';
+// Historical report provenance, not the hash of the extracted implementation.
+export const legacySourceHash = 'cf0c29029b3ea8c17a6247a7aec46ab589246d48ec5afadbcc2b4646348dafe1';
+export const generatorHash = createHash('sha256')
+  .update(readFileSync(new URL('../../lib/maze/candidate-v1.js', import.meta.url)))
+  .update(readFileSync(new URL('../../lib/maze/random-v1.js', import.meta.url))).digest('hex');
+
+// Single invocation, intentionally retaining old failures; daily retries live in the engine.
 export function generate(seed, { width = 13, height = 17, minDistance = 25 } = {}) {
   if (typeof seed !== 'string' || !seed.length) throw new Error('seed must be a nonempty string');
   for (const n of [width, height]) {
@@ -29,8 +20,5 @@ export function generate(seed, { width = 13, height = 17, minDistance = 25 } = {
     }
   }
   if (!Number.isInteger(minDistance) || minDistance < 1) throw new Error('minDistance must be positive');
-  math.random = seededRandom(seed);
-  Object.assign(context, { seed, width, height, minDistance });
-  // Reuse one realm; repeated vm contexts retain substantial V8 metadata in long batches.
-  return structuredClone(script.runInContext(context, { timeout: 2000 }));
+  return carveCandidate(seed, { width, height, minDistance }, seededRandom(seed));
 }
