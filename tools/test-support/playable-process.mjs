@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { PlayableRepository } from '../../services/playable/repository.js';
 import { PlayableService } from '../../services/playable/service.js';
 import { createPlayableRouter } from '../../routes/playableRoutes.js';
+import { fixturePublications } from './legacy-publications.mjs';
 let client, server;
 process.once('message', async ({ uri, secret, at, crash, compatible = false, epochId, ackEventId }) => {
   if (!/^mongodb:\/\/127\.0\.0\.1:\d+\/fc_synthetic\?replicaSet=fcSynthetic$/.test(uri)) throw new Error('Unsafe test database');
@@ -16,7 +17,8 @@ process.once('message', async ({ uri, secret, at, crash, compatible = false, epo
   const app = express();
   if (compatible) {
     const { createCompatibleBundle } = await import('../../services/collectibles/bundle.js');
-    const bundle = createCompatibleBundle({ repository: repo, epochId, secret, clock, choose: () => 0, admissionEnabled: true });
+    const publicationPolicy = fixturePublications(['2025-05-26', '2025-05-27'].map(date => [date, [['S', 'E']]]));
+    const bundle = createCompatibleBundle({ repository: repo, epochId, secret, clock, choose: () => 0, admissionEnabled: true, publicationPolicy });
     if (ackEventId) { await bundle.rewards.acknowledge(ackEventId); process.send({ acked: true }); return; }
     app.use('/api/v2', bundle.v2); app.use(express.json()); app.use('/users', bundle.users); app.use('/maze', bundle.maze);
   } else {

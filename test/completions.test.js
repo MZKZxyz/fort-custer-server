@@ -11,6 +11,7 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import Maze from '../models/Maze.js';
 import RewardItem from '../models/RewardItem.js';
+import { fixturePublications } from '../tools/test-support/legacy-publications.mjs';
 
 let db, dir, server, base, user, token, loseResponse = false;
 const date = '2025-05-26';
@@ -45,7 +46,9 @@ before(async () => {
     }
   }
   process.env.JWT_SECRET = secret;
-  const { default: routes } = await import('../routes/mazeRoutes.js');
+  const legacy = fixturePublications([[date, [['S', ' ', 'E']]]]);
+  const { createMazeRouter } = await import('../routes/mazeRoutes.js');
+  const routes = createMazeRouter({ legacy });
   const app = express();
   app.use(express.json());
   app.use('/maze', (req, res, next) => {
@@ -60,7 +63,8 @@ before(async () => {
     };
     next();
   }, routes);
-  const { default: leaderboard } = await import('../routes/leaderboardRoutes.js');
+  const { createLeaderboardRouter } = await import('../routes/leaderboardRoutes.js');
+  const leaderboard = createLeaderboardRouter({ legacy });
   const { default: users } = await import('../routes/userRoutes.js');
   app.use('/leaderboard', leaderboard);
   app.use('/users', users);

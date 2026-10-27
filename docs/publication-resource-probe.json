@@ -1,0 +1,327 @@
+{
+  "node": "v24.19.0",
+  "platform": "linux",
+  "architecture": "x64",
+  "limits": {
+    "timeoutMs": 1500,
+    "rssBytes": 134217728,
+    "heapMiB": 48,
+    "maxConcurrency": 1,
+    "maxMessageBytes": 262144,
+    "sampleMs": 10
+  },
+  "summary": {
+    "accepted": 40,
+    "maximumElapsedMs": 197.71708199999995,
+    "maximumPeakRssBytes": 54763520,
+    "maximumAcceptedAttempt": 5
+  },
+  "refused": [
+    {
+      "probe": "worst-default",
+      "code": "GENERATOR_TIMEOUT",
+      "metrics": {
+        "elapsedMs": 1503.716864,
+        "peakRssBytes": 60342272
+      }
+    },
+    {
+      "probe": "rss-watchdog",
+      "code": "GENERATOR_MEMORY_LIMIT",
+      "metrics": {
+        "elapsedMs": 136.5860560000001,
+        "peakRssBytes": 50868224
+      }
+    },
+    {
+      "probe": "startup-deadline",
+      "code": "GENERATOR_TIMEOUT",
+      "metrics": {
+        "elapsedMs": 2.0605729999997493,
+        "peakRssBytes": 0
+      }
+    }
+  ],
+  "records": [
+    {
+      "seed": "independent-large-0",
+      "gridHash": "f5d2ef84913a8fa70b903101b4a079815f2109cab6a94dc1a67d34b6e734538a",
+      "acceptedAttempt": 1,
+      "elapsedMs": 149.541282,
+      "peakRssBytes": 51462144
+    },
+    {
+      "seed": "independent-large-1",
+      "gridHash": "5cf8014699bf6b5e8b8da87d6ae1b717a95e8bfb9fde988fa5d52d1cfe251da9",
+      "acceptedAttempt": 3,
+      "elapsedMs": 116.17121400000002,
+      "peakRssBytes": 53411840
+    },
+    {
+      "seed": "independent-large-2",
+      "gridHash": "4c69ea17eea4db240de14d003f8fe14eb96c90dbad5f93b7139b1009ef696167",
+      "acceptedAttempt": 0,
+      "elapsedMs": 124.150936,
+      "peakRssBytes": 48390144
+    },
+    {
+      "seed": "independent-large-3",
+      "gridHash": "a1fd084461a143af553ecfa5f3b0482a5d69420b2c97e96c5e73bf47ed58dad6",
+      "acceptedAttempt": 4,
+      "elapsedMs": 197.71708199999995,
+      "peakRssBytes": 54444032
+    },
+    {
+      "seed": "independent-large-4",
+      "gridHash": "9e99d98c1b0c241ca091352a1f3dc547f4a0412d8fcd4f34450bd919e33a969a",
+      "acceptedAttempt": 0,
+      "elapsedMs": 118.84323600000005,
+      "peakRssBytes": 49795072
+    },
+    {
+      "seed": "independent-large-5",
+      "gridHash": "0c832486a04c201923e4604014c9e80d0ef266c16f6483955e8bdd7051dd4404",
+      "acceptedAttempt": 0,
+      "elapsedMs": 138.64375000000007,
+      "peakRssBytes": 50749440
+    },
+    {
+      "seed": "independent-large-6",
+      "gridHash": "7e27e2f9bbfb4637b764db0ec8390765136a8173575e7683dcba8b200d21db93",
+      "acceptedAttempt": 1,
+      "elapsedMs": 99.03361300000006,
+      "peakRssBytes": 50470912
+    },
+    {
+      "seed": "independent-large-7",
+      "gridHash": "010511529922f3f07a4a625c76b2d4500cbafad414e2eb043679b3bec9d35349",
+      "acceptedAttempt": 0,
+      "elapsedMs": 84.30918900000006,
+      "peakRssBytes": 48037888
+    },
+    {
+      "seed": "independent-large-8",
+      "gridHash": "214a82c46ebf14ac7b0633133b96628b7ce71925d065b7f4a03bdc8a0bca87fb",
+      "acceptedAttempt": 0,
+      "elapsedMs": 72.59047199999986,
+      "peakRssBytes": 46854144
+    },
+    {
+      "seed": "independent-large-9",
+      "gridHash": "3380eeddad5f7f10d4ea829fe6ba871591051fe70dda9c43514bf34b61285e3d",
+      "acceptedAttempt": 1,
+      "elapsedMs": 103.90355599999998,
+      "peakRssBytes": 52588544
+    },
+    {
+      "seed": "independent-large-10",
+      "gridHash": "65b49e0d34e8d9545471378f8319b1512864af8eb0ac07095375b68648646045",
+      "acceptedAttempt": 0,
+      "elapsedMs": 98.7007759999999,
+      "peakRssBytes": 50757632
+    },
+    {
+      "seed": "independent-large-11",
+      "gridHash": "0e05d4bd444b5aba86794424df6c504698ed1583315ad84d7a02fac6e80bc311",
+      "acceptedAttempt": 0,
+      "elapsedMs": 86.53743499999996,
+      "peakRssBytes": 47054848
+    },
+    {
+      "seed": "independent-large-12",
+      "gridHash": "8d523bf768c76936c627a8b71a78db16b8751c17a3e8c30d6ff35acaf7f39036",
+      "acceptedAttempt": 0,
+      "elapsedMs": 102.55212499999993,
+      "peakRssBytes": 50221056
+    },
+    {
+      "seed": "independent-large-13",
+      "gridHash": "f4b752de6643a89c61289d62a66350b424622f1a9991b12ff24720228a824313",
+      "acceptedAttempt": 0,
+      "elapsedMs": 99.64212100000009,
+      "peakRssBytes": 49528832
+    },
+    {
+      "seed": "independent-large-14",
+      "gridHash": "af50d7954f5585857d5b1d2b517e2b1348a83647fbc073436b342e0a37d521d6",
+      "acceptedAttempt": 1,
+      "elapsedMs": 122.65951700000005,
+      "peakRssBytes": 49844224
+    },
+    {
+      "seed": "independent-large-15",
+      "gridHash": "55451e6f4a101e9e28d61dfc6dbaf0b4db1b07449ae30af629e4a29bbd0befa3",
+      "acceptedAttempt": 1,
+      "elapsedMs": 120.90684399999986,
+      "peakRssBytes": 52203520
+    },
+    {
+      "seed": "independent-large-16",
+      "gridHash": "854bcb63226f149da259f5617aff6eafe76f0e4bc64845961c8a8a98f7fcadac",
+      "acceptedAttempt": 0,
+      "elapsedMs": 104.55680999999981,
+      "peakRssBytes": 49848320
+    },
+    {
+      "seed": "independent-large-17",
+      "gridHash": "bbfa9fedf71cfdf5babf15cc05fd25b017eef497b0a1c43f359b83a730afbbe7",
+      "acceptedAttempt": 0,
+      "elapsedMs": 128.34646999999995,
+      "peakRssBytes": 48750592
+    },
+    {
+      "seed": "independent-large-18",
+      "gridHash": "cb7b6d1d591336c1cba1678b0c228e648aaff1d066877807a12d907785c59115",
+      "acceptedAttempt": 0,
+      "elapsedMs": 81.606405,
+      "peakRssBytes": 47828992
+    },
+    {
+      "seed": "independent-large-19",
+      "gridHash": "bb05933c6fd8c0c8ec647a325e4913fec012859b2b1d567802259653c114c17f",
+      "acceptedAttempt": 3,
+      "elapsedMs": 137.56227200000012,
+      "peakRssBytes": 53809152
+    },
+    {
+      "seed": "independent-large-20",
+      "gridHash": "aa7dc7decc264dbae7f41b1ba329346e48b2ab56f4ad52c346905b6e777d3cd5",
+      "acceptedAttempt": 0,
+      "elapsedMs": 111.51999599999999,
+      "peakRssBytes": 49377280
+    },
+    {
+      "seed": "independent-large-21",
+      "gridHash": "2dd9228dd082c43c40793ebfab0eae4d45ace5c2bd6bd7e9c10e646095f23049",
+      "acceptedAttempt": 0,
+      "elapsedMs": 96.97736600000007,
+      "peakRssBytes": 50077696
+    },
+    {
+      "seed": "independent-large-22",
+      "gridHash": "92a5aa57a8930a0ff26193ffcecfdb449e32bdd601b08c4dfeee822fba41f253",
+      "acceptedAttempt": 0,
+      "elapsedMs": 112.92581999999993,
+      "peakRssBytes": 50323456
+    },
+    {
+      "seed": "independent-large-23",
+      "gridHash": "b40993ae7ebe63d4f2a9a2698338b71207ef24620472c6173fe8ac6ae8cc2f02",
+      "acceptedAttempt": 0,
+      "elapsedMs": 128.85617700000012,
+      "peakRssBytes": 49733632
+    },
+    {
+      "seed": "independent-large-24",
+      "gridHash": "567a3cb1d77e8dcbbae5a2a62f67c20741435a90815b4b38ced9af91dbfe4bb9",
+      "acceptedAttempt": 3,
+      "elapsedMs": 135.569434,
+      "peakRssBytes": 53706752
+    },
+    {
+      "seed": "independent-large-25",
+      "gridHash": "4022fb26f2928ea8bc65df5ab5f811533cd1c7a6bfd3a18b60dca9357a6b2a8c",
+      "acceptedAttempt": 1,
+      "elapsedMs": 154.59246500000017,
+      "peakRssBytes": 51052544
+    },
+    {
+      "seed": "independent-large-26",
+      "gridHash": "8d7d63ba40527c8b2379c9f6595cc0380e8fdb373c390d837b9b363f7fba0bce",
+      "acceptedAttempt": 1,
+      "elapsedMs": 132.29968399999962,
+      "peakRssBytes": 47919104
+    },
+    {
+      "seed": "independent-large-27",
+      "gridHash": "63ba46918c1735aff9f03fca5e83805bb9e62cf721ff22089eff68140f3a6560",
+      "acceptedAttempt": 0,
+      "elapsedMs": 132.19082600000002,
+      "peakRssBytes": 49709056
+    },
+    {
+      "seed": "independent-large-28",
+      "gridHash": "1310198c3360d00da610b80c83b88f1085ccf41c5398b016feada499483ce765",
+      "acceptedAttempt": 0,
+      "elapsedMs": 165.50537799999984,
+      "peakRssBytes": 48295936
+    },
+    {
+      "seed": "independent-large-29",
+      "gridHash": "c48fbf97c1e0b118aae86d1c35c6dd4c76f904f9e68dbf12c7a8f3e603217429",
+      "acceptedAttempt": 0,
+      "elapsedMs": 94.44141899999977,
+      "peakRssBytes": 47030272
+    },
+    {
+      "seed": "independent-large-30",
+      "gridHash": "aeb4a8e0353cf5dad4c655c3d7c3496d079d664e78fffa104e21605e6e5ee641",
+      "acceptedAttempt": 2,
+      "elapsedMs": 152.4318800000001,
+      "peakRssBytes": 52330496
+    },
+    {
+      "seed": "independent-large-31",
+      "gridHash": "4ae69cb10814dc03babd99c693a14887c8611e83ed1ff9d71a933e4c4ae6fcc7",
+      "acceptedAttempt": 0,
+      "elapsedMs": 85.68846300000041,
+      "peakRssBytes": 46817280
+    },
+    {
+      "seed": "independent-large-32",
+      "gridHash": "9efdeaa9a20f2e8b6436aaa71f7597bc1a8dc7354a607cf5185276566e2bf273",
+      "acceptedAttempt": 2,
+      "elapsedMs": 145.81311400000004,
+      "peakRssBytes": 52494336
+    },
+    {
+      "seed": "independent-large-33",
+      "gridHash": "a1074151f4d71695ea7affbff7dd8508ccd8905716b0af2c273bcbc2abd1faaa",
+      "acceptedAttempt": 4,
+      "elapsedMs": 155.0321200000003,
+      "peakRssBytes": 53530624
+    },
+    {
+      "seed": "independent-large-34",
+      "gridHash": "71f551e6de59d5a6cdd9eb0acae757139dfab1ee525091f87bd6006a674ad4bf",
+      "acceptedAttempt": 2,
+      "elapsedMs": 127.87374799999998,
+      "peakRssBytes": 52080640
+    },
+    {
+      "seed": "independent-large-35",
+      "gridHash": "a8d96552f882380fd692a64176a530f6fcbf7afde8cb6f46fe8594c893c69687",
+      "acceptedAttempt": 5,
+      "elapsedMs": 167.00212600000032,
+      "peakRssBytes": 54763520
+    },
+    {
+      "seed": "independent-large-36",
+      "gridHash": "56817880846997be9fe8eb3244df5d725834ccf11800ab0c5aba830768f0232f",
+      "acceptedAttempt": 0,
+      "elapsedMs": 113.17820599999959,
+      "peakRssBytes": 48590848
+    },
+    {
+      "seed": "independent-large-37",
+      "gridHash": "f3ec9b7504e1b8edd7ca7e61829616b01a653ec60bb13f77426db6743edee673",
+      "acceptedAttempt": 0,
+      "elapsedMs": 76.52507799999967,
+      "peakRssBytes": 48435200
+    },
+    {
+      "seed": "independent-large-38",
+      "gridHash": "b00d849171fa4340e361873f54d057ee6c2c00e8d835d42c42a983eadb33996c",
+      "acceptedAttempt": 0,
+      "elapsedMs": 104.25604999999996,
+      "peakRssBytes": 49881088
+    },
+    {
+      "seed": "independent-large-39",
+      "gridHash": "5538423d475c85e4210da20c34f1f1c391e1d4dbae7c57d84eed061fe15188b3",
+      "acceptedAttempt": 2,
+      "elapsedMs": 125.70722300000034,
+      "peakRssBytes": 53243904
+    }
+  ]
+}

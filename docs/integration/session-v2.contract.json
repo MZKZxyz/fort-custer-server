@@ -5,13 +5,13 @@
   "sourceSha256": {
     "routes/playableRoutes.js": "9eafb17d8c337382de55fa8a6fab122c6b8f15d2873abee75923a5ed247f9753",
     "routes/userRoutes.js": "a94045030e435b3c334aa730294485defb63a45a7c10dc0c2f48efe2c1a29fc6",
-    "routes/mazeRoutes.js": "5f5e4cdfa4cf3700d256a96540d7ee30d0d4f1408477b4c4fc1b3b6c211c2bf6",
+    "routes/mazeRoutes.js": "632a62905a41f62d80ae33222de2aaa60a85c85f6cb406db8c0015517a0d79e8",
     "middleware/authMiddleware.js": "5b4b4f7d43a17fe1d0aeac3a60aaea8fbab5e298a6a0d536916b1e87f0032dd4",
     "services/playable/service.js": "a24e8ee29f11f6ac3cba857077c0584b3506ac6369e3b624fb74ac740de280fa",
     "services/playable/policy.js": "c1dc7ee72ce8810fb39b02c22bf10a60913d106494a1c6445ebf4a9f1dce60db",
     "services/playable/transcript.js": "5dc0e0b0ea5fd6f2bebc9273d6afd855d90a3b90c14ebce17f3012a380541fb3",
     "services/playable/repository.js": "03647319f0df18879d773c06d886538e7fef08d2e6de2f2510b59c9adb465ea5",
-    "services/collectibles/bundle.js": "1c2e3c3e1c35c91c7bac5c5d3c100d80b55d1f0d1c3d88f120191233188a9b65",
+    "services/collectibles/bundle.js": "042ad020f9bc830e3ae0e9c66468b85c90baf6bcc2e62cf2bb257e5a48c67a66",
     "services/collectibles/shared-rewards.js": "7292af8eec52d54a3105b56ef6868882e9c7070c92022a6095de53827ca50106",
     "services/collectibles/lifecycle.js": "9ca92d0eaa7ad74bd87b4a7412283f0aec4aeba35da1727e7e9136698d828411",
     "services/collectibles/legacy-completion.js": "ce605873f8708f63324c30df7b84fbcd217e47da791b94c4a1767c207f3b1568"

@@ -9,8 +9,10 @@ import Maze from '../models/Maze.js';
 import RewardItem from '../models/RewardItem.js';
 import { PlayableRepository, COLLECTIONS } from '../services/playable/repository.js';
 import { replicaSet, until } from '../tools/transaction-feasibility/replica-set.mjs';
+import { fixturePublications } from '../tools/test-support/legacy-publications.mjs';
 
 const secret = 'synthetic-shared-reward-key', date = '2025-05-26', nextDate = '2025-05-27', epochId = 'synthetic-compatible-epoch';
+const publicationPolicy = fixturePublications([[date, [['S', 'E']]], [nextDate, [['S', 'E']]]]);
 const proof = { version: 'route-transcript-v1', commands: [{ seq: 1, dir: 'right' }] };
 let rs, repo, bundle, factory, defaultMaze, defaultUsers, server, base, user, actor, token, hook, now, health, children = [];
 const clock = { sample: () => ({ at: now, epoch: 'synthetic-clock', healthy: health, uncertaintyMs: 1, evidenceId: 'synthetic-monitor' }) };
@@ -68,7 +70,8 @@ async function invariants(profile = actor.profileId, d = date) {
 before(async () => {
   process.env.JWT_SECRET = secret;
   ({ createCompatibleBundle: factory } = await import('../services/collectibles/bundle.js'));
-  ({ default: defaultMaze } = await import('../routes/mazeRoutes.js'));
+  const { createMazeRouter } = await import('../routes/mazeRoutes.js');
+  defaultMaze = createMazeRouter({ legacy: publicationPolicy });
   ({ default: defaultUsers } = await import('../routes/userRoutes.js'));
   rs = await replicaSet(); await mongoose.connect(rs.uri);
   repo = new PlayableRepository(mongoose.connection.getClient(), mongoose.connection.db); await repo.provision();
@@ -86,7 +89,7 @@ beforeEach(async () => {
   token = jwt.sign({ id: user.id }, secret); actor = { accountId: user.id };
   now = Date.now(); health = true; hook = async () => {};
   repo = new PlayableRepository(mongoose.connection.getClient(), mongoose.connection.db, { hook: stage=>hook(stage) });
-  bundle = factory({ repository: repo, epochId, secret, clock, choose: ()=>0, admissionEnabled: true });
+  bundle = factory({ repository: repo, epochId, secret, clock, choose: ()=>0, admissionEnabled: true, publicationPolicy });
   const app = express(); app.use('/api/v2', bundle.v2); app.use(express.json()); app.use('/users', bundle.users); app.use('/maze', bundle.maze);
   app.use('/off/users', defaultUsers); app.use('/off/maze', defaultMaze);
   server = app.listen(0, '127.0.0.1'); await new Promise(r=>server.once('listening',r)); base=`http://127.0.0.1:${server.address().port}`;

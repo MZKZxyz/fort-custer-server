@@ -1,13 +1,17 @@
 import express from 'express';
 import User from '../models/User.js';
+import Maze from '../models/Maze.js';
+import { createCatalog } from '../services/publication/catalog.js';
+import { legacyPolicy } from '../services/publication/policy.js';
+import { trustedInstant } from '../services/publication/ingress.js';
+import { validateDate, utcDate } from '../lib/maze/dates.js';
+export function createLeaderboardRouter({ now = () => new Date(), legacy = legacyPolicy } = {}) {
 const router = express.Router();
+const catalog = createCatalog({ MazeModel: Maze, legacy });
 
 // helpers
 const MEMORIAL_DAY = '2025-05-26';
 const LABOR_DAY    = '2025-09-01';
-
-const isWithinSummer = (dateStr) =>
-  dateStr >= MEMORIAL_DAY && dateStr <= LABOR_DAY;
 
 const getWeekRange = (startStr) => {
   const start = new Date(startStr);
@@ -25,11 +29,20 @@ router.get('/:timeframe', async (req, res) => {
 
   // Determine targetDates based on timeframe
   if (timeframe === 'daily') {
-    const target = date || new Date().toISOString().slice(0, 10);
-    if (!isWithinSummer(target)) {
-      return res.status(400).json({ error: 'Date out of seasonal range' });
+    res.set('Cache-Control', 'private, no-store');
+    const params = new URL(req.originalUrl, 'http://localhost').searchParams;
+    if ([...params.keys()].some(key => key !== 'date') || params.getAll('date').length > 1) {
+      return res.status(400).json({ error: 'Invalid daily query.', code: 'INVALID_QUERY' });
     }
-    targetDates = [target];
+    try {
+      const sampled = trustedInstant(now());
+      const target = params.has('date') ? params.get('date') : utcDate(sampled);
+      try { validateDate(target); } catch { return res.status(400).json({ error: 'A real YYYY-MM-DD date is required.', code: 'INVALID_DATE' }); }
+      if (!await catalog.published(target, sampled)) return res.status(404).json({
+        error: 'No published maze is available for this date.', code: 'MAZE_NOT_PUBLISHED',
+      });
+      targetDates = [target];
+    } catch { return res.status(503).json({ error: 'Published date could not be loaded.', code: 'LEADERBOARD_UNAVAILABLE' }); }
   }
 
   if (timeframe === 'weekly') {
@@ -98,4 +111,6 @@ router.get('/:timeframe', async (req, res) => {
   }
 });
 
-export default router;
+return router;
+}
+export default createLeaderboardRouter();
