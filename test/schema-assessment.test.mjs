@@ -196,14 +196,14 @@ test('views and unexpected namespaces fail closed without returning collection n
   } finally { await adminDb.collection('rewarditems').drop(); await adminDb.createCollection('rewarditems'); }
 });
 
-function fakeDb(change = () => {}) {
+function fakeDb(change = () => {}, name = databaseName) {
   const calls = [];
-  return { databaseName, client: { options: timeouts }, calls,
+  return { databaseName: name, client: { options: timeouts }, calls,
     async command(body, options) {
       calls.push({ body, options });
       let response;
       if (body.connectionStatus) response = { authInfo: { authenticatedUsers: [{}], authenticatedUserPrivileges: [
-        { resource: { db: databaseName, collection: '' }, actions: ['find', 'listCollections'] },
+        { resource: { db: name, collection: '' }, actions: ['find', 'listCollections'] },
       ] } };
       else if (body.listCollections) response = { cursor: { id: 0, firstBatch: scope.collectionNames.map(name => ({ name, type: 'collection', options: {} })) } };
       else if (body.hello) response = { isWritablePrimary: true, setName: canary };
@@ -276,5 +276,16 @@ test('standalone metadata is sanitized and unsupported/missing introspection rem
     (body, response) => { if (body.aggregate) response.cursor.firstBatch = [{ total: canary }]; },
   ]) {
     await assert.rejects(assessSchema(fakeDb(mutate), scope), error => /^AUDIT_[A-Z_]+$/.test(error.message));
+  }
+});
+
+test('an explicitly approved database named test is not treated as an implicit or generic scope', async () => {
+  const named = fakeDb(() => {}, 'test');
+  const approved = { ...scope, databaseName: 'test' };
+  assert.equal((await assessSchema(named, approved)).disposition, 'OWNER_REVIEW_REQUIRED');
+  await assert.rejects(assessSchema(named, scope), { message: 'AUDIT_SCOPE_REFUSED' });
+  await assert.rejects(assessSchema(named, { ...approved, dedicatedDatabaseConfirmed: false }), { message: 'AUDIT_SCOPE_REFUSED' });
+  for (const reserved of ['admin', 'local', 'config']) {
+    await assert.rejects(assessSchema(fakeDb(() => {}, reserved), { ...scope, databaseName: reserved }), { message: 'AUDIT_SCOPE_REFUSED' });
   }
 });

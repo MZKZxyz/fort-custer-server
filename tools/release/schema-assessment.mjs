@@ -123,7 +123,7 @@ function validateScope(db, approval) {
   if (!approval || Object.keys(approval).sort().join(',') !== 'collectionNames,databaseName,dedicatedDatabaseConfirmed'
       || approval.dedicatedDatabaseConfirmed !== true || typeof approval.databaseName !== 'string'
       || !/^[A-Za-z0-9_-]{1,63}$/.test(approval.databaseName)
-      || ['admin', 'local', 'config', 'test'].includes(approval.databaseName)
+      || ['admin', 'local', 'config'].includes(approval.databaseName)
       || db.databaseName !== approval.databaseName || !Array.isArray(approval.collectionNames)
       || new Set(approval.collectionNames).size !== approval.collectionNames.length
       || !core.every(name => approval.collectionNames.includes(name))

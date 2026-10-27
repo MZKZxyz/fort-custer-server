@@ -18,6 +18,10 @@ Before any live execution, obtain a **separate explicit authorization** identify
    database, the audit code's full reviewed SHA, operator and short low-load window.
    Inspect the connection target privately through the normal owner-controlled channel.
    A matching database name alone does not prove server identity or tenant isolation.
+   Issue #12's metadata-only note identifies an application-shaped database named
+   `test`; this is allowed **only if explicitly approved as the dedicated application
+   database**, never selected implicitly. That note does not prove the Railway target
+   or authorize data reads. `admin`, `local` and `config` remain refused.
 2. An existing, reviewed, authenticated **read-only** principal scoped only to that
    database. Do not reuse `MONGO_URI`, the app's write-capable credentials, a root/admin
    role or an unauthenticated connection. The owner must verify that authorization is

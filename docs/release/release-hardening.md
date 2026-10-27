@@ -37,9 +37,13 @@ selectors. Fresh engineering validation on Node **24.19.0** / local MongoDB **8.
 
 - Original pinned workflow environment: **445 total, 404 passed, 41 failed**, no skips.
 - Corrected workflow's actual shell block, launched with all four inherited selectors
-  present (both nonempty and empty values): **460/460 passed**, zero failed, cancelled,
-  skipped or todo; 66.36 seconds. This includes the original 445 tests and 15 new
+  present (both nonempty and empty values): **461/461 passed**, zero failed, cancelled,
+  skipped or todo; 67.54 seconds. This includes the original 445 tests and 16 new
   CI/audit checks, with authenticated disposable replica-set audit fixtures.
+- The explicitly approved database-name scope includes `test` (never chosen implicitly),
+  matching the later metadata-only context on #12. That metadata does not establish
+  the Railway database target or authorize a live audit; exact scope and read-only
+  privilege checks still apply. Admin/system databases remain refused.
 - Seeded CLI, 1,000-maze sample, memory-bounded 10,000-maze benchmark and deterministic
   report checks passed. The full regression run includes production installer OFF /
   explicit-true blocking and all 41 existing disposable harness cases.
