@@ -5,7 +5,7 @@
   "sourceSha256": {
     "routes/playableRoutes.js": "9eafb17d8c337382de55fa8a6fab122c6b8f15d2873abee75923a5ed247f9753",
     "routes/userRoutes.js": "a94045030e435b3c334aa730294485defb63a45a7c10dc0c2f48efe2c1a29fc6",
-    "routes/mazeRoutes.js": "632a62905a41f62d80ae33222de2aaa60a85c85f6cb406db8c0015517a0d79e8",
+    "routes/mazeRoutes.js": "614f47264349297b3c2edc557cf49436c1fc118eca8a56c0b52bc7671c68f51d",
     "middleware/authMiddleware.js": "5b4b4f7d43a17fe1d0aeac3a60aaea8fbab5e298a6a0d536916b1e87f0032dd4",
     "services/playable/service.js": "a24e8ee29f11f6ac3cba857077c0584b3506ac6369e3b624fb74ac740de280fa",
     "services/playable/policy.js": "c1dc7ee72ce8810fb39b02c22bf10a60913d106494a1c6445ebf4a9f1dce60db",

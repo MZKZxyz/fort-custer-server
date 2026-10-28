@@ -2,7 +2,7 @@ import express from 'express';
 import User from '../models/User.js';
 import Maze from '../models/Maze.js';
 import { createCatalog } from '../services/publication/catalog.js';
-import { legacyPolicy } from '../services/publication/policy.js';
+import { legacyPolicy } from '../services/publication/legacy-runtime.js';
 import { trustedInstant } from '../services/publication/ingress.js';
 import { validateDate, utcDate } from '../lib/maze/dates.js';
 export function createLeaderboardRouter({ now = () => new Date(), legacy = legacyPolicy } = {}) {

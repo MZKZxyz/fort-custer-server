@@ -1,44 +1,28 @@
-// server/index.js
-
-import express from 'express';
+// Connection/listen entrypoint; the exact routers are shared with disposable tests.
 import mongoose from 'mongoose';
-import cors from 'cors';
 import dotenv from 'dotenv';
-import userRoutes from './routes/userRoutes.js';
-import leaderboardRoutes from './routes/leaderboardRoutes.js';
-import mazeRoutes from './routes/mazeRoutes.js';
-import { installPlayableRuntime } from './services/playable/runtime.js';
+import app from './app.js';
+import { assertLegacyReleaseReady } from './services/publication/legacy-runtime.js';
+import { readIndexReadiness } from './services/publication/readiness.js';
 dotenv.config();
 
-
-const app = express();
+// Refuse connection/listen until the committed legacy evidence is approved.
+assertLegacyReleaseReady();
 const PORT = process.env.PORT || 5000;
-// OFF by default; enabling before all-writer compatibility fails before DB access.
-installPlayableRuntime(app);
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// Routes placeholder
-app.get('/', (req, res) => {
-  res.send('Fort Custer Maze API is running');
-});
-
-app.use('/api/users', userRoutes);
-app.use('/api/leaderboard', leaderboardRoutes);
-app.use('/api/maze', mazeRoutes);
-// MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
+  // Provisioning is an independently approved operation, never a startup side effect.
+  autoIndex: false,
+  autoCreate: false,
 })
-.then(() => {
-  console.log('✅ Connected to MongoDB');
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-  });
+.then(async () => {
+  const readiness = await readIndexReadiness(mongoose.connection.db);
+  if (!readiness.ready) throw new Error('ARCHIVE_INDEXES_REQUIRED');
+  app.listen(PORT, () => console.log('Fort Custer Maze API is listening'));
 })
-.catch((err) => {
-  console.error('❌ MongoDB connection error:', err.message);
+.catch(async () => {
+  console.error('SERVER_RELEASE_NOT_READY');
+  await mongoose.disconnect();
+  process.exitCode = 1;
 });
