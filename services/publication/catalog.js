@@ -1,4 +1,4 @@
-import { isPublished, publicationFilter, publicationEra, legacyPolicy, PUBLICATION_ERA } from './policy.js';
+import { isPublished, publicationFilter, publicationEra, legacyPolicy } from './policy.js';
 import { monthDates, trustedInstant, fail } from './ingress.js';
 import { utcDate } from '../../lib/maze/dates.js';
 
@@ -30,8 +30,8 @@ export function createCatalog({ MazeModel, legacy = legacyPolicy }) {
   }
   async function edge(now, direction) {
     const dateBound = { $gte: '0001-01-01', $lte: utcDate(now) };
-    const modern = await scanEdge({ date: dateBound, publicationEra: PUBLICATION_ERA,
-      publishedAt: { $type: 'date', $lte: now }, provenance: { $type: 'object' } }, now, direction,
+    const modernFilter = publicationFilter(now, legacy).$or[0];
+    const modern = await scanEdge({ ...modernFilter, date: { ...dateBound, ...modernFilter.date } }, now, direction,
     { publicationEra: 1, date: 1, publishedAt: 1 });
     const historical = legacy.dates.length ? await scanEdge({ date: { ...dateBound, $in: legacy.dates },
       publicationEra: { $exists: false }, publishedAt: { $exists: false }, provenance: { $exists: false } },

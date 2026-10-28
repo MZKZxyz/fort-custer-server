@@ -1,15 +1,17 @@
 // Synthetic process harness for the actual index.js/default app, not DI routers.
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import { mock } from 'node:test';
 import { pathToFileURL } from 'node:url';
 let server, currentStats = () => ({});
-process.once('message', async ({ root, uri }) => {
+process.once('message', async ({ root, uri, at }) => {
   if (!/^mongodb:\/\/127\.0\.0\.1:\d+\/fc_synthetic\?replicaSet=fcSynthetic$/.test(uri)) throw Error('UNSAFE_FIXTURE');
   dotenv.config = () => ({ parsed: {} });
+  if (at) mock.timers.enable({ apis: ['Date'], now: new Date(at) });
   process.env.JWT_SECRET = 'synthetic-release-test-key';
   process.env.MONGO_URI = uri; process.env.PORT = '0';
   let connectCalls = 0;
-  const ddl = [];
+  const ddl = [], writes = [];
   const connect = mongoose.connect.bind(mongoose);
   mongoose.connect = (target, options) => {
     connectCalls++;
@@ -19,11 +21,12 @@ process.once('message', async ({ root, uri }) => {
       connectTimeoutMS: 2000, socketTimeoutMS: 3000, monitorCommands: true });
     mongoose.connection.getClient().on('commandStarted', ({ commandName }) => {
       if (['create', 'createIndexes', 'drop', 'dropIndexes', 'collMod'].includes(commandName)) ddl.push(commandName);
+      if (['insert', 'update', 'delete', 'findAndModify'].includes(commandName)) writes.push(commandName);
     });
     return pending;
   };
-  const report = value => process.send({ ...value, connectCalls, ddl });
-  currentStats = () => ({ connectCalls, ddl });
+  const report = value => process.send({ ...value, connectCalls, ddl, writes });
+  currentStats = () => ({ connectCalls, ddl, writes });
   console.error = code => { if (code === 'SERVER_RELEASE_NOT_READY') report({ failure: code }); };
   try {
     const { default: app } = await import(pathToFileURL(`${root}/app.js`));
@@ -37,6 +40,7 @@ process.once('message', async ({ root, uri }) => {
   } catch (error) { report({ failure: error.code ?? error.message }); }
 });
 process.on('message', message => {
+  if (message?.op === 'clock') { mock.timers.setTime(Date.parse(message.at)); process.send({ clock: true }); }
   if (message?.op === 'stats') process.send({ stats: true, ...currentStats() });
 });
 process.on('disconnect', async () => {

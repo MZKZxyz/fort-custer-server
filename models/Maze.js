@@ -10,6 +10,9 @@ const ProvenanceSchema = new mongoose.Schema({
   configHash: { type: String, required: true },
   identityHash: { type: String, required: true },
   gridHash: { type: String, required: true },
+  // New fresh-era candidates bind to an explicitly reviewed launch decision.
+  releaseId: { type: String },
+  releaseDecisionHash: { type: String },
   acceptedAttempt: { type: Number, required: true },
   attempts: { type: [new mongoose.Schema({ attempt: { type: Number, required: true },
     code: { type: String, required: true } }, { _id: false, strict: 'throw' })], required: true },

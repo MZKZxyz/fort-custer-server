@@ -1,20 +1,31 @@
-# Legacy publication release artifact
+# Publication release artifacts
+
+Sprint 1.7G uses `fresh-release.json` for the owner's fresh-only archive decision.
+It is deliberately **pending**, with no approved date, identity or approval.
+See [fresh cutover contract and runbook](../docs/release/fresh-archive-cutover.md).
+The real startup and default archive/start/daily routers now share
+`services/publication/release-runtime.js`, which denies every legacy date and
+independently checks the modern document's cutover/time/release binding. Startup
+requires an explicitly reviewed `approved-fresh` artifact; there is no environment
+bypass or hot unlock. Never copy approved synthetic fixtures into either file.
+
+## Retained legacy schema (not active for fresh production admission)
 
 `legacy-publications.json` is intentionally **unapproved and empty**. No positive
 production publication inventory was supplied for issue #19, and no production
 database was inspected. Never copy synthetic fixtures into this file.
 
-The fixed artifact is loaded/validated once per process by
-`services/publication/legacy-runtime.js`. The actual default archive/start/daily
-routers share that immutable policy. There is no environment-selected path,
-network fetch, date-range inference, hot reload or HTTP administration endpoint.
-Pure policy helpers retain a deny-all fallback when no policy is explicitly used.
+The legacy artifact is still validated once per process by `legacy-runtime.js`.
+An approved or nonempty legacy artifact conflicts with fresh startup and refuses
+it. The inventory mechanism is retained for regression/audit; fresh production
+does not use it for admission. There is no environment-selected path, network
+fetch, date-range inference, hot reload or HTTP administration endpoint.
 
-The entrypoint refuses to connect/listen with an unapproved artifact. A missing,
-malformed, future-approved or inconsistent artifact also refuses startup. This
-is a deployment HOLD, not an instruction to replace the existing live image.
+The fresh entrypoint permits empty/unapproved legacy inventory only when the
+separate fresh decision is approved. Missing/malformed legacy config still fails
+closed. Historical-inventory approval is no longer a release prerequisite.
 
-## Schema v1
+## Legacy schema v1
 
 | Field | Rule |
 | --- | --- |
@@ -61,7 +72,11 @@ Do not trim spaces, join rows, normalize characters, change dimensions, regenera
 from seed labels, or rewrite a historical grid. The actual record must still pass
 the shared publication predicate; a matching date with different bytes is hidden.
 
-## Positive evidence and approval workflow — requires later authorization
+## Historical workflow — canceled for this fresh cutover
+
+This retained schema reference is not an instruction to collect historical data.
+Issue #22 cancels the proposed inventory; any different future product decision
+would require separate owner authorization and source review.
 
 1. Owner identifies a narrow exact date set and positive release evidence for
    each date. The old 2025 constants, row existence, seed labels, player progress
@@ -85,6 +100,5 @@ node --input-type=module -e 'import fs from "node:fs"; import {validateLegacyMan
    a running process has no effect. Rollback to a previously approved artifact
    and compatible image requires its own reviewed decision, not a broad unlock.
 
-If no positive inventory is available, retain the current live server until the
-owner explicitly approves an alternative. See the release decision package in
-`docs/release/archive-release-readiness.md`.
+The owner selected the fresh-only alternative in issue #22. Follow
+`docs/release/fresh-archive-cutover.md`; do not start the historical workflow.

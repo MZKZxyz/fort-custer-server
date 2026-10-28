@@ -8,7 +8,7 @@ import RewardItem from '../models/RewardItem.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { createArchiveRouter } from './archiveRoutes.js';
 import { createCatalog } from '../services/publication/catalog.js';
-import { legacyPolicy } from '../services/publication/legacy-runtime.js';
+import { publicationPolicy as legacyPolicy } from '../services/publication/release-runtime.js';
 import { trustedInstant } from '../services/publication/ingress.js';
 import { validateDate, utcDate } from '../lib/maze/dates.js';
 

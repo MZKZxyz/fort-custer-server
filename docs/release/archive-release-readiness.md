@@ -1,5 +1,10 @@
 # Sprint 1.7E release readiness — HOLD
 
+Historical report: issue #22's owner START FRESH decision supersedes the legacy
+inventory prerequisite below. See [fresh-era cutover](fresh-archive-cutover.md)
+for current startup/admission and release gates. No historical inventory is now
+requested or authorized; this report remains prior engineering evidence.
+
 Issue #19; parent #6. Exact starting server main:
 `1f668d23477aa62557bd531e501ce5f6771bdd0c`, the independently accepted server
 archive implementation. Client archive source accepted for review is
