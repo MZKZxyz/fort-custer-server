@@ -1,6 +1,7 @@
 import { hash, generationIdentity } from '../../lib/maze/engine.js';
 import { validateDate, utcDate } from '../../lib/maze/dates.js';
-import { plainKeys, trustedInstant, publisherInput, fail } from './ingress.js';
+import { trustedInstant, publisherInput } from './ingress.js';
+import { createLegacyPolicy } from './legacy-policy.js';
 
 export const PUBLICATION_ERA = 'year-round-v1';
 export const MANIFEST_VERSION = 'maze-publication-v1';
@@ -9,22 +10,8 @@ const rejectionCodes = new Set(['ENDPOINT_DISTANCE_REJECTED', 'FIRE_PLACEMENT_FA
   'TILE_COUNTS_REJECTED', 'BORDER_REJECTED', 'SOLVER_LIMIT', 'UNSOLVABLE',
   'EXTINGUISHER_UNREACHABLE_BEFORE_EXIT', 'DISCONNECTED_GEOMETRY']);
 
-// A reviewed inventory pins both date and grid hash. No source-derived season assumption.
-export function createLegacyPolicy(entries = []) {
-  if (!Array.isArray(entries) || entries.length > 3660) throw fail('INVALID_LEGACY_INVENTORY');
-  const inventory = new Map();
-  for (const entry of entries) {
-    plainKeys(entry, ['date', 'gridHash', 'evidence'], 'INVALID_LEGACY_INVENTORY');
-    validateDate(entry.date);
-    if (!/^[a-f0-9]{64}$/.test(entry.gridHash) || typeof entry.evidence !== 'string'
-        || !entry.evidence.trim() || entry.evidence.length > 256 || inventory.has(entry.date)) throw fail('INVALID_LEGACY_INVENTORY');
-    inventory.set(entry.date, entry.gridHash);
-  }
-  return Object.freeze({ dates: Object.freeze([...inventory.keys()].sort()),
-    matches: (date, gridHash) => inventory.get(date) === gridHash });
-}
-
-// Empty until a separately reviewed publication inventory is approved. Never infer from 2025 bounds.
+export { createLegacyPolicy } from './legacy-policy.js';
+// Pure helper fallback; production router defaults use the separately loaded manifest.
 export const legacyPolicy = createLegacyPolicy();
 
 export function completeGrid(maze) {
