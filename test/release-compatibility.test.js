@@ -245,3 +245,161 @@ test('exact admission rejects preapproval/time/date/release/hash prototypes and 
   }
   assert.deepEqual((await stats(app)).writes, []); assert.deepEqual((await stats(app)).ddl, []);
 });
+
+test('QA P2: old-only progress is absent from every public board and original UUID recovery is read-only', async () => {
+  await provision(); const app = await launch(await snapshot(freshFixture())); assert.ok(app.port);
+  await rs.db.collection('mazes').insertOne({ date, seed: 'original', grid, width: 3, height: 1 });
+  const owner = await account(app), attemptId = '12345678-1234-1234-1234-123456789abc';
+  const receipt = { message: 'Maze complete', time: '12.345', reward: null, today: date, attemptId };
+  await rs.db.collection('users').updateOne({ email: owner.email }, { $set: {
+    [`subProfiles.0.progress.${date}`]: { completed: true, time: '12.345' },
+    [`subProfiles.0.attempts.${date}`]: [{ attemptId, completed: true, started: new Date('2025-05-26T00:00:00Z'), result: receipt }],
+    'subProfiles.0.rewards': { synthetic: 3 },
+  } });
+  const user = await rs.db.collection('users').findOne({ email: owner.email });
+  const mazes = await rs.db.collection('mazes').find({}).toArray(), before = await stats(app);
+  for (const path of ['weekly?start=2025-05-26', 'weekly?start=2026-06-01', 'weekly', 'alltime']) {
+    const board = await request(app, '/api/leaderboard/' + path); assert.equal(board.status, 200); assert.deepEqual(board.data, []);
+  }
+  assert.equal((await request(app, '/api/leaderboard/daily?date=' + date)).data.code, 'MAZE_NOT_PUBLISHED');
+  assert.equal((await request(app, '/api/maze/start', { token: owner.token, body: { date, subProfileId: owner.subProfileId } })).data.code, 'MAZE_NOT_PUBLISHED');
+  assert.deepEqual((await request(app, '/api/maze/archive?month=2025-05')).data.items, []);
+  for (let n = 0; n < 3; n++) assert.deepEqual((await request(app, '/api/maze/complete', { token: owner.token,
+    body: { date, subProfileId: owner.subProfileId, attemptId } })).data, receipt);
+  assert.deepEqual(await rs.db.collection('users').findOne({ email: owner.email }), user);
+  assert.deepEqual(await rs.db.collection('mazes').find({}).toArray(), mazes);
+  assert.deepEqual((await stats(app)).writes, before.writes); assert.deepEqual((await stats(app)).ddl, []);
+});
+
+test('all public rankings verify mixed fresh/historical/missing/corrupt/release-bound dates without leaking profile data', async () => {
+  await provision(); const app = await launch(await snapshot(freshFixture()), '2026-06-13T23:59:59.999Z');
+  const owner = await account(app);
+  const documents = [modern(), modern('2026-06-06', '2026-06-06T12:00:00.000Z'), modern('2026-06-07', '2026-06-07T12:00:00.000Z')];
+  for (const [target, mutate] of [
+    ['2026-06-03', m => { m.provenance.releaseId = 'wrong-release'; }],
+    ['2026-06-04', m => { m.provenance.releaseDecisionHash = '0'.repeat(64); }],
+    ['2026-06-05', m => { m.provenance.gridHash = '0'.repeat(64); }],
+    ['2026-06-08', m => { delete m.provenance.releaseId; }],
+    ['2026-06-09', m => { m.publishedAt = new Date('2026-05-31T00:00:00.000Z'); }],
+    ['2026-06-10', m => { m.publishedAt = new Date('2026-06-14T00:00:00.000Z'); }],
+  ]) { const m = modern(target, '2026-06-13T12:00:00.000Z'); mutate(m); documents.push(m); }
+  documents.push({ date, seed: 'old', grid, width: 3, height: 1 });
+  await rs.db.collection('mazes').insertMany(documents);
+  const progress = Object.fromEntries([date, ...Array.from({ length: 14 }, (_, i) => `2026-06-${String(i + 1).padStart(2, '0')}`)]
+    .map(target => [target, { completed: true, time: '100.000' }]));
+  Object.assign(progress, { '2026-06-01': { completed: true, time: '1.111' },
+    '2026-06-06': { completed: true, time: 2.222 }, '2026-06-07': { completed: true, time: '3.333' },
+    malformed: { completed: true, time: '1.000' }, '2026-02-30': { completed: true, time: '1.000' } });
+  await rs.db.collection('users').updateOne({ email: owner.email }, { $set: { 'subProfiles.0.progress': progress } });
+  const saved = await rs.db.collection('users').find({}).toArray(), mazeSnapshot = await rs.db.collection('mazes').find({}).toArray(), before = await stats(app);
+  const expected = (time, count) => [{ name: 'Synthetic fresh player', subProfileId: owner.subProfileId, time, completedMazes: count }];
+  for (const [path, value] of [['daily?date=2026-06-01', expected('1.111', 1)],
+    ['weekly?start=2026-06-03', expected('3.333', 2)], ['weekly?start=2026-06-13', expected('3.333', 1)],
+    ['weekly?start=2025-05-26', []], ['weekly?start=2026-06-21', []], ['alltime', expected('6.666', 3)]]) {
+    const board = await request(app, '/api/leaderboard/' + path); assert.equal(board.status, 200); assert.deepEqual(board.data, value);
+  }
+  const own = await request(app, '/api/maze/archive?month=2026-06&subProfileId=' + owner.subProfileId, { token: owner.token });
+  assert.deepEqual(own.data.items.map(m => m.date), ['2026-06-01', '2026-06-06', '2026-06-07']);
+  assert.ok(own.data.items.every(m => m.progress.completed));
+  assert.deepEqual(await rs.db.collection('users').find({}).toArray(), saved);
+  assert.deepEqual(await rs.db.collection('mazes').find({}).toArray(), mazeSnapshot);
+  assert.deepEqual((await stats(app)).writes, before.writes); assert.deepEqual((await stats(app)).ddl, []);
+});
+
+test('UTC Sunday week rollover and delayed publication never clamp to summer or count unpublished progress', async () => {
+  await provision(); const app = await launch(await snapshot(freshFixture()), '2026-06-06T23:59:59.999Z');
+  const owner = await account(app);
+  await rs.db.collection('mazes').insertMany([modern(), modern('2026-06-06', '2026-06-06T12:00:00.000Z'),
+    modern('2026-06-07', '2026-06-07T00:00:00.000Z')]);
+  await rs.db.collection('users').updateOne({ email: owner.email }, { $set: { 'subProfiles.0.progress': {
+    '2026-06-01': { completed: true, time: '1.000' }, '2026-06-06': { completed: true, time: '2.000' },
+    '2026-06-07': { completed: true, time: '4.000' }, '2026-06-08': { completed: true, time: '8.000' },
+  } } });
+  let board = await request(app, '/api/leaderboard/weekly'); assert.equal(board.data[0].time, '3.000');
+  assert.deepEqual((await request(app, '/api/leaderboard/weekly?start=2026-06-07')).data, []);
+  await clock(app, '2026-06-07T00:00:00.000Z');
+  board = await request(app, '/api/leaderboard/weekly'); assert.equal(board.data[0].time, '4.000'); assert.equal(board.data[0].completedMazes, 1);
+  assert.equal((await request(app, '/api/leaderboard/weekly?start=2026-06-06')).data[0].time, '3.000');
+  await clock(app, '2026-06-08T00:00:00.000Z'); assert.equal((await request(app, '/api/leaderboard/weekly')).data[0].time, '4.000');
+  await rs.db.collection('mazes').insertOne(modern('2026-06-08', '2026-06-08T00:00:00.000Z'));
+  assert.equal((await request(app, '/api/leaderboard/weekly')).data[0].time, '12.000');
+  assert.equal((await request(app, '/api/leaderboard/alltime')).data[0].completedMazes, 4);
+  for (const query of ['start=2026-02-30', 'start=', 'start=2026-06-07T00%3A00%3A00Z']) {
+    const response = await request(app, '/api/leaderboard/weekly?' + query); assert.equal(response.status, 400); assert.equal(response.data.code, 'INVALID_DATE');
+  }
+  for (const path of ['weekly?start=2026-06-01&start=2026-06-02', 'weekly?start[]=2026-06-01', 'alltime?start=2025-05-26']) {
+    const response = await request(app, '/api/leaderboard/' + path); assert.equal(response.status, 400); assert.equal(response.data.code, 'INVALID_QUERY');
+  }
+});
+
+test('ranking verification failures return retryable 503 rather than partial/empty scores; reads never mutate records', async () => {
+  await provision(); const app = await launch(await snapshot(freshFixture())); const owner = await account(app);
+  await rs.db.collection('mazes').insertOne(modern());
+  await rs.db.collection('users').updateOne({ email: owner.email }, { $set: { 'subProfiles.0.progress': { [freshDate]: { completed: true, time: '5.000' } } } });
+  const original = await rs.db.collection('users').findOne({ email: owner.email }), before = await stats(app);
+  for (const command of ['aggregate', 'find']) {
+    for (const path of ['weekly?start=2026-06-01', 'alltime']) {
+      await rs.client.db('admin').command({ configureFailPoint: 'failCommand', mode: { times: 2 }, data: { failCommands: [command], errorCode: 2 } });
+      try {
+        const response = await request(app, '/api/leaderboard/' + path);
+        assert.equal(response.status, 503); assert.deepEqual(response.data, { error: 'Published rankings could not be verified. Retry shortly.', code: 'LEADERBOARD_UNAVAILABLE' });
+      } finally { await rs.failOff(); }
+      assert.equal((await request(app, '/api/leaderboard/' + path)).data[0].time, '5.000');
+    }
+  }
+  assert.deepEqual(await rs.db.collection('users').findOne({ email: owner.email }), original);
+  assert.deepEqual((await stats(app)).writes, before.writes); assert.deepEqual((await stats(app)).ddl, []);
+});
+
+test('alltime deduplicates shared progress dates into bounded indexed batches and never scans the maze collection', async () => {
+  await provision(); const app = await launch(await snapshot(freshFixture()), '2026-07-15T12:00:00.000Z');
+  const owner = await account(app);
+  const dates = Array.from({ length: 40 }, (_, i) => new Date(Date.parse('2026-06-01T00:00:00Z') + i * 86400000).toISOString().slice(0, 10));
+  await rs.db.collection('mazes').insertMany(dates.map(target => modern(target, '2026-07-15T12:00:00.000Z')));
+  const progress = Object.fromEntries(dates.map(target => [target, { completed: true, time: '1.000' }]));
+  await rs.db.collection('users').updateOne({ email: owner.email }, { $set: { 'subProfiles.0.progress': progress } });
+  await rs.db.collection('users').insertOne({ email: 'synthetic-second@example.invalid', password: 'unused', __v: 0,
+    subProfiles: [{ _id: new mongoose.Types.ObjectId(), name: 'Second synthetic player', progress }] });
+  const before = await stats(app), board = await request(app, '/api/leaderboard/alltime');
+  assert.equal(board.status, 200); assert.equal(board.data.length, 2);
+  assert.ok(board.data.every(row => row.time === '40.000' && row.completedMazes === 40));
+  const reads = (await stats(app)).rankingReads.slice(before.rankingReads.length);
+  assert.equal(reads.length, 3); assert.deepEqual(reads.map(r => r.kind), ['players', 'mazes', 'mazes']);
+  assert.equal(reads[0].limit, 1001); assert.equal(reads[0].profileLimit, 1001);
+  assert.deepEqual(reads.slice(1).map(r => r.dateCount), [32, 8]);
+  assert.ok(reads.every(r => r.maxTimeMS > 0 && r.maxTimeMS <= 2000));
+  assert.ok(reads.slice(1).every(r => r.limit === r.dateCount && r.hint.date === 1));
+  // Fail the second distinct maze batch after the first 32 dates verified.
+  await rs.client.db('admin').command({ configureFailPoint: 'failCommand', mode: { skip: 1 },
+    data: { failCommands: ['find'], errorCode: 2 } });
+  try {
+    const unavailable = await request(app, '/api/leaderboard/alltime');
+    assert.equal(unavailable.status, 503); assert.equal(unavailable.data.code, 'LEADERBOARD_UNAVAILABLE');
+  } finally { await rs.failOff(); }
+});
+
+test('finite ranking budget refuses oversized player populations rather than publishing a partial top 25', async () => {
+  await provision(); const app = await launch(await snapshot(freshFixture()));
+  await rs.db.collection('users').insertMany(Array.from({ length: 1001 }, (_, n) => ({
+    email: `synthetic-budget-${n}@example.invalid`, password: 'unused', __v: 0, subProfiles: [],
+  })));
+  const before = await stats(app), response = await request(app, '/api/leaderboard/alltime');
+  assert.equal(response.status, 503); assert.equal(response.data.code, 'LEADERBOARD_UNAVAILABLE');
+  assert.deepEqual((await stats(app)).writes, before.writes); assert.deepEqual((await stats(app)).ddl, []);
+  assert.equal(await rs.db.collection('users').countDocuments({}), 1001);
+  const oldWeek = await request(app, '/api/leaderboard/weekly?start=2025-05-26');
+  assert.equal(oldWeek.status, 200); assert.deepEqual(oldWeek.data, []);
+});
+
+test('malformed or incomplete saved times never become public ranks even on verified fresh dates', async () => {
+  await provision(); const app = await launch(await snapshot(freshFixture()), '2026-06-10T12:00:00.000Z'); const owner = await account(app);
+  const times = ['1.000', '2garbage', '-1', '0', 'Infinity', { value: 2 }, '1.000' + '0'.repeat(100), '3.000'];
+  const dates = times.map((_, i) => `2026-06-${String(i + 1).padStart(2, '0')}`);
+  await rs.db.collection('mazes').insertMany(dates.map(target => modern(target, '2026-06-10T12:00:00.000Z')));
+  await rs.db.collection('users').updateOne({ email: owner.email }, { $set: { 'subProfiles.0.progress': Object.fromEntries(dates.map((target, i) =>
+    [target, { completed: i !== 7, time: times[i] }])) } });
+  const before = await rs.db.collection('users').findOne({ email: owner.email });
+  const response = await request(app, '/api/leaderboard/alltime'); assert.equal(response.status, 200);
+  assert.deepEqual(response.data, [{ name: 'Synthetic fresh player', subProfileId: owner.subProfileId, time: '1.000', completedMazes: 1 }]);
+  assert.deepEqual(await rs.db.collection('users').findOne({ email: owner.email }), before);
+});

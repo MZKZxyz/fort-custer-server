@@ -60,6 +60,12 @@ try {
   check((await api('users/register', { email, password })).status === 201, 'REGISTRATION_FAILED');
   const token = (await api('users/login', { email, password })).data.token;
   const subProfileId = (await api('users/subprofile', { name: 'Synthetic Browser' }, token)).data[0]._id;
+  const oldDate = '2025-05-26', oldId = '12345678-1234-1234-1234-123456789abc';
+  const oldReceipt = { message: 'Maze complete', time: '12.345', reward: null, today: oldDate, attemptId: oldId };
+  await rs.db.collection('users').updateOne({ email }, { $set: {
+    [`subProfiles.0.progress.${oldDate}`]: { completed: true, time: '12.345' },
+    [`subProfiles.0.attempts.${oldDate}`]: [{ attemptId: oldId, completed: true, started: new Date('2025-05-26T00:00:00Z'), result: oldReceipt }],
+  } });
   const app = express(); app.use(express.json());
   app.use('/api', async (req, res) => {
     const response = await fetch(apiBase + req.originalUrl, { method: req.method, headers: {
@@ -106,9 +112,21 @@ try {
   check(own.data.items.length === 1 && own.data.items[0].progress.completed, 'PRIVATE_PROGRESS_MISSING');
   check((await api('leaderboard/daily?date=' + date)).data.length === 1, 'DAILY_RESULT_MISSING');
   check((await api('maze/start', { date: '2025-05-26', subProfileId }, token)).data.code === 'MAZE_NOT_PUBLISHED', 'LEGACY_START_ALLOWED');
+  check((await api('leaderboard/weekly?start=2025-05-26')).data.length === 0, 'OLD_WEEK_RANKED');
+  const alltime = (await api('leaderboard/alltime')).data;
+  check(alltime.length === 1 && alltime[0].completedMazes === 1 && alltime[0].time === '10.000', 'ALLTIME_COUNTED_OLD_RESULT');
+  await page.goto(base + '/leaderboard?date=' + date);
+  await page.getByRole('cell', { name: 'Synthetic Browser', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Weekly', exact: true }).click();
+  await page.getByText('No legacy saved results yet.', { exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Alltime', exact: true }).click();
+  await page.getByRole('cell', { name: 'Synthetic Browser', exact: true }).waitFor();
+  const oldBefore = await rs.db.collection('users').findOne({ email });
+  check(JSON.stringify((await api('maze/complete', { date: oldDate, subProfileId, attemptId: oldId }, token)).data) === JSON.stringify(oldReceipt), 'OLD_UUID_RECOVERY_FAILED');
+  check(JSON.stringify(await rs.db.collection('users').findOne({ email })) === JSON.stringify(oldBefore), 'OLD_UUID_RECOVERY_MUTATED_DATA');
   const final = await message({ op: 'stats' }); check(!final.ddl.length, 'APP_DDL_OBSERVED');
   console.log(JSON.stringify({ passed: true, checks: ['empty-today', 'late-publication', 'stored-grid-playthrough',
-    'lost-completion-ack', 'reload-UUID-recovery', 'owner-progress', 'daily-result', 'old-date-denial', 'zero-app-DDL'],
+    'lost-completion-ack', 'reload-UUID-recovery', 'owner-progress', 'daily-result', 'old-date-denial', 'old-week-empty', 'fresh-only-alltime', 'aggregate-client-controls', 'old-UUID-recovery', 'zero-app-DDL'],
     browser: browser.version(), mazeDocuments: await rs.db.collection('mazes').countDocuments({}) }));
 } finally {
   await browser?.close();

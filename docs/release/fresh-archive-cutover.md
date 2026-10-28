@@ -178,8 +178,10 @@ server. MazePage displays the server's unavailable message with Back to mazes,
 which returns to the obsolete calendar; it cannot discover the new archive.
 Existing persisted UUID results can still be retried; do not clear localStorage
 or sessionStorage, reconstruct old histories or promise old-client playability.
-Weekly/alltime historical aggregates remain under their existing contract; this
-change gates daily publication and does not reset historical player statistics.
+Daily, Sunday-based UTC weekly and all-time public rankings all exclude results
+without verified fresh-publication eligibility. There is no summer-2025 clamp or
+legacy aggregate exception. Player statistics remain stored unchanged. See the
+[leaderboard correction and client coordination report](leaderboard-remediation.md).
 
 Recommended sequence, each live step separately owner approved:
 

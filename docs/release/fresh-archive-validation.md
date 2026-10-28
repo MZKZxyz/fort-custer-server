@@ -1,5 +1,10 @@
 # Sprint 1.7G engineering validation and independent QA handoff
 
+The original head below failed independent QA for its weekly/all-time historical
+ranking exception. The [same-PR remediation report](leaderboard-remediation.md)
+supersedes that exception and records the correction/re-QA target. Prior counts
+remain historical evidence, not acceptance of the failed head.
+
 Scope: server issue #22, parent #6, fresh-only cutover. Required starting SHA
 `5a6c9ea5fbd90195df0e08d55e552d2d9359d7fb` exactly matched fetched main before
 branch creation. Read the complete issue and parent discussion, existing generator,
