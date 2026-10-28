@@ -13,7 +13,8 @@
     "test:daily-maze": "node --test test/daily-maze.test.js",
     "test:publication": "node --test test/publication-inputs.test.js test/publication-api.test.js",
     "maze:publication-preview": "node tools/maze-publisher/cli.js",
-    "test:release": "node --test test/release-manifest.test.js test/release-compatibility.test.js"
+    "test:release": "node --test test/release-manifest.test.js test/release-compatibility.test.js",
+    "test:fresh": "node --test test/fresh-publication.test.js test/release-manifest.test.js test/release-compatibility.test.js"
   },
   "keywords": [],
   "type": "module",

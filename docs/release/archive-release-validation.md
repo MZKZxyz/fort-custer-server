@@ -1,5 +1,9 @@
 # Sprint 1.7E nonproduction validation
 
+Historical evidence; current fresh-only implementation and validation are in
+[the fresh cutover report](fresh-archive-validation.md). The legacy inventory
+prerequisite below was superseded by the owner's issue #22 START FRESH decision.
+
 Starting server SHA: `1f668d23477aa62557bd531e501ce5f6771bdd0c`.
 The initial workspace had the previous engineering head; fetched main matched
 the required squash merge and the new branch started there before editing.

@@ -11,7 +11,7 @@ const rejectionCodes = new Set(['ENDPOINT_DISTANCE_REJECTED', 'FIRE_PLACEMENT_FA
   'EXTINGUISHER_UNREACHABLE_BEFORE_EXIT', 'DISCONNECTED_GEOMETRY']);
 
 export { createLegacyPolicy } from './legacy-policy.js';
-// Pure helper fallback; production router defaults use the separately loaded manifest.
+// Pure helper legacy fallback; production defaults use the fresh release policy.
 export const legacyPolicy = createLegacyPolicy();
 
 export function completeGrid(maze) {
@@ -52,7 +52,8 @@ export function isPublished(maze, now, legacy = legacyPolicy) {
   if (maze.publicationEra === undefined && maze.publishedAt === undefined && maze.provenance === undefined) {
     return legacy.matches(maze.date, hash(maze.grid));
   }
-  return validManifest(maze) && maze.publishedAt <= instant;
+  return validManifest(maze) && maze.publishedAt <= instant
+    && (!legacy.modernMatches || legacy.modernMatches(maze));
 }
 
 export const publicationEra = maze => maze.publicationEra ?? 'legacy';
@@ -60,8 +61,10 @@ export const publicationEra = maze => maze.publicationEra ?? 'legacy';
 // A cheap indexed prefilter only; every selected row still passes isPublished.
 export function publicationFilter(now, legacy = legacyPolicy) {
   const instant = trustedInstant(now);
+  const modern = legacy.modernFilter?.() ?? {};
   return { date: { $gte: '0001-01-01', $lte: utcDate(instant) }, $or: [
-    { publicationEra: PUBLICATION_ERA, publishedAt: { $type: 'date', $lte: instant }, provenance: { $type: 'object' } },
+    { ...modern, publicationEra: PUBLICATION_ERA,
+      publishedAt: { ...modern.publishedAt, $type: 'date', $lte: instant }, provenance: { $type: 'object' } },
     { date: { $in: legacy.dates }, publicationEra: { $exists: false }, publishedAt: { $exists: false }, provenance: { $exists: false } },
   ] };
 }

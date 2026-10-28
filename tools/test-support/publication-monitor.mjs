@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import { registerHooks } from 'node:module';
 import { EventEmitter } from 'node:events';
+import { readFile as nativeReadFile } from 'node:fs/promises';
 import { generateDaily } from '../../lib/maze/engine.js';
 
 const now = new Date('2028-03-01T00:00:00Z'), input = { date: '2028-02-29' };
@@ -44,7 +45,7 @@ async function healthy() {
 
 async function direct() {
   const failures = [];
-  for (const code of ['ENOENT', 'ENOENT', 'EACCES']) {
+  for (const code of ['ENOENT', 'ESRCH', 'EACCES', 'EPERM', 'EIO']) {
     control.error = code;
     const pending = generateInWorker(input, now);
     await assert.rejects(generateInWorker(input, now), { code: 'GENERATOR_BUSY' });
@@ -52,7 +53,7 @@ async function direct() {
     closedAndKilled(); failures.push(code);
     await healthy();
   }
-  return { failures, healthyAfterEach: 3, closedChildren: control.children.filter(c => c.closed).length };
+  return { failures, healthyAfterEach: failures.length, closedChildren: control.children.filter(c => c.closed).length };
 }
 
 async function publisher(uri) {
@@ -66,7 +67,8 @@ async function publisher(uri) {
     await mongoose.connect(uri, { serverSelectionTimeoutMS: 2000, connectTimeoutMS: 2000, socketTimeoutMS: 3000 });
     await Maze.init();
     const failures = [];
-    for (const [code, date] of [['ENOENT', '2028-02-28'], ['EACCES', '2028-02-29']]) {
+    for (const [i, code] of ['ENOENT', 'ESRCH', 'EACCES', 'EPERM', 'EIO'].entries()) {
+      const date = `2028-02-${20 + i}`;
       control.error = code;
       const before = await Maze.collection.find({}).toArray();
       await assert.rejects(publishMaze({ model: Maze, input: { date }, now }), { code: 'WORKER_RSS_MONITOR_UNAVAILABLE' });
@@ -78,28 +80,56 @@ async function publisher(uri) {
       const recovered = await publishMaze({ model: Maze, input: { date }, now });
       assert.equal(recovered.created, true); assert.equal(await Maze.countDocuments({ date }), 1);
     }
-    return { failures, healthyPublications: await Maze.countDocuments({}), allChildrenClosed: control.children.every(c => c.closed) };
+    const reconciled = [];
+    for (const [i, kind] of ['os-exit-before-event', 'os-esrch-before-event'].entries()) {
+      const date = `2028-02-${25 + i}`, expected = generateDaily({ date });
+      const before = await Maze.collection.find({}).toArray();
+      const report = await lifecycle(kind, async () => {
+        const published = await publishMaze({ model: Maze, input: { date }, now });
+        assert.equal(published.created, true); assert.deepEqual(published.diagnostics, []);
+        assert.equal(published.maze.provenance.gridHash, expected.gridHash);
+        assert.deepEqual(published.maze.grid, expected.maze.grid);
+        const stored = await Maze.collection.findOne({ date });
+        const retry = await publishMaze({ model: Maze, input: { date }, now });
+        assert.equal(retry.created, false); assert.deepEqual(retry.maze, stored);
+        assert.equal(await Maze.countDocuments({ date }), 1);
+        assert.deepEqual(await Maze.collection.find({ date: { $ne: date } }).toArray(), before);
+        return { result: { gridHash: published.maze.provenance.gridHash } };
+      }, { date });
+      reconciled.push({ kind, inserted: 1, recovered: report.recovered, beforeExit: report.beforeExit });
+    }
+    return { failures, reconciled, healthyPublications: await Maze.countDocuments({}), allChildrenClosed: control.children.every(c => c.closed) };
   } finally { await mongoose.disconnect(); }
 }
 
-async function lifecycle(kind) {
-  let child, reads = 0, sends = 0, sentResponse = false;
-  const result = generateDaily(input);
+async function lifecycle(kind, run = () => generateInWorker(input, now), expectedInput = input) {
+  let child, reads = 0, sends = 0, sentResponse = false, beforeExit = false, ended = false, probes = 0;
+  const result = generateDaily(expectedInput);
+  const disappeared = ['os-exit-before-event', 'os-esrch-before-event', 'gone-eacces-before-event'].includes(kind);
+  const realKill = process.kill;
+  process.kill = (pid, signal) => {
+    if (pid === child?.pid && signal === 0) {
+      probes++;
+      if (kind === 'active-unprobeable') throw Object.assign(Error('probe permission failure'), { code: 'EPERM' });
+    }
+    return realKill(pid, signal);
+  };
   const response = () => {
     if (sentResponse) return;
     sentResponse = true;
     child.emit('message', JSON.stringify({ ok: true, result, metrics: { peakRssBytes: 1024 } }));
   };
   const exit = () => {
+    if (ended) return; ended = true;
     response(); child.exitCode = 0; child.emit('exit', 0, null);
     setImmediate(() => child.emit('close', 0));
   };
   control.fork = () => {
-    child = new EventEmitter(); child.pid = kind === 'os-exit-before-event' ? 2 ** 30 : process.pid;
+    child = new EventEmitter(); child.pid = disappeared ? 2 ** 30 : process.pid;
     child.exitCode = null; child.signalCode = null;
     child.kill = signal => {
       child.signalCode = signal;
-      setImmediate(() => { child.emit('exit', null, signal); child.emit('close', null); });
+      setImmediate(() => { if (ended) return; ended = true; child.emit('exit', null, signal); child.emit('close', null); });
       return true;
     };
     child.send = (value, callback) => {
@@ -113,14 +143,18 @@ async function lifecycle(kind) {
     reads++;
     if (kind === 'no-active-sample') { exit(); return new Promise(() => {}); }
     if (reads === 1) return Promise.resolve('State:\tR (running)\nVmHWM:\t1 kB\n');
-    if (kind === 'active-enoent' || kind === 'active-eacces') {
-      return Promise.reject(Object.assign(Error('active monitor failure'), { code: kind === 'active-enoent' ? 'ENOENT' : 'EACCES' }));
-    }
-    if (kind === 'os-exit-before-event') {
+    // A genuine Linux filesystem read rejection, without synthesizing its errno.
+    if (kind === 'active-fs-read-failure') return nativeReadFile(new URL('.', import.meta.url));
+    const activeErrors = { 'active-enoent': 'ENOENT', 'active-esrch': 'ESRCH', 'active-eacces': 'EACCES',
+      'active-eperm': 'EPERM', 'active-eio': 'EIO', 'active-unprobeable': 'ESRCH' };
+    if (activeErrors[kind]) return Promise.reject(Object.assign(Error('active monitor failure'), { code: activeErrors[kind] }));
+    if (disappeared) {
       // An impossible Linux pid gives a real ESRCH before the simulated libuv
       // exit notification; no real process is signalled or terminated here.
+      assert.equal(child.exitCode, null); assert.equal(child.signalCode, null); beforeExit = true;
       response(); setTimeout(exit, 20);
-      return Promise.reject(Object.assign(Error('reaped process'), { code: 'ENOENT' }));
+      const code = kind === 'os-esrch-before-event' ? 'ESRCH' : kind === 'gone-eacces-before-event' ? 'EACCES' : 'ENOENT';
+      return Promise.reject(Object.assign(Error('reaped process'), { code }));
     }
     if (kind === 'active-missing-rss') return Promise.resolve('State:\tR (running)\n');
     if (kind === 'exiting-mm-release') {
@@ -135,20 +169,23 @@ async function lifecycle(kind) {
     // completes. A late ENOENT (or never-completing read) cannot delay settlement.
     exit();
     return new Promise((resolve, reject) => {
-      if (kind === 'exit-enoent') setTimeout(() => reject(Object.assign(Error('exit cleanup'), { code: 'ENOENT' })), 5);
+      if (['exit-enoent', 'exit-esrch'].includes(kind)) setTimeout(() => reject(Object.assign(Error('exit cleanup'), { code: kind === 'exit-esrch' ? 'ESRCH' : 'ENOENT' })), 5);
     });
   };
-  const refused = ['active-enoent', 'active-eacces', 'active-missing-rss', 'no-active-sample'].includes(kind);
-  if (refused) await assert.rejects(generateInWorker(input, now), { code: 'WORKER_RSS_MONITOR_UNAVAILABLE' });
-  else assert.equal((await generateInWorker(input, now)).result.gridHash, result.gridHash);
+  const refused = kind.startsWith('active-') || ['no-active-sample', 'gone-eacces-before-event'].includes(kind);
+  if (refused) await assert.rejects(run(), { code: 'WORKER_RSS_MONITOR_UNAVAILABLE' });
+  else assert.equal((await run()).result.gridHash, result.gridHash);
   assert.equal(control.children.at(-1).closed, true);
   if (kind === 'no-active-sample') assert.equal(sends, 0);
   else if (refused) closedAndKilled();
   else assert.equal(control.children.at(-1).signal, null);
   // Restore real reads/forks and prove a late cleanup callback cannot poison the slot.
-  control.read = null; control.fork = null;
+  if (disappeared) assert.equal(beforeExit, true);
+  if (['os-exit-before-event', 'os-esrch-before-event', 'active-unprobeable'].includes(kind)) assert.ok(probes > 0);
+  if (['active-eacces', 'active-eperm', 'active-eio', 'active-fs-read-failure', 'gone-eacces-before-event'].includes(kind)) assert.equal(probes, 0);
+  control.read = null; control.fork = null; process.kill = realKill;
   await healthy();
-  return { kind, refused, sends, reads, recovered: true };
+  return { kind, refused, sends, reads, probes, beforeExit, recovered: true };
 }
 
 if (process.argv[2] === 'publisher') {

@@ -5,7 +5,7 @@ import User from '../models/User.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { createCatalog } from '../services/publication/catalog.js';
 import { monthDates, trustedInstant } from '../services/publication/ingress.js';
-import { legacyPolicy } from '../services/publication/legacy-runtime.js';
+import { publicationPolicy as legacyPolicy } from '../services/publication/release-runtime.js';
 import { utcDate } from '../lib/maze/dates.js';
 
 export function createArchiveRouter({ now = () => new Date(), legacy = legacyPolicy } = {}) {

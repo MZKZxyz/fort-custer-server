@@ -3,7 +3,7 @@ import { publisherInput, trustedInstant, fail } from './ingress.js';
 import { publicationDocument, validManifest } from './policy.js';
 import { generationIdentity } from '../../lib/maze/engine.js';
 
-function disposableOnly(model) {
+export function disposableOnly(model) {
   const db = model?.db, options = db?.getClient()?.options;
   if (db?.readyState !== 1 || !/^fc_publication_synthetic_[a-z0-9_]{1,40}$/.test(db.name)
       || !options?.hosts?.length || options.hosts.some(host => !['127.0.0.1', '::1', 'localhost'].includes(host.host))

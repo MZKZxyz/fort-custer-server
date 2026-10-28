@@ -2,12 +2,12 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import app from './app.js';
-import { assertLegacyReleaseReady } from './services/publication/legacy-runtime.js';
+import { assertFreshReleaseReady } from './services/publication/release-runtime.js';
 import { readIndexReadiness } from './services/publication/readiness.js';
 dotenv.config();
 
-// Refuse connection/listen until the committed legacy evidence is approved.
-assertLegacyReleaseReady();
+// A reviewed fresh-only decision is required before connection/listen.
+assertFreshReleaseReady();
 const PORT = process.env.PORT || 5000;
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
