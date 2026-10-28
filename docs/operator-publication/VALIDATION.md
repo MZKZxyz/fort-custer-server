@@ -1,5 +1,10 @@
 # Sprint 1.7H nonproduction validation
 
+Historical implementation evidence at `11b3e4c...`: independent security QA found
+a signing-key SPKI alias defect outside the original passing suite. The
+[canonical-key remediation report](KEY-IDENTITY-REMEDIATION.md) supersedes that
+key-uniqueness claim and records the corrected-head re-QA evidence.
+
 Required baseline: `daf455a61aed7d83eb3f0bfc115044db1e46d992`, verified identical
 to fetched main before creating `sprint-1.7h-controlled-publishing`. Read issue #24
 in full (no comments), fresh release/worker/controlled publisher/model/index code

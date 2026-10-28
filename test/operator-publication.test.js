@@ -1,5 +1,6 @@
 import { test, before, after, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { createPublicKey, generateKeyPairSync, sign } from 'node:crypto';
 import { mkdtemp, rm, readFile, chmod, readdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -9,7 +10,7 @@ import Maze from '../models/Maze.js';
 import { replicaSet } from '../tools/transaction-feasibility/replica-set.mjs';
 import { operatorFixture, fixtureNow as now } from '../tools/test-support/operator-fixtures.mjs';
 import { canonicalConfig, algorithmVersion, hash, generationIdentity } from '../lib/maze/engine.js';
-import { digest } from '../tools/operator-publication/artifacts.mjs';
+import { digest, signingBytes } from '../tools/operator-publication/artifacts.mjs';
 import { inspectDisposableTarget, previewOperatorPublication, operateDisposable } from '../tools/operator-publication/rehearsal.mjs';
 import { RehearsalLedger } from '../tools/operator-publication/ledger.mjs';
 import { applyProduction } from '../tools/operator-publication/live-boundary.mjs';
@@ -335,4 +336,84 @@ test('audit completion failure preserves intent and reports verified-winner unce
   assert.ok(!JSON.stringify(result).includes('canary')); assert.equal(inserts().length, 1);
   assert.equal((await apply(plan, approval, { ledger: new RehearsalLedger(root), reconcile: true })).code, 'VERIFIED_WINNER');
   assert.equal(inserts().length, 1);
+});
+
+const spki = pair => pair.publicKey.export({ format: 'der', type: 'spki' });
+function spkiAlias(bytes) {
+  assert.equal(bytes.length, 44); assert.equal(bytes[0], 0x30); assert.equal(bytes[1], 0x2a);
+  const alias = Buffer.concat([Buffer.from([0x30, 0x81, bytes[1]]), bytes.subarray(2)]);
+  assert.equal(alias.length, 45);
+  assert.deepEqual(createPublicKey({ key: alias, format: 'der', type: 'spki' }).export({ format: 'der', type: 'spki' }), bytes);
+  return alias;
+}
+
+test('same Ed25519 material in 44/45-byte SPKI roots is rejected before DB/intent/insert', async () => {
+  const { plan: originalPlan } = await preview();
+  const pair = generateKeyPairSync('ed25519'), der = spki(pair), alias = spkiAlias(der);
+  let claims = 0;
+  const claim = ledger.claim.bind(ledger); ledger.claim = (...args) => { claims++; return claim(...args); };
+  for (const [releaseBytes, publishBytes] of [[der, der], [der, alias], [alias, der]]) {
+    const payload = fixture.context.certificate.payload;
+    const certificate = { keyId: 'same-key-release', payload,
+      signature: sign(null, signingBytes(payload), pair.privateKey).toString('base64') };
+    const context = { ...fixture.context, certificate, keys: [
+      { keyId: 'same-key-release', role: 'release', publicKey: releaseBytes.toString('base64') },
+      { keyId: 'same-key-publish', role: 'publish', publicKey: publishBytes.toString('base64') },
+    ] };
+    const plan = { ...originalPlan, releaseCertificateHash: digest(certificate) };
+    const approvalPayload = { ...fixture.approve(plan).payload, releaseCertificateHash: digest(certificate), planHash: digest(plan) };
+    const approval = { keyId: 'same-key-publish', payload: approvalPayload,
+      signature: sign(null, signingBytes(approvalPayload), pair.privateKey).toString('base64') };
+    commands = [];
+    const result = await apply(plan, approval, { context });
+    // This message is the deterministic red/green evidence; no key bytes or
+    // private material are logged, even when the old validator accepts the alias.
+    const stored = await rs.client.db('fc_publication_synthetic_operator').collection('mazes').countDocuments({});
+    assert.equal(result.code, 'CERTIFICATE_INVALID', JSON.stringify({ result: result.code, dbCommands: commands.length,
+      inserts: inserts().length, claims, stored, ledgerFiles: (await readdir(root)).length }));
+    assert.deepEqual(commands, []); assert.equal(claims, 0); assert.equal(stored, 0); assert.deepEqual(await readdir(root), []);
+    await assert.rejects(preview({ context, target: originalPlan.target }), { code: 'CERTIFICATE_INVALID' });
+    assert.deepEqual(commands, []); assert.equal(claims, 0); assert.deepEqual(await readdir(root), []);
+  }
+});
+
+test('every configured root is parsed as Ed25519, including unselected malformed and wrong-algorithm roots', async () => {
+  const { plan } = await preview(), approval = fixture.approve(plan);
+  const wrongType = generateKeyPairSync('x25519');
+  for (const publicKey of [Buffer.from([0]).toString('base64'), spki(wrongType).toString('base64'),
+    fixture.context.keys[1].publicKey + ' ', '', 42]) {
+    const context = structuredClone(fixture.context);
+    context.keys.push({ keyId: 'unselected-invalid', role: 'publish', publicKey });
+    commands = [];
+    assert.equal((await apply(plan, approval, { context })).code, 'CERTIFICATE_INVALID');
+    await assert.rejects(preview({ context, target: plan.target }), { code: 'CERTIFICATE_INVALID' });
+    assert.deepEqual(commands, []); assert.deepEqual(await readdir(root), []);
+  }
+});
+
+test('canonical duplicate material is rejected across IDs even when the alias root is not a selected signer', async () => {
+  const { plan } = await preview(), approval = fixture.approve(plan);
+  const der = Buffer.from(fixture.context.keys[0].publicKey, 'base64'), alias = spkiAlias(der);
+  for (const role of ['release', 'publish']) {
+    const context = structuredClone(fixture.context);
+    context.keys.push({ keyId: 'unselected-duplicate', role, publicKey: alias.toString('base64') });
+    commands = [];
+    assert.equal((await apply(plan, approval, { context })).code, 'CERTIFICATE_INVALID');
+    assert.deepEqual(commands, []); assert.deepEqual(await readdir(root), []);
+  }
+});
+
+test('two genuinely distinct Ed25519 roots with accepted SPKI encodings authorize one immutable disposable winner', async () => {
+  const context = structuredClone(fixture.context);
+  const releaseDer = Buffer.from(context.keys[0].publicKey, 'base64'), publishDer = Buffer.from(context.keys[1].publicKey, 'base64');
+  assert.notDeepEqual(releaseDer, publishDer);
+  context.keys[1].publicKey = spkiAlias(publishDer).toString('base64');
+  const { plan } = await preview({ context }), approval = fixture.approve(plan); commands = [];
+  assert.equal((await apply(plan, approval, { context })).code, 'INSERTED_VERIFIED');
+  assert.equal(inserts().length, 1); assert.equal(await model.countDocuments({}), 1);
+  const stored = await model.collection.findOne({ date: plan.input.date });
+  assert.equal(stored.provenance.gridHash, plan.gridHash);
+  assert.equal((await apply(plan, approval, { context })).code, 'APPROVAL_OR_DATE_SPENT');
+  assert.equal((await apply(plan, approval, { context, reconcile: true })).code, 'VERIFIED_WINNER');
+  assert.equal(inserts().length, 1); assert.deepEqual(await model.collection.findOne({ date: plan.input.date }), stored);
 });

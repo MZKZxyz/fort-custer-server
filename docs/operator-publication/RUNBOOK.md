@@ -82,8 +82,11 @@ existing disposable guard or edit a `mode` string to get production access.
 
 All signatures are Ed25519 over canonical UTF-8 JSON of
 `["fort-custer/operator-signature-v1", payload]`. Keys are separate role-specific
-public SPKI DER/base64 entries; duplicate key IDs/public keys are rejected, and
-release/publish signer IDs must differ. Preview never holds a private key or signs
+public SPKI DER/base64 entries. Every root is parsed/validated as Ed25519;
+duplicate key IDs or canonical exported key material are rejected across all roles,
+even when the input SPKI encodings differ. See the
+[key-identity correction](KEY-IDENTITY-REMEDIATION.md). Release and publish
+signer IDs must differ. Preview never holds a private key or signs
 approval. Signing is an external owner-approved/offline process; cryptography
 proves possession of trusted keys, not human review. Never transmit private keys.
 

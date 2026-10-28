@@ -37,19 +37,25 @@ export function signedPayload(envelope, role, keys) {
     if (!auditRef(envelope.keyId) || typeof envelope.signature !== 'string'
         || !/^[A-Za-z0-9+/]{86}==$/.test(envelope.signature)) throw fail('CERTIFICATE_INVALID');
     if (!Array.isArray(keys) || keys.length > 8) throw fail('CERTIFICATE_INVALID');
-    for (const key of keys) {
+    const roots = keys.map(key => {
       exactKeys(key, ['keyId', 'role', 'publicKey']);
-      if (!auditRef(key.keyId) || !['release', 'publish'].includes(key.role)) throw fail('CERTIFICATE_INVALID');
-    }
-    if (new Set(keys.map(k => k.keyId)).size !== keys.length || new Set(keys.map(k => k.publicKey)).size !== keys.length) throw fail('CERTIFICATE_INVALID');
-    const matches = keys.filter(key => key.keyId === envelope.keyId && key.role === role);
+      if (!auditRef(key.keyId) || !['release', 'publish'].includes(key.role)
+          || typeof key.publicKey !== 'string' || key.publicKey.length > 128) throw fail('CERTIFICATE_INVALID');
+      const bytes = Buffer.from(key.publicKey, 'base64');
+      if (bytes.toString('base64') !== key.publicKey) throw fail('CERTIFICATE_INVALID');
+      const publicKey = createPublicKey({ key: bytes, format: 'der', type: 'spki' });
+      if (publicKey.asymmetricKeyType !== 'ed25519') throw fail('CERTIFICATE_INVALID');
+      // OpenSSL can accept multiple SPKI encodings of one key. Compare parsed,
+      // canonically exported material for every root, including unselected ones.
+      return { keyId: key.keyId, role: key.role, publicKey,
+        identity: publicKey.export({ format: 'der', type: 'spki' }).toString('base64') };
+    });
+    if (new Set(roots.map(k => k.keyId)).size !== roots.length
+        || new Set(roots.map(k => k.identity)).size !== roots.length) throw fail('CERTIFICATE_INVALID');
+    const matches = roots.filter(key => key.keyId === envelope.keyId && key.role === role);
     if (matches.length !== 1) throw fail('CERTIFICATE_INVALID');
-    const key = matches[0]; exactKeys(key, ['keyId', 'role', 'publicKey']);
-    if (typeof key.publicKey !== 'string' || key.publicKey.length > 128) throw fail('CERTIFICATE_INVALID');
-    if (Buffer.from(key.publicKey, 'base64').toString('base64') !== key.publicKey) throw fail('CERTIFICATE_INVALID');
-    const publicKey = createPublicKey({ key: Buffer.from(key.publicKey, 'base64'), format: 'der', type: 'spki' });
-    if (publicKey.asymmetricKeyType !== 'ed25519'
-        || !verify(null, signingBytes(envelope.payload), publicKey, Buffer.from(envelope.signature, 'base64'))) throw fail('CERTIFICATE_INVALID');
+    if (!verify(null, signingBytes(envelope.payload), matches[0].publicKey,
+      Buffer.from(envelope.signature, 'base64'))) throw fail('CERTIFICATE_INVALID');
     return envelope.payload;
   } catch { throw fail('CERTIFICATE_INVALID'); }
 }
