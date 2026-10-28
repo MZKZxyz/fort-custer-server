@@ -338,7 +338,7 @@ test('actual insert connection loss leaves no partial row; exact-identity retry 
   assert.equal(await Maze.countDocuments({}), 1);
 });
 
-test('real disposable publisher inserts nothing on ENOENT/EACCES and publishes after monitoring recovers', { timeout: 15000 }, async () => {
+test('real disposable publisher fails closed on active read errors and reconciles ENOENT/ESRCH exit before insert', { timeout: 15000 }, async () => {
   const child = fork(new URL('../tools/test-support/publication-monitor.mjs', import.meta.url), ['publisher'], {
     stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
   });
@@ -353,7 +353,8 @@ test('real disposable publisher inserts nothing on ENOENT/EACCES and publishes a
   });
   child.send({ uri: rs.uri.replace('/fc_synthetic?', '/fc_publication_synthetic_monitor?') });
   const report = await done;
-  assert.deepEqual(report.failures, [{ code: 'ENOENT', inserted: 0 }, { code: 'EACCES', inserted: 0 }]);
-  assert.equal(report.healthyPublications, 2); assert.equal(report.allChildrenClosed, true);
-  assert.equal(await rs.client.db('fc_publication_synthetic_monitor').collection('mazes').countDocuments({}), 2);
+  assert.deepEqual(report.failures, ['ENOENT', 'ESRCH', 'EACCES', 'EPERM', 'EIO'].map(code => ({ code, inserted: 0 })));
+  assert.deepEqual(report.reconciled, ['os-exit-before-event', 'os-esrch-before-event'].map(kind => ({ kind, inserted: 1, recovered: true, beforeExit: true })));
+  assert.equal(report.healthyPublications, 7); assert.equal(report.allChildrenClosed, true);
+  assert.equal(await rs.client.db('fc_publication_synthetic_monitor').collection('mazes').countDocuments({}), 7);
 });

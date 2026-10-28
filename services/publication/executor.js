@@ -57,7 +57,9 @@ export async function generateInWorker(input, now, limits = {}) {
             if (sampledPeakRssBytes > rssBytes) stop('GENERATOR_MEMORY_LIMIT');
           } else if (!await confirmMissingProcess()) stop('WORKER_RSS_MONITOR_UNAVAILABLE');
         } catch (error) {
-          if (error.code !== 'ENOENT' || !await confirmMissingProcess()) stop('WORKER_RSS_MONITOR_UNAVAILABLE');
+          // Either procfs disappearance error can precede libuv's exit event;
+          // both still require confirmed exit, while other read errors fail closed.
+          if ((error.code !== 'ENOENT' && error.code !== 'ESRCH') || !await confirmMissingProcess()) stop('WORKER_RSS_MONITOR_UNAVAILABLE');
         } finally { sampling = false; }
       };
       const monitor = setInterval(sample, WORKER_LIMITS.sampleMs);

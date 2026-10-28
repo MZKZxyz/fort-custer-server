@@ -100,18 +100,20 @@ test('operator CLI is always dry-run, fails closed, and ignores every ambient da
   }
 });
 
-test('persistent ENOENT/EACCES kill real workers, clear the busy slot and permit healthy reuse', () => {
+test('persistent disappearance/permission/read errors kill real workers, clear the busy slot and permit healthy reuse', () => {
   const child = spawnSync(process.execPath, ['tools/test-support/publication-monitor.mjs', 'direct'], {
     encoding: 'utf8', timeout: 15000,
   });
   assert.equal(child.status, 0, child.stderr);
   const report = JSON.parse(child.stdout);
-  assert.deepEqual(report.failures, ['ENOENT', 'ENOENT', 'EACCES']);
-  assert.equal(report.healthyAfterEach, 3); assert.equal(report.closedChildren, 6);
+  assert.deepEqual(report.failures, ['ENOENT', 'ESRCH', 'EACCES', 'EPERM', 'EIO']);
+  assert.equal(report.healthyAfterEach, 5); assert.equal(report.closedChildren, 10);
 });
 
 for (const kind of ['fast-exit', 'exit-enoent', 'exit-pending-read', 'zombie-exit', 'exiting-mm-release', 'os-exit-before-event',
-  'active-enoent', 'active-eacces', 'active-missing-rss', 'no-active-sample']) {
+  'os-esrch-before-event', 'exit-esrch', 'gone-eacces-before-event',
+  'active-enoent', 'active-esrch', 'active-eacces', 'active-eperm', 'active-eio', 'active-fs-read-failure',
+  'active-unprobeable', 'active-missing-rss', 'no-active-sample']) {
   test(`monitor lifecycle ${kind} settles once and preserves healthy worker reuse`, () => {
     const child = spawnSync(process.execPath, ['tools/test-support/publication-monitor.mjs', kind], {
       encoding: 'utf8', timeout: 10000,

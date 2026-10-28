@@ -1,5 +1,10 @@
 # PR #23: fresh-only public leaderboard correction
 
+Independent re-QA closed this leaderboard P2 on `ea9d5012` and identified a
+separate pre-existing ESRCH supervisor defect. Its targeted correction and current
+validation are in [the monitor reliability report](esrch-monitor-remediation.md).
+The earlier monitor incident below remains untraced; no causal link is assumed.
+
 The independent [Systems/Security failure](https://github.com/MZKZxyz/fort-custer-server/pull/23#pullrequestreview-5682264559)
 and [integrator correction](https://github.com/MZKZxyz/fort-custer-server/pull/23#pullrequestreview-5682304785)
 rejected head `8dd9263ef80341744c974bef75606be20e6cc350`: daily/start/archive
