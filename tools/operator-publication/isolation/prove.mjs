@@ -170,7 +170,8 @@ try {
   // Change a measured dependency in a derived image. Bootstrap refuses it before
   // dynamic importing generator or opening the DB. Production also rejects image ID.
   const badContext = join(temp, 'bad'); await mkdir(badContext);
-  await writeFile(join(badContext, 'Dockerfile'), `FROM ${prefix}:proof\nUSER 0\nRUN ["/usr/local/bin/node", "-e", "require('fs').appendFileSync('/app/lib/maze/engine.js','\\n// tampered')"]\nUSER 10001:10001\n`);
+  const mutation = JSON.stringify(['/usr/local/bin/node', '-e', "require('fs').appendFileSync('/app/lib/maze/engine.js','// tampered')"]);
+  await writeFile(join(badContext, 'Dockerfile'), `FROM ${prefix}:proof\nUSER 0\nRUN ${mutation}\nUSER 10001:10001\n`);
   await docker(['build', '-t', `${prefix}:modified`, badContext], { timeout: 60000 });
   const modifiedId = json(await docker(['image', 'inspect', `${prefix}:modified`]))[0].Id;
   check('modified executable source refused by measured bootstrap', parsed(await job('generate', { image: modifiedId })).code === 'SOURCE_MODIFIED');
