@@ -1,6 +1,9 @@
 # ADR 001: a dedicated Linux host, disposable containers, external one-use authority
 
 Status: **proposed for independent Systems/Security review, production NO-GO**.
+Sprint 1.8A adds [host lifecycle fixtures and an explicit verification matrix](HOST-LIFECYCLE.md).
+Real supervisor SIGKILL with explicit parent recovery is now tested; durable
+systemd deadline, daemon-independent cgroup fencing and reboot remain NOT VERIFIED.
 Issue [#26](https://github.com/MZKZxyz/fort-custer-server/issues/26), parent #6.
 Engineering baseline fetched and verified before edits:
 `62fd6401cb10ba1cac26f4ad48e3209ae0972846` (Sprint 1.7H, PR #25).

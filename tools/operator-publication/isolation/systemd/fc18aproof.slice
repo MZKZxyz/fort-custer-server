@@ -1,0 +1,10 @@
+[Unit]
+Description=Dedicated synthetic proof container cgroup (no other workloads)
+RefuseManualStop=yes
+StopWhenUnneeded=no
+
+[Slice]
+CPUQuota=100%
+MemoryMax=384M
+MemorySwapMax=0
+TasksMax=64

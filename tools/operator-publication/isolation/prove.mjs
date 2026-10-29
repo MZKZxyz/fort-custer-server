@@ -1,7 +1,7 @@
 // Explicit, opt-in local Docker proof. Not discovered by npm test or app startup.
 // Creates only uniquely named local disposable containers/volumes; never cloud resources.
 import { spawn } from 'node:child_process';
-import { mkdtemp, writeFile, rm, mkdir } from 'node:fs/promises';
+import { mkdtemp, writeFile, rm, mkdir, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,12 +9,14 @@ import { generateKeyPairSync, randomBytes, randomUUID, sign } from 'node:crypto'
 import assert from 'node:assert/strict';
 import { digest, signingBytes } from '../artifacts.mjs';
 import { isolationIndexFixtures } from '../../test-support/isolation-index-fixtures.mjs';
+import { prepare, receipt, containerLabels, recover, status } from './lifecycle.mjs';
+import { setTimeout as delay } from 'node:timers/promises';
 
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 const prefix = `fc17j-${randomUUID().slice(0, 8)}`;
 const nodeImage = 'node@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df';
 const mongoImage = 'mongo@sha256:5dda65a823a0d73d9caae4f449ab01973cf9884cea4ef56f9cb84dbe5e00acbd';
-const containers = [], volumes = [], checks = [];
+const containers = [], lifecycleNames = [], volumes = [], checks = [];
 const temp = await mkdtemp(join(tmpdir(), `${prefix}-`));
 const reportPath = resolve(process.argv[2] ?? join(tmpdir(), `${prefix}-evidence.json`));
 const dockerEnv = { ...process.env };
@@ -61,18 +63,63 @@ async function volume(label, files = {}, uid = 10002) {
   await docker(['rm', helper]);
   return name;
 }
-async function job(mode, { args = [], mounts = [], uid = 10001, image = imageId, deadline = 20000, memory = 256 } = {}) {
-  const name = `${prefix}-job-${containers.length}`; containers.push(name);
-  await docker(['create', '--name', name, '--network', 'none', '--hostname', 'fixture', '--user', `${uid}:${uid}`,
+async function job(mode, { args = [], mounts = [], uid = 10001, image = imageId, deadline = 20000, memory = 256, lifecycle } = {}) {
+  let stateDir, intent;
+  if (lifecycle) {
+    stateDir = await mkdtemp(join(temp, 'lifecycle-'));
+    intent = await prepare(stateDir, { imageId: image, sourceSha });
+    lifecycleNames.push(intent.name);
+  }
+  const name = intent?.name ?? `${prefix}-job-${containers.length}`; containers.push(name);
+  const created = await docker(['create', '--name', name, '--restart=no', '--network', 'none', '--hostname', 'fixture', '--user', `${uid}:${uid}`,
     '--read-only', '--cap-drop=ALL', '--security-opt', 'no-new-privileges=true', '--pids-limit', '32',
     '--memory', `${memory}m`, '--memory-swap', `${memory}m`, '--cpus', '0.5', '--ulimit', 'nofile=64:64',
     '--tmpfs', '/tmp:rw,noexec,nosuid,nodev,size=8388608,mode=1777', '--log-driver', 'none',
     ...['HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY', 'NO_PROXY', 'http_proxy', 'https_proxy', 'all_proxy', 'no_proxy'].flatMap(k => ['--env', `${k}=`]),
+    ...(intent ? Object.entries(containerLabels(intent)).flatMap(([key, value]) => ['--label', `${key}=${value}`]) : []),
     ...mounts, image, mode, ...args]);
   const spec = json(await docker(['inspect', name]))[0];
   assert.equal(spec.Image, image); assert.equal(spec.HostConfig.NetworkMode, 'none');
   assert.equal(spec.HostConfig.Privileged, false); assert.equal(spec.HostConfig.ReadonlyRootfs, true);
   assert.ok(spec.Mounts.filter(m => m.Type === 'volume').every(m => m.RW === false));
+  if (lifecycle) {
+    await receipt(stateDir, created.stdout.toString().trim());
+    const retained = await Promise.all(['spent.json', 'intent.json', 'receipt.json'].map(n => readFile(join(stateDir, n), 'utf8')));
+    const child = spawn(process.execPath, ['tools/test-support/lifecycle-process.mjs', stateDir], { cwd: root, env: dockerEnv, stdio: ['ignore', 'ignore', 'pipe', 'ipc'] });
+    const exited = new Promise(resolve => child.once('exit', (code, signal) => resolve({ code, signal })));
+    try {
+      await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(Error('CHILD_SUPERVISOR_NOT_READY')), 10000);
+        child.once('message', value => { clearTimeout(timer); value.started ? resolve() : reject(Error('CHILD_NOT_STARTED')); });
+        child.once('error', error => { clearTimeout(timer); reject(error); });
+        child.once('exit', () => { clearTimeout(timer); reject(Error('CHILD_EARLY_EXIT')); });
+      });
+      if (lifecycle.ready) await lifecycle.ready();
+      else {
+        const until = performance.now() + 5000;
+        while (performance.now() < until) {
+          const top = (await docker(['top', name, '-eo', 'pid,comm'])).stdout.toString().trim().split('\n');
+          if (top.length >= 3) break;
+          await delay(50);
+        }
+        check('lifecycle actual detached descendant exists before kill', (await docker(['top', name, '-eo', 'pid,comm'])).stdout.toString().trim().split('\n').length >= 3);
+      }
+      child.kill('SIGKILL');
+      assert.equal((await exited).signal, 'SIGKILL');
+      check('actual supervisor SIGKILL leaves container requiring external recovery', (await status(stateDir)).running);
+      // Deliberately injected adapter outage, NOT a dockerd restart/partition.
+      await assert.rejects(recover(stateDir, { call: async () => { throw Error('INJECTED_DAEMON_UNAVAILABLE'); } }), /INJECTED_DAEMON_UNAVAILABLE/);
+      assert.equal((await status(stateDir)).running, true);
+      const outcome = await recover(stateDir);
+      await recover(stateDir); // idempotent reconnect / recovery, never starts work
+      check('targeted recovery kills job only and preserves spent immutable records', outcome.retry === false && !(await status(stateDir)).present);
+      assert.deepEqual(await Promise.all(['spent.json', 'intent.json', 'receipt.json'].map(n => readFile(join(stateDir, n), 'utf8'))), retained);
+      await assert.rejects(prepare(stateDir, { imageId: image, sourceSha }), /SPENT_OR_UNCERTAIN/);
+      return { recovered: true };
+    } finally {
+      child.kill('SIGKILL'); await exited;
+    }
+  }
   let deadlineHit = false, killError;
   // External to the job; daemon SIGKILL tears down its PID namespace, including
   // setsid/detached descendants. Host-supervisor death is a documented blocker.
@@ -118,6 +165,11 @@ try {
   check('cgroup PID limit rejected process growth', Number(parsed(await job('pids')).events.match(/max (\d+)/)?.[1]) > 0);
   const tree = await job('tree', { deadline: 2500 });
   check('external deadline killed detached process tree', tree.deadlineHit && tree.state.ExitCode === 137 && parsed(tree).code === 'DETACHED_CHILD_STARTED');
+  const bystander = `${prefix}-unrelated`; containers.push(bystander);
+  await docker(['create', '--name', bystander, '--network=none', imageId, 'tree']);
+  await job('tree', { lifecycle: {} });
+  check('targeted recovery retained unrelated container', json(await docker(['inspect', bystander]))[0].State.Status === 'created');
+  await docker(['rm', bystander]);
 
   const pairs = ['release', 'publish'].map(role => ({ role, ...generateKeyPairSync('ed25519') }));
   const keys = pairs.map(p => ({ role: p.role, keyId: `fixture-${p.role}`, publicKey: p.publicKey.export({ format: 'der', type: 'spki' }).toString('base64') }));
@@ -180,10 +232,23 @@ try {
   check('unknown claim ACK prevents any write', parsed(await invoke(second, 'write', 'claim-ack')).code === 'CLAIM_UNCERTAIN');
   check('uncertain claimed date cannot be retried', parsed(await invoke(second)).code === 'APPROVAL_OR_DATE_SPENT');
   check('missing winner remains uncertain under read-only reconcile', parsed(await invoke(second, 'reconcile', undefined, readerVol)).code === 'NO_WINNER_UNCERTAIN');
+  const crashed = request(parsed(await job('generate', { args: ['2026-06-03'] })));
+  const crashRequest = await volume('crash-request', { 'request.json': crashed });
+  await job('write', { uid: 10002, args: ['claim-hold'], mounts: [...mount(policyVol, '/policy'), ...mount(crashRequest, '/request'), ...mount(writerVol, '/writer'), ...mount(socketVol, '/socket')],
+    lifecycle: { ready: async () => {
+      const until = performance.now() + 10000;
+      while (performance.now() < until) {
+        if (parsed(await job('admin', { uid: 999, args: ['counts'], mounts: adminMounts })).claims === 3) return;
+        await delay(100);
+      }
+      throw Error('CLAIM_HOLD_NOT_OBSERVED');
+    } } });
+  check('SIGKILL recovery retains central consumed claim and refuses publication replay', parsed(await invoke(crashed)).code === 'APPROVAL_OR_DATE_SPENT'
+    && parsed(await invoke(crashed, 'reconcile', undefined, readerVol)).code === 'NO_WINNER_UNCERTAIN');
   const counts = parsed(await job('admin', { uid: 999, args: ['counts'], mounts: adminMounts }));
-  check('global claims and durable intent remain without duplicate insert', counts.mazes === 1 && counts.claims === 2 && counts.audit === 1);
+  check('global claims and durable intent remain without duplicate insert', counts.mazes === 1 && counts.claims === 3 && counts.audit === 1);
   await job('admin', { uid: 999, args: ['drift'], mounts: adminMounts });
-  const third = request(parsed(await job('generate', { args: ['2026-06-03'] })));
+  const third = request(parsed(await job('generate', { args: ['2026-06-04'] })));
   check('metadata fingerprint drift refuses new claim', parsed(await invoke(third)).code === 'TARGET_DRIFT');
 
   // Change a measured dependency in a derived image. Bootstrap refuses it before
@@ -196,7 +261,10 @@ try {
   check('modified executable source refused by measured bootstrap', parsed(await job('generate', { image: modifiedId })).code === 'SOURCE_MODIFIED');
   evidence = { schemaVersion: 1, mode: 'disposable-container-proof', sourceSha, node: process.version,
     nodeImage, mongoImage, imageId, measurement: measured.hash, checks, counts,
-    production: 'LIVE_APPLY_BLOCKED', gaps: ['host-supervisor death deadline', 'production Atlas TLS/topology/egress', 'owner roots and provenance', 'external DDL fence', 'rollback-resistant authority/audit', 'independent Systems/Security QA'] };
+    production: 'LIVE_APPLY_BLOCKED', hostLifecycle: { supervisorSIGKILL: 'observed; explicit parent recovery',
+      daemonInterruption: 'NOT VERIFIED; adapter exception only', systemdDeadline: 'NOT VERIFIED',
+      cgroupFence: 'NOT VERIFIED', reboot: 'NOT VERIFIED' },
+    gaps: ['independent host-supervisor death deadline/fence/reboot proof', 'production Atlas TLS/topology/egress', 'owner roots and provenance', 'external DDL fence', 'rollback-resistant authority/audit', 'independent Systems/Security QA'] };
 } finally {
   for (const name of containers.reverse()) await docker(['rm', '-f', name], { allowFailure: true }).catch(() => {});
   for (const name of volumes.reverse()) await docker(['volume', 'rm', name], { allowFailure: true }).catch(() => {});
@@ -205,6 +273,7 @@ try {
   const remainingContainers = await docker(['ps', '-aq', '--filter', `name=${prefix}-`]);
   const remainingVolumes = await docker(['volume', 'ls', '-q', '--filter', `name=${prefix}-`]);
   assert.equal(remainingContainers.stdout.length + remainingVolumes.stdout.length, 0, 'DISPOSAL_INCOMPLETE');
+  for (const name of lifecycleNames) assert.equal((await docker(['ps', '-aq', '--filter', `name=^/${name}$`])).stdout.length, 0, 'LIFECYCLE_DISPOSAL_INCOMPLETE');
 }
 await writeFile(reportPath, JSON.stringify(evidence, null, 2) + '\n', { mode: 0o600, flag: 'wx' });
 process.stdout.write(`Evidence: ${reportPath}\n`);

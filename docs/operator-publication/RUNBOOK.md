@@ -1,5 +1,10 @@
 # One-date operator publication — live apply BLOCKED
 
+Sprint 1.8A adds the [disposable host lifecycle runbook](HOST-LIFECYCLE.md),
+including exact-ID orphan recovery, STOP handling, uninstalled systemd fixtures,
+costs and the production gap matrix. No production installation or activation is
+authorized; host systemd/cgroup/daemon/reboot guarantees remain NOT VERIFIED.
+
 Sprint 1.7J adds a **disposable-only** isolated-container proof and proposed
 architecture under issue [#26](https://github.com/MZKZxyz/fort-custer-server/issues/26).
 See [ADR 001 and costs](ADR-001-ISOLATED-PUBLISHER.md),

@@ -1,5 +1,11 @@
 # Reproduce the disposable isolation proof
 
+Sprint 1.8A extends this same opt-in Docker harness with real supervisor SIGKILL,
+exact-ID recovery and retained central approval consumption. See
+[HOST-LIFECYCLE](HOST-LIFECYCLE.md) for the host fixture, separate failure-case
+matrix, NOT VERIFIED controls and operating instructions. It does not turn this
+surviving-parent proof into a durable host deadline.
+
 Use Node 24, Linux with a local trusted Docker daemon, cgroup v2 CPU/memory/PID
 controllers, default seccomp and enough disk for the Node/Mongo images. No cloud
 account or production database is needed. Missing enforcement causes a failed
