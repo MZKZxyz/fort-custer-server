@@ -86,7 +86,9 @@ async function job(mode, { args = [], mounts = [], uid = 10001, image = imageId,
     await receipt(stateDir, created.stdout.toString().trim());
     const retained = await Promise.all(['spent.json', 'intent.json', 'receipt.json'].map(n => readFile(join(stateDir, n), 'utf8')));
     const child = spawn(process.execPath, ['tools/test-support/lifecycle-process.mjs', stateDir], { cwd: root, env: dockerEnv, stdio: ['ignore', 'ignore', 'pipe', 'ipc'] });
-    const exited = new Promise(resolve => child.once('exit', (code, signal) => resolve({ code, signal })));
+    child.stderr.resume(); // drain bounded fixture diagnostics even on failed startup
+    // close also fires when spawn fails; exit alone would strand final cleanup.
+    const exited = new Promise(resolve => child.once('close', (code, signal) => resolve({ code, signal })));
     try {
       await new Promise((resolve, reject) => {
         const timer = setTimeout(() => reject(Error('CHILD_SUPERVISOR_NOT_READY')), 10000);
