@@ -32,8 +32,10 @@ or arbitrary image/URI selector exists in the harness CLI.
 All container/volume names have a fresh `fc17j-*` prefix. Fixture credentials and
 private signing keys are generated fresh; private signing keys remain in host
 memory and fixture credentials go only to 0600 temporary files/named volumes.
-The harness removes its containers, volumes, temporary files and image tags in
-`finally`. The evidence file is created exclusively after verifying disposal;
+The harness removes completed provisioning helpers and stopped jobs promptly
+(jobs only after inspecting their stopped/PID-zero state), bounding retained
+filesystem copies on a `vfs` daemon. Remaining containers, volumes, temporary
+files and image tags are removed in `finally`. The evidence file is created exclusively after verifying disposal;
 choose a new output filename for each run. It remains outside the checkout. Docker build cache
 and public base images may remain. On supervisor/host SIGKILL, `finally` cannot
 run: preserve evidence first, then inspect and remove only that invocation's
@@ -65,13 +67,54 @@ unknown insert ACK and separate read-only reconciliation; retained central claim
 and audit counts; target metadata drift. Assertions are required, not informative
 log messages. See the [threat model](THREAT-MODEL.md) for what each does not prove.
 
-The source-only tests verify measurement and signed authority/input bindings.
+The isolation/security tests verify measurement, signed authority/input bindings
+and strict index readiness, including disposable-Mongo metadata regressions.
 The prior operator suite remains the complete release/window/fresh-provenance,
 worker watchdog, exact-date publication and actual Mongo fault regression suite.
 The new fixture protocol stores synthetic candidate bytes in its reserved DB;
 it is not wired into the app model or a live publication adapter. Fixture ACK
 faults occur after actual commands and deliberately discard results; they model
 uncertainty rather than assert that a network partition happened.
+
+## Index readiness correction (Sprint 1.7J P3)
+
+[Independent review 5693265522](https://github.com/MZKZxyz/fort-custer-server/pull/27#pullrequestreview-5693265522)
+demonstrated that a unique `{seed:1}` index named `date_1` passed the former
+fixture readiness check. `target(db)` now reuses the server's index assessment:
+the actual ordered key must be exactly `{date:1}`, with `unique === true`, no
+sparse/partial/hidden/in-progress-build/TTL behavior and absent or simple
+collation. The name provides no authority. The complete options/index metadata
+and ordered keys still participate in the target fingerprint.
+
+The permanent regressions cover misleading field, direction, compound keys,
+missing uniqueness, sparse, partial, hidden, TTL and incompatible collation.
+They also exercise unfinished-build metadata, compatible simple collation,
+name-independent success and preservation of full fingerprints. Disposable Mongo
+must reject each adversarial definition and accept the correct date index,
+which must reject a duplicate date with code 11000.
+
+The Docker proof adds nine actual authenticated writer attempts against those
+adversarial index definitions. Each must refuse before creating any claim, maze
+or audit row. Restoring the exact correct index must retain the original signed
+target fingerprint and allow the subsequent one-winner concurrency/recovery
+proof. These nine checks extend the original 24 required assertions to 33.
+Only the synthetic fixture administrator can install these definitions; the
+writer's DDL privileges remain denied.
+
+During expansion of this matrix, two local proof attempts stopped at partial-index
+setup; bounded diagnostics on the second identified MongoDB `14031`
+(`OutOfDiskSpace`). Retaining every completed container until final teardown
+exhausted the `vfs` daemon's fixture disk. Prompt removal of stopped containers
+addresses that test-harness limit without changing job budgets, enforcement or
+retained Mongo authority. Failed runs produced no success evidence and completed
+their disposal checks; the final full proof must pass without skips.
+
+Red/green verification: the new wrong-field regression failed on the baseline
+predicate with `Missing expected rejection`; the corrected predicate passes.
+The handoff on PR #27 records the final exact SHA, observed suite counts and
+Docker evidence. No production readiness is inferred from these tests. This
+correction does not close the external concurrent-DDL fence or any production
+gap in the [threat model](THREAT-MODEL.md).
 
 ## Full regression and independent QA
 

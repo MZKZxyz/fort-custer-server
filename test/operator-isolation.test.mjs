@@ -5,7 +5,9 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { generateKeyPairSync, sign, randomUUID } from 'node:crypto';
 import { measurement } from '../tools/operator-publication/isolation/measure.mjs';
-import { validateRequest } from '../tools/operator-publication/isolation/protocol.mjs';
+import { validateRequest, target, database } from '../tools/operator-publication/isolation/protocol.mjs';
+import { isolationIndexFixtures } from '../tools/test-support/isolation-index-fixtures.mjs';
+import { replicaSet } from '../tools/transaction-feasibility/replica-set.mjs';
 import { digest, signingBytes } from '../tools/operator-publication/artifacts.mjs';
 import { generateDaily, canonicalConfig, algorithmVersion } from '../lib/maze/engine.js';
 import { publicationDocument } from '../services/publication/policy.js';
@@ -66,4 +68,52 @@ test('request cannot introduce caller roots or change candidate, target, date or
 
 test('fixture proof cannot authorize production apply', () => {
   const f = fixture(); assert.equal(applyProduction(f).code, 'LIVE_APPLY_BLOCKED');
+});
+
+function metadataDb(indexes) {
+  return {
+    listCollections: () => ({ toArray: async () => [{ info: { uuid: Buffer.alloc(16, 1) }, options: {} }] }),
+    collection: () => ({ listIndexes: () => ({ toArray: async () => indexes }) }),
+  };
+}
+
+for (const [name, fixture] of Object.entries(isolationIndexFixtures)) {
+  test(`target rejects misleading date_1 index: ${name}`, async () => {
+    await assert.rejects(target(metadataDb([{ name: 'date_1', key: fixture.key, ...fixture.options }])), /TARGET_INVALID/);
+  });
+}
+
+test('target rejects unfinished date index builds', async () => {
+  await assert.rejects(target(metadataDb([{ name: 'date_1', key: { date: 1 }, unique: true, buildUUID: 'in-progress' }])), /TARGET_INVALID/);
+});
+
+test('target accepts exact unique date semantics independently of name and fingerprints full metadata', async () => {
+  const valid = { name: 'approved_date', key: { date: 1 }, unique: true };
+  const snapshot = await target(metadataDb([valid]));
+  assert.equal(snapshot.database, database);
+  assert.equal(snapshot.indexesHash, digest([{ ...valid, key: [['date', 1]] }]));
+  const explicitSimple = { ...valid, sparse: false, hidden: false, collation: { locale: 'simple' } };
+  assert.notEqual((await target(metadataDb([explicitSimple]))).indexesHash, snapshot.indexesHash);
+  // An unrelated index must remain in the pinned fingerprint.
+  assert.notEqual((await target(metadataDb([valid, { name: 'seed_1', key: { seed: 1 } }]))).indexesHash, snapshot.indexesHash);
+});
+
+test('disposable Mongo rejects spoofed date indexes/options and retains the correct-index success path', async () => {
+  const rs = await replicaSet();
+  try {
+    const db = rs.client.db(database);
+    for (const name of ['mazes', 'claims', 'audit']) await db.createCollection(name);
+    for (const [name, fixture] of Object.entries(isolationIndexFixtures)) {
+      await db.collection('mazes').createIndex(fixture.key, { ...fixture.options, name: 'date_1' });
+      await assert.rejects(target(db), /TARGET_INVALID/, name);
+      for (const collection of ['mazes', 'claims', 'audit']) assert.equal(await db.collection(collection).countDocuments(), 0, `${name}: ${collection}`);
+      await db.collection('mazes').dropIndex('date_1');
+    }
+    await db.collection('mazes').createIndex({ date: 1 }, { unique: true });
+    const original = await target(db);
+    assert.equal(original.collection, 'mazes');
+    await db.collection('mazes').insertOne({ date: '2026-06-01', seed: 'first' });
+    await assert.rejects(db.collection('mazes').insertOne({ date: '2026-06-01', seed: 'second' }), { code: 11000 });
+    assert.deepEqual(await target(db), original);
+  } finally { await rs.close(); }
 });

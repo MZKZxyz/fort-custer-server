@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { digest, signedPayload } from '../artifacts.mjs';
 import { exactKeys } from '../../../services/publication/fresh-release.js';
 import { validManifest } from '../../../services/publication/policy.js';
+import { assessIndexReadiness } from '../../../services/publication/readiness.js';
 
 export const database = 'fc_publication_synthetic_isolation';
 export const socketUri = `mongodb://%2Fsocket%2Fmongodb-27017.sock/${database}?directConnection=true&replicaSet=fcIsolated`;
@@ -33,7 +34,9 @@ export function validateRequest(request, policy, measured) {
 export async function target(db) {
   const rows = await db.listCollections({ name: 'mazes' }, { maxTimeMS: 2000 }).toArray();
   const indexes = await db.collection('mazes').listIndexes({ maxTimeMS: 2000 }).toArray();
-  if (rows.length !== 1 || !indexes.some(i => i.name === 'date_1' && i.unique)) throw Error('TARGET_INVALID');
+  // Names are labels, not evidence of date uniqueness. Reuse the server's exact
+  // key/options assessment; retain the full metadata fingerprint below.
+  if (rows.length !== 1 || !assessIndexReadiness({ mazes: indexes }).checks.mazeDateUnique) throw Error('TARGET_INVALID');
   return { database, collection: 'mazes', uuid: rows[0].info.uuid.toString('hex'),
     optionsHash: digest(rows[0].options), indexesHash: digest(indexes.map(i => ({ ...i, key: Object.entries(i.key) }))) };
 }

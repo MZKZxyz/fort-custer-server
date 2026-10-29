@@ -95,7 +95,7 @@ try {
     await new Promise((resolve, reject) => { child.once('spawn', resolve); child.once('error', reject); }); child.unref();
     output({ code: 'DETACHED_CHILD_STARTED' }); setInterval(() => {}, 1000);
   } else if (mode === 'admin') {
-    const { admin } = await import('./fixture-admin.mjs'); output(await admin(process.argv[3]));
+    const { admin } = await import('./fixture-admin.mjs'); output(await admin(process.argv[3], process.argv[4]));
   } else throw Error('FIXTURE_MODE_INVALID');
 } catch (error) {
   const allowed = ['SOURCE_MODIFIED', 'SOURCE_UNTRUSTED', 'CERTIFICATE_INVALID', 'APPROVAL_INVALID'];

@@ -1,8 +1,9 @@
 // Only the disposable harness mounts this account. Never present in writer/gen.
 import { readFile } from 'node:fs/promises';
 import { client, database, target } from './protocol.mjs';
+import { isolationIndexFixtures } from '../../test-support/isolation-index-fixtures.mjs';
 const pause = () => new Promise(resolve => setTimeout(resolve, 100));
-export async function admin(mode) {
+export async function admin(mode, indexCase) {
   const accounts = JSON.parse(await readFile('/admin/accounts.json', 'utf8'));
   let connection;
   if (mode === 'init') {
@@ -37,6 +38,21 @@ export async function admin(mode) {
       return { target: await target(db) };
     }
     if (mode === 'counts') return { mazes: await db.collection('mazes').countDocuments(), claims: await db.collection('claims').countDocuments(), audit: await db.collection('audit').countDocuments() };
+    if (mode === 'index-fixture') {
+      if (indexCase !== 'restore' && !Object.hasOwn(isolationIndexFixtures, indexCase)) throw Error('FIXTURE_INDEX_CASE');
+      const fixture = indexCase === 'restore' ? { key: { date: 1 }, options: { unique: true } } : isolationIndexFixtures[indexCase];
+      let phase = 'drop';
+      try {
+        await db.collection('mazes').dropIndex('date_1');
+        phase = 'create';
+        await db.collection('mazes').createIndex(fixture.key, { ...fixture.options, name: 'date_1' });
+      } catch (error) {
+        // Bounded fixture diagnostics only; never emit command text or secrets.
+        return { code: 'FIXTURE_INDEX_SETUP_FAILED', phase, mongoCode: Number.isInteger(error.code) ? error.code : null,
+          transport: ['MongoNetworkError', 'MongoNetworkTimeoutError', 'MongoServerSelectionError'].includes(error.name) };
+      }
+      return { code: 'FIXTURE_INDEX_CHANGED' };
+    }
     if (mode === 'drift') { await db.collection('mazes').createIndex({ seed: 1 }); return { code: 'FIXTURE_DDL_CHANGED' }; }
     throw Error('FIXTURE_ADMIN_MODE');
   } finally { await connection.close(); }

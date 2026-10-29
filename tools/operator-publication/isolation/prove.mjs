@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { generateKeyPairSync, randomBytes, randomUUID, sign } from 'node:crypto';
 import assert from 'node:assert/strict';
 import { digest, signingBytes } from '../artifacts.mjs';
+import { isolationIndexFixtures } from '../../test-support/isolation-index-fixtures.mjs';
 
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 const prefix = `fc17j-${randomUUID().slice(0, 8)}`;
@@ -55,6 +56,9 @@ async function volume(label, files = {}, uid = 10002) {
     '--mount', `type=volume,src=${name},dst=/data`, '--entrypoint', '/usr/local/bin/node', nodeImage,
     '-e', `const f=require('fs'); f.chownSync('/data',${uid},${uid}); f.chmodSync('/data',0o755); for(const n of f.readdirSync('/data')) {f.chownSync('/data/'+n,${uid},${uid}); f.chmodSync('/data/'+n,0o600);}`]);
   await docker(['cp', `${dir}/.`, `${helper}:/data`]); await docker(['start', '-a', helper]);
+  // vfs copies each container filesystem. Release completed helpers promptly;
+  // named volumes retain the fixture data until final verified teardown.
+  await docker(['rm', helper]);
   return name;
 }
 async function job(mode, { args = [], mounts = [], uid = 10001, image = imageId, deadline = 20000, memory = 256 } = {}) {
@@ -79,6 +83,9 @@ async function job(mode, { args = [], mounts = [], uid = 10001, image = imageId,
   if (killError) throw killError;
   const state = json(await docker(['inspect', name]))[0].State;
   assert.equal(state.Running, false); assert.equal(state.Pid, 0);
+  // Inspect enforcement/exit first, then release the stopped root filesystem.
+  // Retaining every adversarial job can exhaust a vfs daemon's local disk.
+  await docker(['rm', name]);
   // docker start -a returns zero even when the container exits nonzero. Inspect it.
   return { stdout: result.stdout.toString(), stderr: result.stderr.toString(), state, deadlineHit };
 }
@@ -151,6 +158,18 @@ try {
   const fake = request({ ...generated, seed: 'tampered' });
   check('signed malformed candidate refused', parsed(await invoke(fake)).code === 'APPROVAL_INVALID');
   check('unauthenticated socket access cannot publish', parsed(await job('unauthenticated', { uid: 10002, mounts: [...mount(socketVol, '/socket')] })).code === 'UNAUTHENTICATED_DENIED');
+  // Real authenticated writer attempts with misleading index names/options.
+  // Every rejection must precede any durable claim, maze insert or result audit.
+  for (const indexCase of Object.keys(isolationIndexFixtures)) {
+    const changed = parsed(await job('admin', { uid: 999, args: ['index-fixture', indexCase], mounts: adminMounts }));
+    assert.equal(changed.code, 'FIXTURE_INDEX_CHANGED', JSON.stringify(changed));
+    const refused = parsed(await invoke(original));
+    const beforeClaim = parsed(await job('admin', { uid: 999, args: ['counts'], mounts: adminMounts }));
+    check(`invalid date index ${indexCase} refused before claim/maze/audit`, refused.code === 'FIXTURE_UNAVAILABLE'
+      && beforeClaim.mazes === 0 && beforeClaim.claims === 0 && beforeClaim.audit === 0);
+    const restored = parsed(await job('admin', { uid: 999, args: ['index-fixture', 'restore'], mounts: adminMounts }));
+    assert.equal(restored.code, 'FIXTURE_INDEX_CHANGED', JSON.stringify(restored));
+  }
   const competitor = request(generated);
   const concurrent = (await Promise.all([invoke(original, 'write', 'write-ack'), invoke(competitor, 'write', 'write-ack')])).map(parsed);
   check('concurrent independent containers consume one global date', concurrent.filter(r => r.code === 'RECONCILED_VERIFIED').length === 1 && concurrent.filter(r => ['APPROVAL_OR_DATE_SPENT', 'CLAIM_UNCERTAIN'].includes(r.code)).length === 1);
