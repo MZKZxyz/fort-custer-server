@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { mkdtemp, rm, readFile, writeFile, chmod, symlink, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { spawn } from 'node:child_process';
+import { missingResource, commandFailure, failureReport } from '../tools/operator-publication/isolation/proof-outcome.mjs';
 import { prepare, receipt, containerLabels, recover, status, readRecord, appendRecord, assertPolicy } from '../tools/operator-publication/isolation/lifecycle.mjs';
 
 const policy = { sourceSha: 'a'.repeat(40), imageId: `sha256:${'b'.repeat(64)}` };
@@ -117,4 +119,74 @@ test('corrupt STOP refuses cleanup; no full-disk guarantee asserted', async t =>
   // exhausting the shared filesystem. ENOSPC power-loss behavior is NOT proven.
   await writeFile(join(f.dir, 'STOP.json'), 'corrupt', { mode: 0o600 });
   await assert.rejects(recover(f.dir, { call: f.call })); assert.deepEqual(f.mutations, []);
+});
+
+async function failureProcess(t, scenario) {
+  const dir = await mkdtemp(join(tmpdir(), 'fc18a-outcome-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const evidence = join(dir, 'success.json'), trace = join(dir, 'trace.jsonl');
+  const child = spawn(process.execPath, ['tools/test-support/proof-failure-process.mjs', scenario, evidence, trace]);
+  let stdout = '', stderr = '';
+  child.stdout.on('data', bytes => { stdout += bytes; }); child.stderr.on('data', bytes => { stderr += bytes; });
+  const timer = setTimeout(() => child.kill('SIGKILL'), 5000);
+  const [code, signal] = await new Promise((resolve, reject) => {
+    child.once('error', reject); child.once('close', (code, signal) => resolve([code, signal]));
+  });
+  clearTimeout(timer);
+  assert.equal(signal, null); assert.equal(stdout, '');
+  assert.ok(stderr.length < 4096);
+  for (const value of ['synthetic-private-canary', 'mongodb://', 'private-key=', 'grid=', 'signature=', 'spawnargs', 'stack']) assert.ok(!stderr.includes(value));
+  return { code, stderr, evidence, trace: (await readFile(trace, 'utf8')).trim().split('\n').map(JSON.parse) };
+}
+for (const scenario of ['primary', 'cleanup', 'combined']) test(`proof ${scenario} failure exits nonzero, preserves phase contexts and never publishes`, async t => {
+  const result = await failureProcess(t, scenario);
+  assert.equal(result.code, 1);
+  await assert.rejects(readFile(result.evidence), { code: 'ENOENT' });
+  const report = JSON.parse(result.stderr);
+  assert.equal(report.code, 'PROOF_FAILED'); assert.equal(report.retry, false);
+  assert.equal(report.production, 'LIVE_APPLY_BLOCKED');
+  assert.deepEqual(result.trace, [{ phase: 'primary' }, { phase: 'cleanup', args: ['rm', '-f', 'a'.repeat(64)] }, { phase: 'verify' }]);
+  if (scenario !== 'cleanup') {
+    assert.equal(report.primary.operation, 'start'); assert.equal(report.primary.exitCode, 31);
+    assert.deepEqual(report.primary.reasons, ['QA_PRIMARY_PROVISION_FAILURE']);
+  } else assert.equal(report.primary, null);
+  if (scenario !== 'primary') {
+    assert.equal(report.cleanup.total, 2);
+    assert.equal(report.cleanup.failures[0].operation, 'rm'); assert.equal(report.cleanup.failures[0].exitCode, 32);
+    assert.deepEqual(report.cleanup.failures[0].reasons, ['QA_SECONDARY_CLEANUP_FAILURE']);
+    assert.deepEqual(report.cleanup.failures[1].reasons, ['DISPOSAL_INCOMPLETE']);
+  } else assert.equal(report.cleanup, null);
+});
+test('proof success publishes only after primary, cleanup and verification finish', async t => {
+  const result = await failureProcess(t, 'success');
+  assert.equal(result.code, 0); assert.equal(result.stderr, '');
+  assert.deepEqual(JSON.parse(await readFile(result.evidence)), { synthetic: true });
+  assert.equal(result.trace.at(-1).phase, 'verify');
+});
+test('cleanup failure collection stays bounded and still attempts every step', async t => {
+  const result = await failureProcess(t, 'overflow');
+  assert.equal(result.code, 1); await assert.rejects(readFile(result.evidence), { code: 'ENOENT' });
+  const report = JSON.parse(result.stderr);
+  assert.equal(report.cleanup.total, 20); assert.equal(report.cleanup.failures.length, 8);
+  assert.equal(result.trace.filter(row => row.phase === 'additional-cleanup').length, 20);
+});
+for (const scenario of ['unknown', 'falsy']) test(`proof ${scenario} exception cannot leak secrets or become success`, async t => {
+  const result = await failureProcess(t, scenario);
+  assert.equal(result.code, 1); await assert.rejects(readFile(result.evidence), { code: 'ENOENT' });
+  assert.equal(JSON.parse(result.stderr).primary.code, 'UNCLASSIFIED_FAILURE');
+  assert.equal(result.trace.at(-1).phase, 'verify');
+});
+test('only exact already-absent resource responses are benign cleanup', () => {
+  const expected = 'Error response from daemon: No such container: owned-id';
+  assert.equal(missingResource(Buffer.from(expected), 'container', 'owned-id'), true);
+  assert.equal(missingResource(Buffer.from(expected), 'container', 'other-id'), false);
+  assert.equal(missingResource(Buffer.from(expected + '\nQA_SECONDARY_CLEANUP_FAILURE'), 'container', 'owned-id'), false);
+  assert.equal(missingResource(Buffer.from('Error response from daemon: get owned-volume: no such volume'), 'volume', 'owned-volume'), true);
+});
+test('command diagnostics cannot print arbitrary command arguments or error properties', () => {
+  const error = commandFailure('secret-binary', ['secret-operation', 'password=synthetic-private-canary'], { exitCode: 999, stderr: 'synthetic-private-canary' });
+  error.secret = 'synthetic-private-canary';
+  const text = failureReport(error), report = JSON.parse(text);
+  assert.ok(!text.includes('synthetic-private-canary'));
+  assert.equal(report.primary.command, 'other'); assert.equal(report.primary.operation, 'other'); assert.equal(report.primary.exitCode, null);
 });

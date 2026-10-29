@@ -11,6 +11,7 @@ import { digest, signingBytes } from '../artifacts.mjs';
 import { isolationIndexFixtures } from '../../test-support/isolation-index-fixtures.mjs';
 import { prepare, receipt, containerLabels, recover, status } from './lifecycle.mjs';
 import { setTimeout as delay } from 'node:timers/promises';
+import { cleanupSteps, commandFailure, failureReport, missingResource, runWithCleanup } from './proof-outcome.mjs';
 
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 const prefix = `fc17j-${randomUUID().slice(0, 8)}`;
@@ -27,17 +28,17 @@ async function command(binary, args, { timeout = 60000, max = 2 * 1024 * 1024, i
   return new Promise((resolvePromise, reject) => {
     const child = spawn(binary, args, { cwd: root, env: dockerEnv, stdio: ['pipe', 'pipe', 'pipe'] });
     let stdout = Buffer.alloc(0), stderr = Buffer.alloc(0), failed;
-    const timer = setTimeout(() => { failed = Error('SUPERVISOR_COMMAND_TIMEOUT'); child.kill('SIGKILL'); }, timeout);
+    const timer = setTimeout(() => { failed = commandFailure(binary, args, { code: 'SUPERVISOR_COMMAND_TIMEOUT' }); child.kill('SIGKILL'); }, timeout);
     const append = (which, bytes) => {
-      if (stdout.length + stderr.length + bytes.length > max) { failed = Error('OUTPUT_LIMIT'); child.kill('SIGKILL'); }
+      if (stdout.length + stderr.length + bytes.length > max) { failed = commandFailure(binary, args, { code: 'OUTPUT_LIMIT' }); child.kill('SIGKILL'); }
       else if (which === 'out') stdout = Buffer.concat([stdout, bytes]); else stderr = Buffer.concat([stderr, bytes]);
     };
     child.stdout.on('data', b => append('out', b)); child.stderr.on('data', b => append('err', b));
-    child.once('error', e => { clearTimeout(timer); reject(e); });
+    child.once('error', e => { clearTimeout(timer); reject(commandFailure(binary, args, { code: e.code })); });
     child.once('exit', code => {
       clearTimeout(timer);
       if (failed) reject(failed);
-      else if (code !== 0 && !allowFailure) reject(Error(`COMMAND_FAILED: ${binary} ${args[0]} (${code}): ${stderr.toString().slice(-1500)}`));
+      else if (code !== 0 && !allowFailure) reject(commandFailure(binary, args, { exitCode: code, stderr }));
       else resolvePromise({ stdout, stderr, code });
     });
     child.stdin.on('error', () => {}); child.stdin.end(input);
@@ -142,7 +143,7 @@ const parsed = result => {
   assert.ok(result.stdout.trim(), `JOB_OUTPUT_MISSING: exit=${result.state.ExitCode} oom=${result.state.OOMKilled} deadline=${result.deadlineHit} ${result.stderr.slice(-1500)}`);
   return JSON.parse(result.stdout.trim());
 };
-try {
+async function prove() {
   assert.equal(process.versions.node.split('.')[0], '24');
   for (const key of ['MONGO_URI', 'MONGODB_URI', 'MONGO_URL', 'DATABASE_URL']) assert.equal(Object.hasOwn(process.env, key), false, `${key} must be unset`);
   await docker(['info']);
@@ -277,15 +278,33 @@ try {
       daemonInterruption: 'NOT VERIFIED; adapter exception only', systemdDeadline: 'NOT VERIFIED',
       cgroupFence: 'NOT VERIFIED', reboot: 'NOT VERIFIED' },
     gaps: ['independent host-supervisor death deadline/fence/reboot proof', 'production Atlas TLS/topology/egress', 'owner roots and provenance', 'external DDL fence', 'rollback-resistant authority/audit', 'independent Systems/Security QA'] };
-} finally {
-  for (const name of containers.reverse()) await docker(['rm', '-f', name], { allowFailure: true }).catch(() => {});
-  for (const name of volumes.reverse()) await docker(['volume', 'rm', name], { allowFailure: true }).catch(() => {});
-  for (const tag of [`${prefix}:modified`, `${prefix}:proof`]) await docker(['image', 'rm', tag], { allowFailure: true }).catch(() => {});
-  await rm(temp, { recursive: true, force: true });
-  const remainingContainers = await docker(['ps', '-aq', '--filter', `name=${prefix}-`]);
-  const remainingVolumes = await docker(['volume', 'ls', '-q', '--filter', `name=${prefix}-`]);
-  assert.equal(remainingContainers.stdout.length + remainingVolumes.stdout.length, 0, 'DISPOSAL_INCOMPLETE');
-  for (const name of lifecycleNames) assert.equal((await docker(['ps', '-aq', '--filter', `name=^/${name}$`])).stdout.length, 0, 'LIFECYCLE_DISPOSAL_INCOMPLETE');
 }
-await writeFile(reportPath, JSON.stringify(evidence, null, 2) + '\n', { mode: 0o600, flag: 'wx' });
-process.stdout.write(`Evidence: ${reportPath}\n`);
+async function remove(args, kind, name) {
+  const result = await docker(args, { allowFailure: true });
+  if (result.code !== 0 && !missingResource(result.stderr, kind, name)) throw commandFailure('docker', args, { exitCode: result.code, stderr: result.stderr });
+}
+async function dispose() {
+  await cleanupSteps([
+    ...containers.toReversed().map(name => () => remove(['rm', '-f', name], 'container', name)),
+    ...volumes.toReversed().map(name => () => remove(['volume', 'rm', name], 'volume', name)),
+    ...[`${prefix}:modified`, `${prefix}:proof`].map(tag => () => remove(['image', 'rm', tag], 'image', tag)),
+    () => rm(temp, { recursive: true, force: true }),
+    async () => {
+      const remaining = await docker(['ps', '-aq', '--filter', `name=${prefix}-`]);
+      assert.equal(remaining.stdout.length, 0, 'DISPOSAL_INCOMPLETE');
+    },
+    async () => {
+      const remaining = await docker(['volume', 'ls', '-q', '--filter', `name=${prefix}-`]);
+      assert.equal(remaining.stdout.length, 0, 'DISPOSAL_INCOMPLETE');
+    },
+    ...lifecycleNames.map(name => async () => assert.equal((await docker(['ps', '-aq', '--filter', `name=^/${name}$`])).stdout.length, 0, 'LIFECYCLE_DISPOSAL_INCOMPLETE')),
+  ]);
+}
+try {
+  await runWithCleanup(prove, dispose);
+  await writeFile(reportPath, JSON.stringify(evidence, null, 2) + '\n', { mode: 0o600, flag: 'wx' });
+  process.stdout.write(`Evidence: ${reportPath}\n`);
+} catch (error) {
+  process.stderr.write(failureReport(error) + '\n');
+  process.exitCode = 1;
+}

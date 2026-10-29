@@ -127,6 +127,40 @@ gap in the [threat model](THREAT-MODEL.md).
 
 ## Full regression and independent QA
 
+### Sprint 1.8A P3: primary and cleanup diagnostics
+
+The proof runs primary work and disposal as separate phases. Disposal continues
+all tracked removal and inventory checks after an individual failure. Only exact
+Docker responses for an already-absent tracked resource are benign; every other
+nonzero removal remains a cleanup failure, even if a later inventory is empty.
+Success evidence is written only after **both** phases succeed. Either failure
+exits 1; combined failures retain both contexts in one `PROOF_FAILED` JSON record.
+
+Reports contain phase identity, a command/operation allowlist, bounded exit status,
+and allowlisted reason codes. Raw stderr, command arguments, paths, grids,
+credentials, signatures, arbitrary error properties, causes and stacks are never
+serialized. Unknown free-form diagnostics are suppressed, rather than guessed
+safe by truncation. The published controlled fault tokens
+`QA_PRIMARY_PROVISION_FAILURE` and `QA_SECONDARY_CLEANUP_FAILURE` are allowlisted
+for reproducible QA. Cleanup retains at most eight diagnostics plus
+the total failure count; reason scanning is limited to the first 4096 characters.
+
+Permanent subprocess regressions in `test:operator-lifecycle` cover primary-only,
+cleanup-only and combined failures, no success artifact, exact-ID adapter calls,
+continued disposal verification, bounded reports, secret canaries, unknown/falsy
+exceptions and the success path. These synthetic command adapters prove reporting
+and control flow, **not OS/Docker enforcement**. A separate controlled Docker CLI
+shim reproduction must fail writer-helper start before execution and refuse
+removal of that same inspected helper ID. It must exit nonzero with both reason
+codes and disposal failure, produce no success evidence, and preserve the stopped
+helper/owned volume for explicit exact-ID fixture teardown. This injection does
+not establish actual daemon loss, physical ENOSPC or the cause of earlier natural
+provisioning failures.
+
+This diagnostic correction changes no lifecycle authority, consumed claims,
+production policy or host enforcement. All NOT VERIFIED host properties in
+[HOST-LIFECYCLE](HOST-LIFECYCLE.md) remain blockers.
+
 Obtain a local `mongod` 8 binary for the existing test fixtures (the repository CI
 documents its checked download), then run from the clean pinned PR head:
 
