@@ -1,5 +1,9 @@
 # One-shot publisher threat model and gap matrix
 
+Sprint 1.8A lifecycle evidence and the complete host/production gap matrix are in
+[HOST-LIFECYCLE](HOST-LIFECYCLE.md). Its actual supervisor-kill/targeted recovery
+checks do not certify systemd, daemon-independent fencing or reboot behavior.
+
 Scope: issue #26, disposable proof only. Assets are permanent maze integrity,
 single-use owner authority, source/key identity, credentials and retained intent.
 Attackers include malicious operation inputs, modified source/dependencies, a

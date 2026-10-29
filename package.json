@@ -18,6 +18,7 @@
     "test:operator": "node --test test/operator-publication.test.js",
     "maze:operator": "node tools/operator-publication/cli.mjs",
     "test:operator-isolation": "node --test test/operator-isolation.test.mjs",
+    "test:operator-lifecycle": "node --test test/operator-lifecycle.test.mjs",
     "proof:operator-isolation": "node tools/operator-publication/isolation/prove.mjs"
   },
   "keywords": [],

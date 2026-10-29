@@ -1,0 +1,18 @@
+[Unit]
+Description=Fence synthetic slice and reconcile retained attempt, never rerun work
+Requires=fc18aproof.slice
+After=local-fs.target fc18aproof.slice docker.service
+Before=fc18a-proof.service
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+ExecStart=/usr/local/bin/node /opt/fort-custer-proof/tools/operator-publication/isolation/host-supervisor.mjs boot-sweep
+RemainAfterExit=yes
+TimeoutStartSec=25
+KillMode=control-group
+Restart=no
+
+[Install]
+WantedBy=multi-user.target

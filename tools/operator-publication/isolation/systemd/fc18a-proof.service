@@ -1,0 +1,25 @@
+[Unit]
+Description=One attempt synthetic publisher lifecycle proof (manual only)
+Requires=fc18aproof.slice docker.service
+After=fc18aproof.slice docker.service fc18a-proof-recovery.service
+Requires=fc18a-proof-recovery.service
+
+[Service]
+Type=exec
+User=root
+UMask=0077
+WorkingDirectory=/opt/fort-custer-proof
+ExecStart=/usr/local/bin/node /opt/fort-custer-proof/tools/operator-publication/isolation/host-supervisor.mjs run
+ExecStopPost=/usr/local/bin/node /opt/fort-custer-proof/tools/operator-publication/isolation/host-supervisor.mjs recover
+RuntimeMaxSec=30
+TimeoutStartSec=10
+TimeoutStopSec=25
+KillMode=control-group
+SendSIGKILL=yes
+Restart=no
+LimitNOFILE=128
+MemoryMax=256M
+TasksMax=32
+StandardOutput=journal
+StandardError=journal
+# No Install section: no automatic job start, cron, timer or scheduler.

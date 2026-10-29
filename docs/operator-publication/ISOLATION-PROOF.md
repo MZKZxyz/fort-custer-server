@@ -1,5 +1,11 @@
 # Reproduce the disposable isolation proof
 
+Sprint 1.8A extends this same opt-in Docker harness with real supervisor SIGKILL,
+exact-ID recovery and retained central approval consumption. See
+[HOST-LIFECYCLE](HOST-LIFECYCLE.md) for the host fixture, separate failure-case
+matrix, NOT VERIFIED controls and operating instructions. It does not turn this
+surviving-parent proof into a durable host deadline.
+
 Use Node 24, Linux with a local trusted Docker daemon, cgroup v2 CPU/memory/PID
 controllers, default seccomp and enough disk for the Node/Mongo images. No cloud
 account or production database is needed. Missing enforcement causes a failed
@@ -29,7 +35,9 @@ files (excluding its own manifest and npm executable `.bin` links). OS/runtime
 files are covered by the image digest, not that manifest. No root from the request
 or arbitrary image/URI selector exists in the harness CLI.
 
-All container/volume names have a fresh `fc17j-*` prefix. Fixture credentials and
+Most container/volume names have a fresh `fc17j-*` prefix. Sprint 1.8A lifecycle
+jobs instead use `fc18a-<UUID>` names bound to their private intent/ID receipts;
+both sets are tracked for verified disposal. Fixture credentials and
 private signing keys are generated fresh; private signing keys remain in host
 memory and fixture credentials go only to 0600 temporary files/named volumes.
 The harness removes completed provisioning helpers and stopped jobs promptly
@@ -39,7 +47,8 @@ files and image tags are removed in `finally`. The evidence file is created excl
 choose a new output filename for each run. It remains outside the checkout. Docker build cache
 and public base images may remain. On supervisor/host SIGKILL, `finally` cannot
 run: preserve evidence first, then inspect and remove only that invocation's
-exact recorded prefix. Never use a broad Docker prune on a shared daemon.
+exact recorded prefix and lifecycle receipt IDs. Never use a broad Docker prune
+on a shared daemon.
 
 Evidence contains source SHA, runtime Node version, base digests, built image ID,
 content measurement, individual passed assertions and aggregate document/claim/
@@ -117,6 +126,64 @@ correction does not close the external concurrent-DDL fence or any production
 gap in the [threat model](THREAT-MODEL.md).
 
 ## Full regression and independent QA
+
+### Sprint 1.8A P3: primary and cleanup diagnostics
+
+The proof runs primary work and disposal as separate phases. Disposal continues
+all tracked removal and inventory checks after an individual failure. Only exact
+Docker responses for an already-absent tracked resource are benign; every other
+nonzero removal remains a cleanup failure, even if a later inventory is empty.
+Success evidence is written only after **both** phases succeed. Either failure
+exits 1; combined failures retain both contexts in one `PROOF_FAILED` JSON record.
+
+Reports contain phase identity, a command/operation allowlist, bounded exit status,
+and allowlisted reason codes. Raw stderr, command arguments, paths, grids,
+credentials, signatures, arbitrary error properties, causes and stacks are never
+serialized. Unknown free-form diagnostics are suppressed, rather than guessed
+safe by truncation. The published controlled fault tokens
+`QA_PRIMARY_PROVISION_FAILURE` and `QA_SECONDARY_CLEANUP_FAILURE` are allowlisted
+for reproducible QA. Cleanup retains at most eight diagnostics plus
+the total failure count; reason scanning is limited to the first 4096 characters.
+
+Permanent subprocess regressions in `test:operator-lifecycle` cover primary-only,
+cleanup-only and combined failures, no success artifact, exact-ID adapter calls,
+continued disposal verification, bounded reports, secret canaries, unknown/falsy
+exceptions and the success path. These synthetic command adapters prove reporting
+and control flow, **not OS/Docker enforcement**. A separate controlled Docker CLI
+shim reproduction must fail writer-helper start before execution and refuse
+removal of that same inspected helper ID. It must exit nonzero with both reason
+codes and disposal failure, produce no success evidence, and preserve the stopped
+helper/owned volume for explicit exact-ID fixture teardown. This injection does
+not establish actual daemon loss, physical ENOSPC or the cause of earlier natural
+provisioning failures.
+
+This diagnostic correction changes no lifecycle authority, consumed claims,
+production policy or host enforcement. All NOT VERIFIED host properties in
+[HOST-LIFECYCLE](HOST-LIFECYCLE.md) remain blockers.
+
+The cleanup follow-up makes extraction no-throw for unusual thrown values.
+Primary errors are captured without inspection until cleanup has been attempted;
+cleanup-step errors are counted and retained (at most eight) without formatting
+until all scheduled steps and inventory checks have run. Diagnostics are not on
+the execution path to another cleanup step.
+
+Extraction rejects Proxies (including revoked ones) without invoking traps, reads
+only own data descriptors, and never executes getters, walks error prototypes,
+uses `instanceof` on thrown values, or coerces error properties with `toString` or
+`Symbol.toPrimitive`. Unsupported values use the fixed bounded
+`{"code":"UNCLASSIFIED_FAILURE","reasons":[]}` fallback. Safe internal snapshots
+use private identity maps rather than public error properties or caller-forgeable
+custom error constructors. The command runner decodes its own bounded stderr
+Buffer; the diagnostic layer accepts only primitive strings for reason scanning.
+
+Permanent subprocess tests require primary and subsequent cleanup/inventory steps
+to run for throwing code/message getters, Proxy/prototype traps, revoked Proxies,
+nested unprintable values and symbols in both phases. They cover dual hostile
+failures, all 25 scheduled cleanup failures with an eight-record cap, unchanged
+redaction, no success artifact, nonzero exit, and unforgeable diagnostic snapshots.
+These are JavaScript control-flow guarantees for caught exceptions, not progress
+after process termination, an indefinitely running callback, OOM or host loss.
+The independent host deadline/cgroup/reboot gaps remain NOT VERIFIED.
 
 Obtain a local `mongod` 8 binary for the existing test fixtures (the repository CI
 documents its checked download), then run from the clean pinned PR head:

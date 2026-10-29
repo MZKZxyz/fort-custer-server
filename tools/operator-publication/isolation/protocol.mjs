@@ -1,7 +1,7 @@
 // Synthetic protocol only. No URI, production keys, ambient selectors or live adapter.
 import mongoose from 'mongoose';
 import { randomUUID } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { digest, signedPayload } from '../artifacts.mjs';
 import { exactKeys } from '../../../services/publication/fresh-release.js';
 import { validManifest } from '../../../services/publication/policy.js';
@@ -68,6 +68,12 @@ export async function writeFixture({ request, policy, measured, fault }) {
       // An uncertain commit NEVER authorizes an insert, even if claims are visible.
       consumed = true;
       if (fault === 'claim-ack') return 'CLAIM_UNCERTAIN';
+      // Synthetic crash fixture only: hold after the real majority claim ACK.
+      // A killed supervisor/container must never restore this consumed intent.
+      if (fault === 'claim-hold') {
+        await writeFile('/tmp/fc18a-claim-ack', 'ack', { mode: 0o600, flag: 'wx' });
+        await new Promise(() => { setInterval(() => {}, 1000); });
+      }
     } catch (error) {
       return error.code === 11000 ? 'APPROVAL_OR_DATE_SPENT' : 'CLAIM_UNCERTAIN';
     }
