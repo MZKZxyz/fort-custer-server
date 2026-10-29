@@ -161,6 +161,30 @@ This diagnostic correction changes no lifecycle authority, consumed claims,
 production policy or host enforcement. All NOT VERIFIED host properties in
 [HOST-LIFECYCLE](HOST-LIFECYCLE.md) remain blockers.
 
+The cleanup follow-up makes extraction no-throw for unusual thrown values.
+Primary errors are captured without inspection until cleanup has been attempted;
+cleanup-step errors are counted and retained (at most eight) without formatting
+until all scheduled steps and inventory checks have run. Diagnostics are not on
+the execution path to another cleanup step.
+
+Extraction rejects Proxies (including revoked ones) without invoking traps, reads
+only own data descriptors, and never executes getters, walks error prototypes,
+uses `instanceof` on thrown values, or coerces error properties with `toString` or
+`Symbol.toPrimitive`. Unsupported values use the fixed bounded
+`{"code":"UNCLASSIFIED_FAILURE","reasons":[]}` fallback. Safe internal snapshots
+use private identity maps rather than public error properties or caller-forgeable
+custom error constructors. The command runner decodes its own bounded stderr
+Buffer; the diagnostic layer accepts only primitive strings for reason scanning.
+
+Permanent subprocess tests require primary and subsequent cleanup/inventory steps
+to run for throwing code/message getters, Proxy/prototype traps, revoked Proxies,
+nested unprintable values and symbols in both phases. They cover dual hostile
+failures, all 25 scheduled cleanup failures with an eight-record cap, unchanged
+redaction, no success artifact, nonzero exit, and unforgeable diagnostic snapshots.
+These are JavaScript control-flow guarantees for caught exceptions, not progress
+after process termination, an indefinitely running callback, OOM or host loss.
+The independent host deadline/cgroup/reboot gaps remain NOT VERIFIED.
+
 Obtain a local `mongod` 8 binary for the existing test fixtures (the repository CI
 documents its checked download), then run from the clean pinned PR head:
 

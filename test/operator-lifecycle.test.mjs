@@ -190,3 +190,72 @@ test('command diagnostics cannot print arbitrary command arguments or error prop
   assert.ok(!text.includes('synthetic-private-canary'));
   assert.equal(report.primary.command, 'other'); assert.equal(report.primary.operation, 'other'); assert.equal(report.primary.exitCode, null);
 });
+
+for (const phase of ['primary', 'cleanup']) for (const kind of ['code-getter', 'message-getter', 'proxy', 'revoked-proxy', 'nested-proxy', 'unprintable', 'symbol', 'prototype-proxy']) {
+  test(`hostile ${kind} in ${phase} cannot prevent cleanup or verification`, async t => {
+    const result = await failureProcess(t, `hostile-${phase}-${kind}`);
+    assert.equal(result.code, 1); await assert.rejects(readFile(result.evidence), { code: 'ENOENT' });
+    const report = JSON.parse(result.stderr), fallback = { code: 'UNCLASSIFIED_FAILURE', reasons: [] };
+    assert.deepEqual(result.trace, [{ phase: 'primary' }, { phase: 'cleanup', args: ['rm', '-f', 'a'.repeat(64)] },
+      { phase: 'verify' }, { phase: 'format-traps', calls: 0 }]);
+    assert.equal(report.code, 'PROOF_FAILED'); assert.equal(report.retry, false);
+    if (phase === 'primary') { assert.deepEqual(report.primary, fallback); assert.equal(report.cleanup, null); }
+    else { assert.equal(report.primary, null); assert.equal(report.cleanup.total, 1); assert.deepEqual(report.cleanup.failures, [fallback]); }
+  });
+}
+test('hostile primary and cleanup exceptions retain separate fallback contexts', async t => {
+  const result = await failureProcess(t, 'hostile-combined-proxy');
+  assert.equal(result.code, 1); await assert.rejects(readFile(result.evidence), { code: 'ENOENT' });
+  const report = JSON.parse(result.stderr), fallback = { code: 'UNCLASSIFIED_FAILURE', reasons: [] };
+  assert.deepEqual(report.primary, fallback); assert.deepEqual(report.cleanup.failures, [fallback]);
+  assert.equal(report.cleanup.total, 1);
+  assert.deepEqual(result.trace.slice(-2), [{ phase: 'verify' }, { phase: 'format-traps', calls: 0 }]);
+});
+test('hostile cleanup overflow attempts all 25 steps and final inventory before bounded formatting', async t => {
+  const result = await failureProcess(t, 'hostile-overflow-proxy');
+  assert.equal(result.code, 1); await assert.rejects(readFile(result.evidence), { code: 'ENOENT' });
+  const report = JSON.parse(result.stderr);
+  assert.equal(report.cleanup.total, 25); assert.equal(report.cleanup.failures.length, 8);
+  assert.ok(report.cleanup.failures.every(f => f.code === 'UNCLASSIFIED_FAILURE'));
+  assert.equal(result.trace.filter(row => row.phase === 'additional-cleanup').length, 25);
+  assert.deepEqual(result.trace.slice(-2), [{ phase: 'verify' }, { phase: 'format-traps', calls: 0 }]);
+});
+test('direct failure reporting rejects hostile objects without executing their code', () => {
+  let calls = 0; const trap = () => { calls++; throw Error('synthetic-private-canary'); };
+  const revoked = Proxy.revocable({}, {}); revoked.revoke();
+  for (const error of [{ get code() { return trap(); } }, new Proxy({}, { getPrototypeOf: trap, get: trap }), revoked.proxy,
+    { message: { toString: trap, [Symbol.toPrimitive]: trap } }, Symbol('synthetic-private-canary'), 0n, null, undefined]) {
+    const text = failureReport(error), report = JSON.parse(text);
+    assert.ok(text.length < 512); assert.ok(!text.includes('synthetic-private-canary'));
+    assert.deepEqual(report.primary, { code: 'UNCLASSIFIED_FAILURE', reasons: [] });
+  }
+  assert.equal(calls, 0);
+});
+test('trusted diagnostic snapshots cannot be poisoned by public error accessors', async t => {
+  const result = await failureProcess(t, 'hostile-primary-branded');
+  assert.equal(result.code, 1); await assert.rejects(readFile(result.evidence), { code: 'ENOENT' });
+  const report = JSON.parse(result.stderr);
+  assert.equal(report.primary.code, 'COMMAND_FAILED'); assert.equal(report.primary.operation, 'start');
+  assert.deepEqual(report.primary.reasons, ['QA_PRIMARY_PROVISION_FAILURE']);
+  assert.deepEqual(result.trace.slice(-2), [{ phase: 'verify' }, { phase: 'format-traps', calls: 0 }]);
+});
+test('reason extraction never coerces caller-supplied objects', () => {
+  let calls = 0; const trap = () => { calls++; throw Error('synthetic-private-canary'); };
+  const error = commandFailure('docker', ['start'], { stderr: { toString: trap, [Symbol.toPrimitive]: trap } });
+  const report = JSON.parse(failureReport(error));
+  assert.equal(calls, 0); assert.deepEqual(report.primary.reasons, []);
+});
+test('public error constructors and forged prototypes cannot mint trusted diagnostics', () => {
+  const genuine = commandFailure('docker', ['start']);
+  let calls = 0; const trap = () => { calls++; throw Error('synthetic-private-canary'); };
+  const forged = Object.create(Object.getPrototypeOf(genuine));
+  Object.defineProperty(forged, 'detail', { get: trap });
+  const constructed = new genuine.constructor('synthetic-private-canary');
+  constructed.detail = { code: 'synthetic-private-canary', reasons: ['synthetic-private-canary'] };
+  for (const error of [forged, constructed]) {
+    const text = failureReport(error);
+    assert.ok(!text.includes('synthetic-private-canary'));
+    assert.deepEqual(JSON.parse(text).primary, { code: 'UNCLASSIFIED_FAILURE', reasons: [] });
+  }
+  assert.equal(calls, 0);
+});

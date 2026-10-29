@@ -34,11 +34,11 @@ async function command(binary, args, { timeout = 60000, max = 2 * 1024 * 1024, i
       else if (which === 'out') stdout = Buffer.concat([stdout, bytes]); else stderr = Buffer.concat([stderr, bytes]);
     };
     child.stdout.on('data', b => append('out', b)); child.stderr.on('data', b => append('err', b));
-    child.once('error', e => { clearTimeout(timer); reject(commandFailure(binary, args, { code: e.code })); });
+    child.once('error', e => { clearTimeout(timer); reject(commandFailure(binary, args, e)); });
     child.once('exit', code => {
       clearTimeout(timer);
       if (failed) reject(failed);
-      else if (code !== 0 && !allowFailure) reject(commandFailure(binary, args, { exitCode: code, stderr }));
+      else if (code !== 0 && !allowFailure) reject(commandFailure(binary, args, { exitCode: code, stderr: stderr.toString() }));
       else resolvePromise({ stdout, stderr, code });
     });
     child.stdin.on('error', () => {}); child.stdin.end(input);
@@ -281,7 +281,7 @@ async function prove() {
 }
 async function remove(args, kind, name) {
   const result = await docker(args, { allowFailure: true });
-  if (result.code !== 0 && !missingResource(result.stderr, kind, name)) throw commandFailure('docker', args, { exitCode: result.code, stderr: result.stderr });
+  if (result.code !== 0 && !missingResource(result.stderr, kind, name)) throw commandFailure('docker', args, { exitCode: result.code, stderr: result.stderr.toString() });
 }
 async function dispose() {
   await cleanupSteps([
