@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, rm, readFile, writeFile, chmod, symlink, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { prepare, receipt, containerLabels, recover, status, readRecord, appendRecord } from '../tools/operator-publication/isolation/lifecycle.mjs';
+import { prepare, receipt, containerLabels, recover, status, readRecord, appendRecord, assertPolicy } from '../tools/operator-publication/isolation/lifecycle.mjs';
 
 const policy = { sourceSha: 'a'.repeat(40), imageId: `sha256:${'b'.repeat(64)}` };
 const id = 'c'.repeat(64);
@@ -40,6 +40,15 @@ test('status is read-only and cannot restore authority', async t => {
   const f = await fixture(t); const before = await readdir(f.dir);
   assert.deepEqual((await status(f.dir, f.call)).retry, false);
   assert.deepEqual(await readdir(f.dir), before); assert.deepEqual(f.mutations, []);
+});
+test('installed policy drift cannot authorize recovery of a different intent', async t => {
+  const f = await fixture(t);
+  const expected = { ...policy, cgroupParent: '' };
+  assert.doesNotThrow(() => assertPolicy(f.intent, expected));
+  for (const change of [{ sourceSha: 'd'.repeat(40) }, { imageId: `sha256:${'d'.repeat(64)}` }, { cgroupParent: 'fc18aproof.slice' }]) {
+    assert.throws(() => assertPolicy(f.intent, { ...expected, ...change }), /POLICY_DRIFT/);
+  }
+  assert.deepEqual(f.mutations, []);
 });
 for (const [name, mutate] of Object.entries({
   'bad labels': s => { s.Config.Labels['org.fort-custer.intent'] = 'wrong'; },

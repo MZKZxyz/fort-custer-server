@@ -3,7 +3,7 @@
 import { readFile, writeFile, lstat, realpath, readdir } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
-import { containerLabels, docker, prepare, receipt, recover, status, privateDirectory, readRecord } from './lifecycle.mjs';
+import { containerLabels, docker, prepare, receipt, recover, status, privateDirectory, readRecord, loadIntent, assertPolicy } from './lifecycle.mjs';
 
 const root = '/opt/fort-custer-proof';
 const state = '/var/lib/fort-custer-proof/attempt';
@@ -47,7 +47,13 @@ try {
   // The fixed fence precedes fallible policy/state/daemon work on every stop.
   if (['recover', 'boot-sweep'].includes(operation) && process.getuid() === 0) await fence();
   const config = await policy();
+  const gitEnv = { PATH: '/usr/bin:/bin', HOME: '/nonexistent', GIT_CONFIG_NOSYSTEM: '1' };
+  const git = args => execFileSync('/usr/bin/git', ['-C', root, ...args], { env: gitEnv, timeout: 5000, maxBuffer: 256 * 1024 }).toString().trim();
+  if (git(['rev-parse', 'HEAD']) !== config.sourceSha || git(['status', '--porcelain', '--untracked-files=all'])) stop('SOURCE_DRIFT');
   await privateDirectory(state);
+  if (operation !== 'run' && (await readdir(state)).length) {
+    assertPolicy(await loadIntent(state), { ...config, cgroupParent: 'fc18aproof.slice' });
+  }
   if (operation === 'status') {
     process.stdout.write(JSON.stringify(await status(state)) + '\n');
   } else if (operation === 'recover' || operation === 'boot-sweep') {
@@ -56,9 +62,6 @@ try {
     if ((await readdir(state)).length === 0) process.stdout.write('FENCED_EMPTY_DISPOSABLE_HOST; MANUAL_ARM_REQUIRED\n');
     else process.stdout.write(JSON.stringify(await recover(state, { fence })) + '\n');
   } else if (operation === 'run') {
-    const gitEnv = { PATH: '/usr/bin:/bin', HOME: '/nonexistent', GIT_CONFIG_NOSYSTEM: '1' };
-    const git = args => execFileSync('/usr/bin/git', ['-C', root, ...args], { env: gitEnv, timeout: 5000, maxBuffer: 256 * 1024 }).toString().trim();
-    if (git(['rev-parse', 'HEAD']) !== config.sourceSha || git(['status', '--porcelain', '--untracked-files=all'])) stop('SOURCE_DRIFT');
     const info = JSON.parse(await docker(['info', '--format', '{{json .}}']));
     if (info.CgroupVersion !== '2' || info.CgroupDriver !== 'systemd' || info.LiveRestoreEnabled !== false) stop('HOST_CGROUP_UNSUPPORTED');
     if ((await readFile(`${cgroup}/cgroup.freeze`, 'utf8')).trim() !== '0'

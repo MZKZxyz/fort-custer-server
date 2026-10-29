@@ -84,6 +84,10 @@ export async function loadIntent(dir) {
   if (spent.intentHash !== hash(intent)) refuse('SPENT_STATE_INVALID');
   return intent;
 }
+export function assertPolicy(intent, policy) {
+  if (intent.imageId !== policy.imageId || intent.sourceSha !== policy.sourceSha
+      || intent.cgroupParent !== policy.cgroupParent) refuse('POLICY_DRIFT');
+}
 export async function prepare(dir, { imageId, sourceSha, cgroupParent = '' }) {
   // Existing spent state (even a partial/corrupt one) refuses before any daemon call.
   await privateDirectory(dir);
