@@ -166,7 +166,10 @@ try {
   const cpu = parsed(await job('cpu')).cpu; check('cgroup CPU quota throttled busy process', Number(cpu.match(/nr_throttled (\d+)/)?.[1]) > 0);
   check('cgroup PID limit rejected process growth', Number(parsed(await job('pids')).events.match(/max (\d+)/)?.[1]) > 0);
   const tree = await job('tree', { deadline: 2500 });
-  check('external deadline killed detached process tree', tree.deadlineHit && tree.state.ExitCode === 137 && parsed(tree).code === 'DETACHED_CHILD_STARTED');
+  // The whole-job budget includes image bootstrap. It may expire before a child
+  // exists; requiring its stdout would incorrectly reject that enforced timeout.
+  // The separate lifecycle probe below MUST observe the detached child before kill.
+  check('surviving-parent deadline stopped container including bootstrap', tree.deadlineHit && tree.state.ExitCode === 137);
   const bystander = `${prefix}-unrelated`; containers.push(bystander);
   await docker(['create', '--name', bystander, '--network=none', imageId, 'tree']);
   await job('tree', { lifecycle: {} });

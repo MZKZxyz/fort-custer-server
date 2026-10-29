@@ -187,7 +187,7 @@ On that **separately authorized disposable machine only**, an operator can:
 | Boundary | Evidence in this sprint | Remaining production blocker / owner |
 | --- | --- | --- |
 | Real supervisor death | Docker proof kills an actual child supervisor; container survival and later parent recovery observed | Independent PID 1 cleanup after loss of *all* supervisor processes NOT VERIFIED; Systems/Security host QA |
-| Whole-job deadline | Existing surviving-parent timer kills a real detached container tree | systemd RuntimeMaxSec and complete-job cgroup path NOT VERIFIED; cannot label a Node timer durable |
+| Whole-job deadline | Surviving-parent timer stops a real container, including bootstrap; detached-child teardown is separately observed before SIGKILL/recovery | systemd RuntimeMaxSec and complete-job cgroup path NOT VERIFIED; cannot label a Node timer durable |
 | Daemon-independent kill/fence | Fixed freeze/kill/empty-check implementation and unit fixtures | Actual freeze/kill, late start fencing, slice persistence NOT VERIFIED; approved dedicated host needed |
 | Daemon interruption | Injected adapter failures preserve STOP/spent state; reconnect cleanup only | Actual dockerd/containerd interruption, live-restore behavior NOT VERIFIED; no privilege to interrupt this daemon |
 | Reboot and boot sweep | Fixed boot recovery unit, no restart job | Reboot, power loss, boot ordering and no-resurrection NOT VERIFIED; no shared-host reboot |
