@@ -94,7 +94,7 @@ async function job(mode, { args = [], mounts = [], uid = 10001, image = imageId,
         child.once('error', error => { clearTimeout(timer); reject(error); });
         child.once('exit', () => { clearTimeout(timer); reject(Error('CHILD_EARLY_EXIT')); });
       });
-      if (lifecycle.ready) await lifecycle.ready();
+      if (lifecycle.ready) await lifecycle.ready(name);
       else {
         const until = performance.now() + 5000;
         while (performance.now() < until) {
@@ -235,10 +235,17 @@ try {
   const crashed = request(parsed(await job('generate', { args: ['2026-06-03'] })));
   const crashRequest = await volume('crash-request', { 'request.json': crashed });
   await job('write', { uid: 10002, args: ['claim-hold'], mounts: [...mount(policyVol, '/policy'), ...mount(crashRequest, '/request'), ...mount(writerVol, '/writer'), ...mount(socketVol, '/socket')],
-    lifecycle: { ready: async () => {
+    lifecycle: { ready: async name => {
       const until = performance.now() + 10000;
       while (performance.now() < until) {
-        if (parsed(await job('admin', { uid: 999, args: ['counts'], mounts: adminMounts })).claims === 3) return;
+        // An in-container tmpfs marker is written only AFTER the actual claim
+        // ACK; observing a local DB count alone could race that acknowledgement.
+        const held = await docker(['exec', '--user=10002:10002', name, '/usr/local/bin/node', '-e',
+          "require('fs').accessSync('/tmp/fc18a-claim-ack')"], { allowFailure: true });
+        if (held.code === 0) {
+          assert.equal(parsed(await job('admin', { uid: 999, args: ['counts'], mounts: adminMounts })).claims, 3);
+          return;
+        }
         await delay(100);
       }
       throw Error('CLAIM_HOLD_NOT_OBSERVED');

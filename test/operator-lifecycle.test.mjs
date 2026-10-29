@@ -65,11 +65,16 @@ test('extra job-scoped ID, changed label inventory and missing receipt quarantin
 });
 test('daemon loss and failure during cleanup stay spent; reconnect only cleans', async t => {
   const f = await fixture(t);
-  for (const failAt of ['ps', 'inspect', 'rm']) {
+  for (const failAt of ['ps', 'inspect', 'kill', 'rm']) {
     await assert.rejects(recover(f.dir, { call: args => args[0] === failAt ? Promise.reject(Error('DAEMON_UNCERTAIN')) : f.call(args) }), /DAEMON_UNCERTAIN/);
     await assert.rejects(prepare(f.dir, policy), /SPENT_OR_UNCERTAIN/);
   }
   await recover(f.dir, { call: f.call }); assert.equal(f.mutations.length, 1);
+});
+test('stopped state with nonzero PID refuses removal', async t => {
+  const f = await fixture(t); f.spec.State = { Running: false, Pid: 123 };
+  await assert.rejects(recover(f.dir, { call: f.call }), /TERMINATION_UNCERTAIN/);
+  assert.deepEqual(f.mutations, []);
 });
 test('failed fence or STOP persistence prevents any daemon operation', async t => {
   const f = await fixture(t); let called = false;
