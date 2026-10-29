@@ -16,7 +16,9 @@
     "test:release": "node --test test/release-manifest.test.js test/release-compatibility.test.js",
     "test:fresh": "node --test test/fresh-publication.test.js test/release-manifest.test.js test/release-compatibility.test.js",
     "test:operator": "node --test test/operator-publication.test.js",
-    "maze:operator": "node tools/operator-publication/cli.mjs"
+    "maze:operator": "node tools/operator-publication/cli.mjs",
+    "test:operator-isolation": "node --test test/operator-isolation.test.mjs",
+    "proof:operator-isolation": "node tools/operator-publication/isolation/prove.mjs"
   },
   "keywords": [],
   "type": "module",

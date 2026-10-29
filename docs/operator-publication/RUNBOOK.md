@@ -1,5 +1,15 @@
 # One-date operator publication — live apply BLOCKED
 
+Sprint 1.7J adds a **disposable-only** isolated-container proof and proposed
+architecture under issue [#26](https://github.com/MZKZxyz/fort-custer-server/issues/26).
+See [ADR 001 and costs](ADR-001-ISOLATED-PUBLISHER.md),
+[threat model / production gap matrix](THREAT-MODEL.md), and
+[reproduction / independent QA](ISOLATION-PROOF.md). The proof uses real local
+Docker enforcement and authenticated synthetic MongoDB; it does not provision
+or approve a production runner. The historical 1.7H observations below describe
+that sprint's environment, not the new proof's daemon. All later production gates
+in this runbook remain separate and closed. `LIVE_APPLY_BLOCKED` is unchanged.
+
 Issue [#24](https://github.com/MZKZxyz/fort-custer-server/issues/24), parent #6.
 Starting server main `daf455a61aed7d83eb3f0bfc115044db1e46d992` matched fetched
 main exactly. This is preparation outside the live API process, not activation.
