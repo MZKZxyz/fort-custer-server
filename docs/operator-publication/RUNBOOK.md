@@ -1,5 +1,10 @@
 # One-date operator publication — live apply BLOCKED
 
+Start later infrastructure/release decisions with the [Sprint 1.8B decision
+packet](PRODUCTION-READINESS-1.8B.md): current price evidence, host acceptance,
+Atlas/DDL/TLS requirements, build/key custody and ordered owner approvals.
+Its design does not authorize any production step or advance to 1.8C.
+
 Sprint 1.8A adds the [disposable host lifecycle runbook](HOST-LIFECYCLE.md),
 including exact-ID orphan recovery, STOP handling, uninstalled systemd fixtures,
 costs and the production gap matrix. No production installation or activation is

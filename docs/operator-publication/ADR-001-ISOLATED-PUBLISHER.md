@@ -1,6 +1,11 @@
 # ADR 001: a dedicated Linux host, disposable containers, external one-use authority
 
 Status: **proposed for independent Systems/Security review, production NO-GO**.
+Sprint 1.8B's [decision packet](PRODUCTION-READINESS-1.8B.md) supersedes this
+ADR's historical price allowances and chooses an isolated 2-GiB VM by default,
+with qualifying existing dedicated hardware as fallback. It specifies ordered
+owner gates, narrow metadata identities and independent host acceptance; no
+production adapter, host installation or authority is delivered.
 Sprint 1.8A adds [host lifecycle fixtures and an explicit verification matrix](HOST-LIFECYCLE.md).
 Real supervisor SIGKILL with explicit parent recovery is now tested; durable
 systemd deadline, daemon-independent cgroup fencing and reboot remain NOT VERIFIED.
