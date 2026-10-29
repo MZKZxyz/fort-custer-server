@@ -35,7 +35,9 @@ files (excluding its own manifest and npm executable `.bin` links). OS/runtime
 files are covered by the image digest, not that manifest. No root from the request
 or arbitrary image/URI selector exists in the harness CLI.
 
-All container/volume names have a fresh `fc17j-*` prefix. Fixture credentials and
+Most container/volume names have a fresh `fc17j-*` prefix. Sprint 1.8A lifecycle
+jobs instead use `fc18a-<UUID>` names bound to their private intent/ID receipts;
+both sets are tracked for verified disposal. Fixture credentials and
 private signing keys are generated fresh; private signing keys remain in host
 memory and fixture credentials go only to 0600 temporary files/named volumes.
 The harness removes completed provisioning helpers and stopped jobs promptly
@@ -45,7 +47,8 @@ files and image tags are removed in `finally`. The evidence file is created excl
 choose a new output filename for each run. It remains outside the checkout. Docker build cache
 and public base images may remain. On supervisor/host SIGKILL, `finally` cannot
 run: preserve evidence first, then inspect and remove only that invocation's
-exact recorded prefix. Never use a broad Docker prune on a shared daemon.
+exact recorded prefix and lifecycle receipt IDs. Never use a broad Docker prune
+on a shared daemon.
 
 Evidence contains source SHA, runtime Node version, base digests, built image ID,
 content measurement, individual passed assertions and aggregate document/claim/

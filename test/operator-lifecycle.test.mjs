@@ -104,7 +104,7 @@ test('bad permissions, symlink receipt, corrupt/oversize state fail closed', asy
 });
 test('corrupt STOP refuses cleanup; no full-disk guarantee asserted', async t => {
   const f = await fixture(t);
-  // A non-file collision exercises the real exclusive-file failure path without
+  // A corrupt existing record exercises the exclusive-file failure path without
   // exhausting the shared filesystem. ENOSPC power-loss behavior is NOT proven.
   await writeFile(join(f.dir, 'STOP.json'), 'corrupt', { mode: 0o600 });
   await assert.rejects(recover(f.dir, { call: f.call })); assert.deepEqual(f.mutations, []);
