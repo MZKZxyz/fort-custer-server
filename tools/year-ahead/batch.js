@@ -102,14 +102,17 @@ export function createBatch({ root, id, year, plan, sourceRevision }) {
     provenance: { sourceRevision, sourceDigest: sourceDigest(), nodeVersion: process.version, createdAt: new Date().toISOString() },
     entries: dates.map((date, i) => ({ date, tier: slots[i % slots.length].name,
       seeds: Array.from({ length: plan.maxCandidateSeeds }, () => randomBytes(32).toString('hex')) })) };
+  const protectedManifest = { ...manifest, contentHash: hash(manifest) };
   // mkdir is exclusive; an existing approved, interrupted or complete batch is never replaced.
   mkdirSync(dir, { mode: 0o700 });
-  install(dir, 'manifest.json', manifest);
+  install(dir, 'manifest.json', protectedManifest);
   return { status: 'created', expected: dates.length };
 }
 function load(dir) {
   privatePath(dir, true);
   const m = read(join(dir, 'manifest.json'));
+  const { contentHash, ...payload } = m;
+  same(contentHash, hash(payload));
   same(m.schemaVersion, schemaVersion); same(m.algorithmVersion, algorithmVersion);
   same(m.provenance.sourceDigest, sourceDigest());
   if (!/^[a-f0-9]{40}$/.test(m.provenance.sourceRevision)) fail('BATCH_INTEGRITY_FAILED');

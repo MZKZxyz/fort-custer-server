@@ -110,6 +110,8 @@ test('interruption retains exact seed plan, verifies records on resume, cleans o
 test('malformed manifests, duplicate private seeds, changed versions and unexpected artifacts fail closed', t => {
   const f = fixture(t), path = join(f.dir, 'manifest.json'), original = json(path);
   for (const mutate of [m => { m.entries[1].seeds[0] = m.entries[0].seeds[0]; },
+    m => { m.entries.at(-1).seeds[0] = (m.entries.at(-1).seeds[0][0] === 'a' ? 'b' : 'a') + m.entries.at(-1).seeds[0].slice(1); },
+    m => { m.plan.tiers[0].config.minDistance++; },
     m => { m.entries.pop(); }, m => { m.algorithmVersion = 'unknown'; },
     m => { m.provenance.sourceDigest = '0'.repeat(64); }, m => { m.entries[2].date = m.entries[0].date; }]) {
     const copy = structuredClone(original); mutate(copy); save(path, copy);
@@ -230,7 +232,9 @@ test('quality bounds reject a solvable candidate, retain its trial and advance t
     const result = generateDaily({ date: entry.date, seed, config: m.plan.tiers[0].config });
     if (result.analysis.solution.minimumMoves <= 40) accepted ??= seed; else rejected ??= seed;
   }
-  assert.ok(accepted && rejected); entry.seeds[0] = rejected; entry.seeds[1] = accepted; save(path, m);
+  assert.ok(accepted && rejected); entry.seeds[0] = rejected; entry.seeds[1] = accepted;
+  // Deliberately author a synthetic fixture, rather than simulate unnoticed corruption.
+  const { contentHash, ...payload } = m; m.contentHash = hash(payload); save(path, m);
   try { generateBatch(f); } catch (error) { assert.equal(error.message, 'DATE_CANDIDATES_EXHAUSTED'); }
   const record = json(join(f.dir, `${entry.date}.json`));
   assert.equal(record.choice, 1); assert.deepEqual(record.trials.map(t => t.status), ['QUALITY_REJECTED', 'ACCEPTED']);
