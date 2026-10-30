@@ -134,3 +134,7 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Defense in depth only: year-ahead tool requires all private stores outside Git.
+*.private-maze.json
+private-maze-batches/

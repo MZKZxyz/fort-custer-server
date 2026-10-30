@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "maxCandidateSeeds": 8,
+  "tiers": [
+    { "name": "small-sample", "weight": 1, "config": { "width": 13, "height": 17, "maxAttempts": 32 } },
+    { "name": "middle-sample", "weight": 1, "config": { "width": 17, "height": 19, "maxAttempts": 32 } },
+    { "name": "large-sample", "weight": 1, "config": { "width": 21, "height": 21, "maxAttempts": 32 } }
+  ]
+}

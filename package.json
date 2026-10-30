@@ -20,7 +20,9 @@
     "test:operator-isolation": "node --test test/operator-isolation.test.mjs",
     "test:operator-lifecycle": "node --test test/operator-lifecycle.test.mjs",
     "test:operator-authority": "node --test test/operator-authority.test.mjs",
-    "proof:operator-isolation": "node tools/operator-publication/isolation/prove.mjs"
+    "proof:operator-isolation": "node tools/operator-publication/isolation/prove.mjs",
+    "maze:year-ahead": "node tools/year-ahead/cli.js",
+    "test:year-ahead": "node --test test/year-ahead.test.js test/year-ahead-api.test.js"
   },
   "keywords": [],
   "type": "module",
