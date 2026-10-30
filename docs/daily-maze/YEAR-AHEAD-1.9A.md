@@ -3,7 +3,7 @@
 Issue [#36](https://github.com/MZKZxyz/fort-custer-server/issues/36), parent #35.
 Branch: `codex/sprint-1.9a-private-year-ahead`. Starting main was reverified as
 `cec541d71f83eca42463182b62c00433acc53746`. Implementation/experiment revision:
-`f0e9b281b4006f0cef87c31cc2b92951800d8fd0`. The final tested PR head is recorded in
+`e9e2715fc620f5147b730e59a79e96fb349315e3`. The final tested PR head is recorded in
 the PR's exact-head QA handoff (a document cannot contain its own commit SHA).
 
 This is offline, nonproduction engineering. No launch date, production batch,
@@ -33,9 +33,11 @@ node tools/year-ahead/cli.js --command validate --root /absolute/private/store -
 ```
 
 `create` exclusively creates a batch: it never replaces an existing directory.
-Its frozen manifest contains the exact canonical plan, UTC dates, algorithm/RNG
+Its checksummed frozen manifest contains the exact canonical plan, UTC dates, algorithm/RNG
 configuration, source revision, computational source digest, Node version,
-creation instant and independent 256-bit `randomBytes` seeds. Each date has up to
+creation instant and independent 256-bit `randomBytes` seeds. Its creation-time
+content checksum is verified before every load, including incomplete batches;
+valid-shaped seed/config corruption therefore fails before generation. Each date has up to
 16 independent bounded seed candidates (8 in the experimental plan). The existing
 `daily-dfs-v1` generator owns its own bounded internal retries (32 here).
 Each accepted private record preserves the seed, full grid, version/config,
@@ -92,26 +94,26 @@ private hashes or selected puzzle identities are included.
 | --- | ---: | ---: |
 | Accepted / expected | 365 / 365 | 366 / 366 |
 | Sizes 13×17 / 17×19 / 21×21 | 122 / 122 / 121 | 122 / 122 / 122 |
-| Existing heuristic easy / medium / hard | 241 / 124 / 0 | 243 / 120 / 3 |
-| Optimal required inputs min / median / p95 / max | 24 / 57 / 126 / 186 | 24 / 53 / 133 / 196 |
-| Movement steps median / p95 | 56 / 125 | 52 / 132 |
-| Direction changes median / p95 / max | 17 / 40 / 63 | 17 / 43 / 62 |
+| Existing heuristic easy / medium / hard | 244 / 117 / 4 | 248 / 111 / 7 |
+| Optimal required inputs min / median / p95 / max | 24 / 55 / 118 / 200 | 24 / 55 / 113 / 196 |
+| Movement steps median / p95 | 55 / 117 | 54 / 113 |
+| Direction changes median / p95 / max | 18 / 37 / 64 | 17 / 36 / 62 |
 | Dead ends median / p95 | 9 / 14 | 9 / 14 |
 | Branch cells median / p95 | 7 / 12 | 7 / 12 |
-| Internal candidate rejections | 267 | 278 |
+| Internal candidate rejections | 298 | 274 |
 | Exhausted dates / accepted solvability failures | 0 / 0 | 0 / 0 |
-| Reachable extinguisher / required-fire optimal routes | 365 / 235 | 366 / 247 |
-| Generation-only milliseconds median / p95 | 0.572 / 1.353 | 0.575 / 1.252 |
+| Reachable extinguisher / required-fire optimal routes | 365 / 228 | 366 / 226 |
+| Generation-only milliseconds median / p95 | 0.598 / 1.311 | 0.627 / 1.348 |
 
-There were 545 rejected internal candidates in 1,276 attempts (42.71%); bounded
-retry recovered every date. Reasons: 489 legacy fire/extinguisher reachability,
-51 extinguisher-after-exit, 5 endpoint distance. Accepted invalid/unsolvable grids,
+There were 572 rejected internal candidates in 1,303 attempts (43.90%); bounded
+retry recovered every date. Reasons: 535 legacy fire/extinguisher reachability,
+35 extinguisher-after-exit, 2 endpoint distance. Accepted invalid/unsolvable grids,
 solver limits and terminal generation failures were 0/731 (observed sample rate,
 not a reliability guarantee). All have exactly one S/E/X/F and closed borders;
 all extinguisher pickups are reachable before terminal exit. Fire is required on
-482 optimal routes (65.94%) and optional on 249. Generation-only timing includes
+454 optimal routes (62.11%) and optional on 277. Generation-only timing includes
 carving, retries and analysis, but excludes writing, revalidation and startup;
-these shared-host timings are not an SLA. The largest single trial was 8.038 ms.
+these shared-host timings are not an SLA. The largest single trial was 6.119 ms.
 
 Required inputs count the separate extinguish input that consumes the inventory
 without moving; movement steps exclude it. Turns count changes between optimal
@@ -122,14 +124,14 @@ cycle rank does not estimate arbitrary longer playable action sequences.
 
 | Size | Normal actions median / p95 | Leap actions median / p95 | Total samples |
 | --- | ---: | ---: | ---: |
-| 13×17 | 40 / 79 | 44 / 71 | 244 |
-| 17×19 | 60 / 116 | 56 / 110 | 244 |
-| 21×21 | 78 / 151 | 70 / 159 | 243 |
+| 13×17 | 44 / 76 | 45 / 91 | 244 |
+| 17×19 | 55 / 117 | 57 / 107 | 244 |
+| 21×21 | 78 / 132 | 72 / 130 | 243 |
 
 Larger grids trend longer, but overlap substantially. The normalized existing
-score labels larger layouts easy despite more inputs; only three hard labels
-occur, two on 13×17. Do not equate dimensions or existing heuristic score with
-player difficulty. `minDistance:25` measures pre-placement path vertices, so six
+score labels larger layouts easy despite more inputs; only 11 hard labels
+occur across the 731 samples. Do not equate dimensions or existing heuristic score with
+player difficulty. `minDistance:25` measures pre-placement path vertices, so eleven
 accepted solutions need only 24 inputs. An approved action floor should use the
 new explicit bound rather than changing the versioned engine.
 
@@ -141,8 +143,8 @@ necessity, pickup detour, dead ends, fog/exploration and actual completion times
 before adopting thresholds. No production acceptance rules or tier proportions
 are enabled; collect player evidence before proposing a final annual mix.
 
-Manual outlier cohorts: 50 routes exceed 120 inputs, 6 are under 25, 3 exceed 60
-turns, and 249 bypass fire optimally (cohorts overlap). Compare the longest route
+Manual outlier cohorts: 31 routes exceed 120 inputs, 11 are under 25, 2 exceed 60
+turns, and 277 bypass fire optimally (cohorts overlap). Compare the longest route
 in each size with short/optional-fire examples; the 13×17 long tail is especially
 useful for testing whether score normalization misleads. Exact selections and
 metrics are in the **private** playtest shortlist; no date/index/hash is published.
@@ -166,8 +168,10 @@ the deployed old `/maze/start` exposes any existing future record to a valid use
 The newer API's guard is not protection for that deployed old code.
 
 Exact current custody: private 0700 directory
-`/workspace/private-maze-batches-1-9a/`, with `normal-fixture/`, `leap-fixture/` and
-0600 `playtest-shortlist.private-maze.json`. Batches are outside
+`/workspace/private-maze-batches-1-9a/`, with final `final-normal-fixture/`, `final-leap-fixture/` and
+0600 `playtest-shortlist.private-maze.json`. The earlier unapproved
+`normal-fixture/` and `leap-fixture/` remain intact as superseded research evidence
+from the earlier implementation revision; they are not the report dataset. Batches are outside
 `/workspace/fort-custer-server`, untracked, unapproved and never inserted into
 Atlas or any HTTP fixture. The application does not mount this directory. This
 cloud workspace is **ephemeral**, is not a backup, is not encrypted by this tool,
@@ -230,13 +234,15 @@ data is absent from normal lookup. These are disposable repository seams, not
 production or Atlas permission testing.
 
 - `node --test test/year-ahead.test.js test/year-ahead-api.test.js`: **15 passed,
-  0 failed, 0 skipped**, 6.117 seconds on implementation revision above.
-- Full `npm test`: **684 passed, 0 failed, 0 skipped**, 73.194 seconds.
+  0 failed, 0 skipped**, 6.129 seconds on implementation revision above.
+- Full `npm test`: **684 passed, 0 failed, 0 skipped** before the checksum fix.
+  The post-fix exact-head full run is recorded in the PR handoff.
   Exact final-head verification is recorded in the PR handoff.
 - Both retained annual batches revalidated with byte-identical aggregate output;
   **731/731** retained mazes completed through the separate client movement fixture.
 - Private fingerprints scanned against `npm pack --dry-run --ignore-scripts` file
-  contents: **198 files against 8,772 private fingerprints, zero leaks**.
+  contents: **198 files against 17,544 private fingerprints, zero leaks**
+  (both final and superseded private fixtures).
   Source syntax and `git diff --check` also checked.
 
 Changed files: `.gitignore`, `package.json`, `tools/year-ahead/{batch.js,cli.js,
