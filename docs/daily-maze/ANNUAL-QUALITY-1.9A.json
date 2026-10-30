@@ -1,0 +1,828 @@
+{
+  "schemaVersion": 1,
+  "mode": "sanitized-aggregate-only",
+  "purpose": "Representative fixtures; no launch date or approved yearly mix",
+  "fixtures": {
+    "normal": {
+      "schemaVersion": 1,
+      "mode": "sanitized-aggregate-only",
+      "total": {
+        "accepted": 365,
+        "seedTrials": 365,
+        "exhaustedSeeds": 0,
+        "qualityRejectedSeeds": 0,
+        "rejectedCandidates": 267,
+        "rejectionReasons": {
+          "LEGACY_REACHABILITY_REJECTED": 239,
+          "EXTINGUISHER_UNREACHABLE_BEFORE_EXIT": 25,
+          "ENDPOINT_DISTANCE_REJECTED": 3
+        },
+        "solvabilityFailures": 0,
+        "requiredFireCount": 235,
+        "reachableExtinguisherCount": 365,
+        "heuristicTiers": {
+          "easy": 241,
+          "medium": 124,
+          "hard": 0
+        },
+        "plannedTiers": {
+          "small-sample": 122,
+          "middle-sample": 122,
+          "large-sample": 121
+        },
+        "fireTilesPerMaze": 1,
+        "extinguisherTilesPerMaze": 1,
+        "actions": {
+          "min": 24,
+          "median": 57,
+          "p95": 126,
+          "max": 186,
+          "mean": 63.263
+        },
+        "movementSteps": {
+          "min": 24,
+          "median": 56,
+          "p95": 125,
+          "max": 185,
+          "mean": 62.619
+        },
+        "turns": {
+          "min": 4,
+          "median": 17,
+          "p95": 40,
+          "max": 63,
+          "mean": 19.677
+        },
+        "deadEnds": {
+          "min": 3,
+          "median": 9,
+          "p95": 14,
+          "max": 16,
+          "mean": 9.058
+        },
+        "branches": {
+          "min": 1,
+          "median": 7,
+          "p95": 12,
+          "max": 14,
+          "mean": 6.981
+        },
+        "branchingFrequency": {
+          "min": 0.012345679012345678,
+          "median": 0.04895104895104895,
+          "p95": 0.06315789473684211,
+          "max": 0.07692307692307693,
+          "mean": 0.048
+        },
+        "cycleRank": {
+          "min": 0,
+          "median": 0,
+          "p95": 0,
+          "max": 0,
+          "mean": 0
+        },
+        "shortestSolutions": {
+          "min": 1,
+          "median": 1,
+          "p95": 1,
+          "max": 1,
+          "mean": 1
+        },
+        "score": {
+          "min": 30,
+          "median": 67,
+          "p95": 105,
+          "max": 122,
+          "mean": 67.668
+        },
+        "generationMs": {
+          "min": 0.20972399999999425,
+          "median": 0.5724369999999794,
+          "p95": 1.3532259999999496,
+          "max": 8.037588,
+          "mean": 0.69
+        },
+        "playtestCriteriaCounts": {
+          "actionsOver120": 24,
+          "actionsUnder25": 5,
+          "turnsOver60": 2,
+          "optionalFire": 130
+        }
+      },
+      "sizes": {
+        "13x17": {
+          "accepted": 122,
+          "seedTrials": 122,
+          "exhaustedSeeds": 0,
+          "qualityRejectedSeeds": 0,
+          "rejectedCandidates": 98,
+          "rejectionReasons": {
+            "LEGACY_REACHABILITY_REJECTED": 88,
+            "EXTINGUISHER_UNREACHABLE_BEFORE_EXIT": 7,
+            "ENDPOINT_DISTANCE_REJECTED": 3
+          },
+          "solvabilityFailures": 0,
+          "requiredFireCount": 78,
+          "reachableExtinguisherCount": 122,
+          "heuristicTiers": {
+            "easy": 66,
+            "medium": 56,
+            "hard": 0
+          },
+          "plannedTiers": {
+            "small-sample": 122
+          },
+          "fireTilesPerMaze": 1,
+          "extinguisherTilesPerMaze": 1,
+          "actions": {
+            "min": 24,
+            "median": 40,
+            "p95": 79,
+            "max": 85,
+            "mean": 46.418
+          },
+          "movementSteps": {
+            "min": 24,
+            "median": 40,
+            "p95": 78,
+            "max": 84,
+            "mean": 45.779
+          },
+          "turns": {
+            "min": 5,
+            "median": 13,
+            "p95": 25,
+            "max": 32,
+            "mean": 14.328
+          },
+          "deadEnds": {
+            "min": 3,
+            "median": 7,
+            "p95": 8,
+            "max": 10,
+            "mean": 6.475
+          },
+          "branches": {
+            "min": 1,
+            "median": 5,
+            "p95": 6,
+            "max": 7,
+            "mean": 4.434
+          },
+          "branchingFrequency": {
+            "min": 0.012345679012345678,
+            "median": 0.05263157894736842,
+            "p95": 0.06315789473684211,
+            "max": 0.07526881720430108,
+            "mean": 0.047
+          },
+          "cycleRank": {
+            "min": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "mean": 0
+          },
+          "shortestSolutions": {
+            "min": 1,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "mean": 1
+          },
+          "score": {
+            "min": 40,
+            "median": 71,
+            "p95": 106,
+            "max": 122,
+            "mean": 73.672
+          },
+          "generationMs": {
+            "min": 0.20972399999999425,
+            "median": 0.45174600000007104,
+            "p95": 1.093467000000004,
+            "max": 8.037588,
+            "mean": 0.577
+          },
+          "playtestCriteriaCounts": {
+            "actionsOver120": 0,
+            "actionsUnder25": 4,
+            "turnsOver60": 0,
+            "optionalFire": 44
+          }
+        },
+        "17x19": {
+          "accepted": 122,
+          "seedTrials": 122,
+          "exhaustedSeeds": 0,
+          "qualityRejectedSeeds": 0,
+          "rejectedCandidates": 90,
+          "rejectionReasons": {
+            "LEGACY_REACHABILITY_REJECTED": 81,
+            "EXTINGUISHER_UNREACHABLE_BEFORE_EXIT": 9
+          },
+          "solvabilityFailures": 0,
+          "requiredFireCount": 77,
+          "reachableExtinguisherCount": 122,
+          "heuristicTiers": {
+            "easy": 92,
+            "medium": 30,
+            "hard": 0
+          },
+          "plannedTiers": {
+            "middle-sample": 122
+          },
+          "fireTilesPerMaze": 1,
+          "extinguisherTilesPerMaze": 1,
+          "actions": {
+            "min": 24,
+            "median": 60,
+            "p95": 116,
+            "max": 154,
+            "mean": 60.443
+          },
+          "movementSteps": {
+            "min": 24,
+            "median": 59,
+            "p95": 115,
+            "max": 153,
+            "mean": 59.811
+          },
+          "turns": {
+            "min": 6,
+            "median": 17,
+            "p95": 34,
+            "max": 50,
+            "mean": 18.648
+          },
+          "deadEnds": {
+            "min": 5,
+            "median": 9,
+            "p95": 11,
+            "max": 13,
+            "mean": 8.844
+          },
+          "branches": {
+            "min": 3,
+            "median": 7,
+            "p95": 9,
+            "max": 11,
+            "mean": 6.746
+          },
+          "branchingFrequency": {
+            "min": 0.02097902097902098,
+            "median": 0.04895104895104895,
+            "p95": 0.06293706293706294,
+            "max": 0.07692307692307693,
+            "mean": 0.047
+          },
+          "cycleRank": {
+            "min": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "mean": 0
+          },
+          "shortestSolutions": {
+            "min": 1,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "mean": 1
+          },
+          "score": {
+            "min": 36,
+            "median": 64,
+            "p95": 101,
+            "max": 121,
+            "mean": 64.943
+          },
+          "generationMs": {
+            "min": 0.28565600000001723,
+            "median": 0.5426520000000323,
+            "p95": 1.17483900000002,
+            "max": 3.779741999999999,
+            "mean": 0.642
+          },
+          "playtestCriteriaCounts": {
+            "actionsOver120": 5,
+            "actionsUnder25": 1,
+            "turnsOver60": 0,
+            "optionalFire": 45
+          }
+        },
+        "21x21": {
+          "accepted": 121,
+          "seedTrials": 121,
+          "exhaustedSeeds": 0,
+          "qualityRejectedSeeds": 0,
+          "rejectedCandidates": 79,
+          "rejectionReasons": {
+            "LEGACY_REACHABILITY_REJECTED": 70,
+            "EXTINGUISHER_UNREACHABLE_BEFORE_EXIT": 9
+          },
+          "solvabilityFailures": 0,
+          "requiredFireCount": 80,
+          "reachableExtinguisherCount": 121,
+          "heuristicTiers": {
+            "easy": 83,
+            "medium": 38,
+            "hard": 0
+          },
+          "plannedTiers": {
+            "large-sample": 121
+          },
+          "fireTilesPerMaze": 1,
+          "extinguisherTilesPerMaze": 1,
+          "actions": {
+            "min": 25,
+            "median": 78,
+            "p95": 151,
+            "max": 186,
+            "mean": 83.091
+          },
+          "movementSteps": {
+            "min": 24,
+            "median": 78,
+            "p95": 150,
+            "max": 185,
+            "mean": 82.43
+          },
+          "turns": {
+            "min": 4,
+            "median": 26,
+            "p95": 50,
+            "max": 63,
+            "mean": 26.107
+          },
+          "deadEnds": {
+            "min": 8,
+            "median": 12,
+            "p95": 15,
+            "max": 16,
+            "mean": 11.876
+          },
+          "branches": {
+            "min": 6,
+            "median": 10,
+            "p95": 13,
+            "max": 14,
+            "mean": 9.785
+          },
+          "branchingFrequency": {
+            "min": 0.03015075376884422,
+            "median": 0.05025125628140704,
+            "p95": 0.06532663316582915,
+            "max": 0.07035175879396985,
+            "mean": 0.049
+          },
+          "cycleRank": {
+            "min": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "mean": 0
+          },
+          "shortestSolutions": {
+            "min": 1,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "mean": 1
+          },
+          "score": {
+            "min": 30,
+            "median": 64,
+            "p95": 102,
+            "max": 115,
+            "mean": 64.364
+          },
+          "generationMs": {
+            "min": 0.346258999999975,
+            "median": 0.7100339999999505,
+            "p95": 1.4994159999999965,
+            "max": 2.5495690000000053,
+            "mean": 0.852
+          },
+          "playtestCriteriaCounts": {
+            "actionsOver120": 19,
+            "actionsUnder25": 0,
+            "turnsOver60": 2,
+            "optionalFire": 41
+          }
+        }
+      }
+    },
+    "leap": {
+      "schemaVersion": 1,
+      "mode": "sanitized-aggregate-only",
+      "total": {
+        "accepted": 366,
+        "seedTrials": 366,
+        "exhaustedSeeds": 0,
+        "qualityRejectedSeeds": 0,
+        "rejectedCandidates": 278,
+        "rejectionReasons": {
+          "EXTINGUISHER_UNREACHABLE_BEFORE_EXIT": 26,
+          "LEGACY_REACHABILITY_REJECTED": 250,
+          "ENDPOINT_DISTANCE_REJECTED": 2
+        },
+        "solvabilityFailures": 0,
+        "requiredFireCount": 247,
+        "reachableExtinguisherCount": 366,
+        "heuristicTiers": {
+          "easy": 243,
+          "medium": 120,
+          "hard": 3
+        },
+        "plannedTiers": {
+          "small-sample": 122,
+          "middle-sample": 122,
+          "large-sample": 122
+        },
+        "fireTilesPerMaze": 1,
+        "extinguisherTilesPerMaze": 1,
+        "actions": {
+          "min": 24,
+          "median": 53,
+          "p95": 133,
+          "max": 196,
+          "mean": 62.407
+        },
+        "movementSteps": {
+          "min": 24,
+          "median": 52,
+          "p95": 132,
+          "max": 195,
+          "mean": 61.732
+        },
+        "turns": {
+          "min": 4,
+          "median": 17,
+          "p95": 43,
+          "max": 62,
+          "mean": 19.484
+        },
+        "deadEnds": {
+          "min": 3,
+          "median": 9,
+          "p95": 14,
+          "max": 17,
+          "mean": 9.117
+        },
+        "branches": {
+          "min": 1,
+          "median": 7,
+          "p95": 12,
+          "max": 15,
+          "mean": 7.068
+        },
+        "branchingFrequency": {
+          "min": 0.010526315789473684,
+          "median": 0.04895104895104895,
+          "p95": 0.06993006993006994,
+          "max": 0.08421052631578947,
+          "mean": 0.048
+        },
+        "cycleRank": {
+          "min": 0,
+          "median": 0,
+          "p95": 0,
+          "max": 0,
+          "mean": 0
+        },
+        "shortestSolutions": {
+          "min": 1,
+          "median": 1,
+          "p95": 1,
+          "max": 1,
+          "mean": 1
+        },
+        "score": {
+          "min": 30,
+          "median": 65,
+          "p95": 104,
+          "max": 158,
+          "mean": 67.918
+        },
+        "generationMs": {
+          "min": 0.21166500000003907,
+          "median": 0.5747569999999769,
+          "p95": 1.251878000000005,
+          "max": 4.413795999999998,
+          "mean": 0.664
+        },
+        "playtestCriteriaCounts": {
+          "actionsOver120": 26,
+          "actionsUnder25": 1,
+          "turnsOver60": 1,
+          "optionalFire": 119
+        }
+      },
+      "sizes": {
+        "13x17": {
+          "accepted": 122,
+          "seedTrials": 122,
+          "exhaustedSeeds": 0,
+          "qualityRejectedSeeds": 0,
+          "rejectedCandidates": 111,
+          "rejectionReasons": {
+            "LEGACY_REACHABILITY_REJECTED": 103,
+            "EXTINGUISHER_UNREACHABLE_BEFORE_EXIT": 7,
+            "ENDPOINT_DISTANCE_REJECTED": 1
+          },
+          "solvabilityFailures": 0,
+          "requiredFireCount": 87,
+          "reachableExtinguisherCount": 122,
+          "heuristicTiers": {
+            "easy": 66,
+            "medium": 54,
+            "hard": 2
+          },
+          "plannedTiers": {
+            "small-sample": 122
+          },
+          "fireTilesPerMaze": 1,
+          "extinguisherTilesPerMaze": 1,
+          "actions": {
+            "min": 24,
+            "median": 44,
+            "p95": 71,
+            "max": 139,
+            "mean": 46.287
+          },
+          "movementSteps": {
+            "min": 24,
+            "median": 44,
+            "p95": 70,
+            "max": 138,
+            "mean": 45.574
+          },
+          "turns": {
+            "min": 4,
+            "median": 13,
+            "p95": 26,
+            "max": 36,
+            "mean": 14.393
+          },
+          "deadEnds": {
+            "min": 3,
+            "median": 6,
+            "p95": 9,
+            "max": 10,
+            "mean": 6.467
+          },
+          "branches": {
+            "min": 1,
+            "median": 4,
+            "p95": 7,
+            "max": 8,
+            "mean": 4.451
+          },
+          "branchingFrequency": {
+            "min": 0.010526315789473684,
+            "median": 0.043010752688172046,
+            "p95": 0.07368421052631578,
+            "max": 0.08421052631578947,
+            "mean": 0.047
+          },
+          "cycleRank": {
+            "min": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "mean": 0
+          },
+          "shortestSolutions": {
+            "min": 1,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "mean": 1
+          },
+          "score": {
+            "min": 41,
+            "median": 73,
+            "p95": 106,
+            "max": 158,
+            "mean": 74.475
+          },
+          "generationMs": {
+            "min": 0.21166500000003907,
+            "median": 0.4783140000000117,
+            "p95": 0.8797720000000027,
+            "max": 4.413795999999998,
+            "mean": 0.537
+          },
+          "playtestCriteriaCounts": {
+            "actionsOver120": 1,
+            "actionsUnder25": 1,
+            "turnsOver60": 0,
+            "optionalFire": 35
+          }
+        },
+        "17x19": {
+          "accepted": 122,
+          "seedTrials": 122,
+          "exhaustedSeeds": 0,
+          "qualityRejectedSeeds": 0,
+          "rejectedCandidates": 76,
+          "rejectionReasons": {
+            "LEGACY_REACHABILITY_REJECTED": 62,
+            "EXTINGUISHER_UNREACHABLE_BEFORE_EXIT": 13,
+            "ENDPOINT_DISTANCE_REJECTED": 1
+          },
+          "solvabilityFailures": 0,
+          "requiredFireCount": 89,
+          "reachableExtinguisherCount": 122,
+          "heuristicTiers": {
+            "easy": 82,
+            "medium": 39,
+            "hard": 1
+          },
+          "plannedTiers": {
+            "middle-sample": 122
+          },
+          "fireTilesPerMaze": 1,
+          "extinguisherTilesPerMaze": 1,
+          "actions": {
+            "min": 26,
+            "median": 56,
+            "p95": 110,
+            "max": 158,
+            "mean": 62.828
+          },
+          "movementSteps": {
+            "min": 25,
+            "median": 56,
+            "p95": 109,
+            "max": 157,
+            "mean": 62.098
+          },
+          "turns": {
+            "min": 6,
+            "median": 18,
+            "p95": 34,
+            "max": 51,
+            "mean": 19.557
+          },
+          "deadEnds": {
+            "min": 4,
+            "median": 9,
+            "p95": 12,
+            "max": 13,
+            "mean": 9.025
+          },
+          "branches": {
+            "min": 2,
+            "median": 7,
+            "p95": 10,
+            "max": 11,
+            "mean": 6.959
+          },
+          "branchingFrequency": {
+            "min": 0.013986013986013986,
+            "median": 0.04895104895104895,
+            "p95": 0.06993006993006994,
+            "max": 0.07692307692307693,
+            "mean": 0.049
+          },
+          "cycleRank": {
+            "min": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "mean": 0
+          },
+          "shortestSolutions": {
+            "min": 1,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "mean": 1
+          },
+          "score": {
+            "min": 39,
+            "median": 64,
+            "p95": 100,
+            "max": 132,
+            "mean": 67.689
+          },
+          "generationMs": {
+            "min": 0.31747399999997583,
+            "median": 0.5303019999999492,
+            "p95": 1.1925990000000866,
+            "max": 3.1528439999999947,
+            "mean": 0.65
+          },
+          "playtestCriteriaCounts": {
+            "actionsOver120": 4,
+            "actionsUnder25": 0,
+            "turnsOver60": 0,
+            "optionalFire": 33
+          }
+        },
+        "21x21": {
+          "accepted": 122,
+          "seedTrials": 122,
+          "exhaustedSeeds": 0,
+          "qualityRejectedSeeds": 0,
+          "rejectedCandidates": 91,
+          "rejectionReasons": {
+            "EXTINGUISHER_UNREACHABLE_BEFORE_EXIT": 6,
+            "LEGACY_REACHABILITY_REJECTED": 85
+          },
+          "solvabilityFailures": 0,
+          "requiredFireCount": 71,
+          "reachableExtinguisherCount": 122,
+          "heuristicTiers": {
+            "easy": 95,
+            "medium": 27,
+            "hard": 0
+          },
+          "plannedTiers": {
+            "large-sample": 122
+          },
+          "fireTilesPerMaze": 1,
+          "extinguisherTilesPerMaze": 1,
+          "actions": {
+            "min": 26,
+            "median": 70,
+            "p95": 159,
+            "max": 196,
+            "mean": 78.107
+          },
+          "movementSteps": {
+            "min": 25,
+            "median": 70,
+            "p95": 158,
+            "max": 195,
+            "mean": 77.525
+          },
+          "turns": {
+            "min": 7,
+            "median": 21,
+            "p95": 50,
+            "max": 62,
+            "mean": 24.5
+          },
+          "deadEnds": {
+            "min": 8,
+            "median": 12,
+            "p95": 15,
+            "max": 17,
+            "mean": 11.861
+          },
+          "branches": {
+            "min": 5,
+            "median": 10,
+            "p95": 13,
+            "max": 15,
+            "mean": 9.795
+          },
+          "branchingFrequency": {
+            "min": 0.02512562814070352,
+            "median": 0.05025125628140704,
+            "p95": 0.06532663316582915,
+            "max": 0.07537688442211055,
+            "mean": 0.049
+          },
+          "cycleRank": {
+            "min": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "mean": 0
+          },
+          "shortestSolutions": {
+            "min": 1,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "mean": 1
+          },
+          "score": {
+            "min": 30,
+            "median": 58,
+            "p95": 101,
+            "max": 118,
+            "mean": 61.59
+          },
+          "generationMs": {
+            "min": 0.3353899999999612,
+            "median": 0.7069549999999936,
+            "p95": 1.5229830000000106,
+            "max": 2.7542899999999975,
+            "mean": 0.803
+          },
+          "playtestCriteriaCounts": {
+            "actionsOver120": 21,
+            "actionsUnder25": 0,
+            "turnsOver60": 1,
+            "optionalFire": 51
+          }
+        }
+      }
+    }
+  }
+}
