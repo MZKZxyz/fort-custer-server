@@ -1,5 +1,9 @@
 # One-date operator publication — live apply BLOCKED
 
+Sprint 1.8C's [authority/audit decision](ONE-USE-AUTHORITY-1.8C.md) and
+[first-publication runbook](FIRST-PUBLICATION-RUNBOOK.md) supply the next source-only
+handoff. All real host, cloud, Atlas and cutover gates remain closed.
+
 Start later infrastructure/release decisions with the [Sprint 1.8B decision
 packet](PRODUCTION-READINESS-1.8B.md): current price evidence, host acceptance,
 Atlas/DDL/TLS requirements, build/key custody and ordered owner approvals.

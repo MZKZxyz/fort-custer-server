@@ -1,6 +1,9 @@
 # ADR 001: a dedicated Linux host, disposable containers, external one-use authority
 
 Status: **proposed for independent Systems/Security review, production NO-GO**.
+Sprint 1.8C adds the [authority/audit decision and cost model](ONE-USE-AUTHORITY-1.8C.md)
+and [first-publication checkpoints](FIRST-PUBLICATION-RUNBOOK.md). Local transaction
+evidence is not AWS durability, immutable retention or admin rollback proof.
 Sprint 1.8B's [decision packet](PRODUCTION-READINESS-1.8B.md) supersedes this
 ADR's historical price allowances and chooses an isolated 2-GiB VM by default,
 with qualifying existing dedicated hardware as fallback. It specifies ordered
@@ -184,9 +187,9 @@ retries and transaction-token replay as authorization recovery. A lost response
 still stops publication; eventual read-only investigation cannot mint a fresh GO.
 No leases that expire back into availability, TTL, automatic retry or claim reset.
 
-Pin table account/region/ARN and require strongly consistent recovery reads. Deny
-update/delete/TTL/restore/table-alias changes to runtime identities. Restores make
-a different table ARN and must fail the pin; owner recovery must compare retained
+Pin table account/region/ARN **and generated TableId**, and require strongly consistent recovery reads. Deny
+update/delete/TTL/restore/table-alias changes to runtime identities. Restores or
+recreation must fail the TableId pin even if a table name/ARN is reused; owner recovery must compare retained
 spent records to the external audit before accepting any new authority. Append
 intent/result receipts to separately administered S3 Object Lock compliance
 retention with a creation-only producer, independently checked retention and
