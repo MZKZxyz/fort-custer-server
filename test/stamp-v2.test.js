@@ -55,6 +55,33 @@ test('malformed and bypass layouts fail, and legacy v1 bytes remain stable', () 
   const v1=generateDaily({date:'2028-01-01',seed:'legacy-regression'});
   assert.equal(v1.gridHash,'0733635438a87ca5ee6cf57fd25bb9d06e4c36dfb641f0e7f5067b00384de87b');
 });
+// A fixed tree with a short S-E route and one side corridor. Moving P changes
+// depth without changing the topology; the optional spur is a misleading branch.
+function tierFixture(depth, spur = false) {
+  const grid = Array.from({ length: 14 }, () => Array(7).fill('#'));
+  for (let c = 1; c <= 3; c++) grid[1][c] = ' ';
+  for (let r = 2; r <= 10; r++) grid[r][2] = ' ';
+  if (spur) grid[4][3] = ' ';
+  grid[1][1] = 'S'; grid[1][3] = 'E'; grid[depth + 1][2] = 'P';
+  return grid;
+}
+test('verifier enforces tier identity and both depth boundaries independently', () => {
+  const medium = generate({ seed: 'tier-spoof-medium', tier: 'medium' });
+  const hard = generate({ seed: 'tier-spoof-hard', tier: 'hard' });
+  assert.equal(verify(medium.grid, 'hard').code, 'HARD_BRANCH_DEPTH_REJECTED');
+  assert.equal(verify(hard.grid, 'medium').code, 'MEDIUM_BRANCH_DEPTH_REJECTED');
+  assert.equal(verify(medium.grid, 'medium').code, 'ACCEPTED');
+  assert.equal(verify(hard.grid, 'hard').code, 'ACCEPTED');
+  for (const depth of [2, 8]) assert.equal(verify(tierFixture(depth), 'medium').code, 'ACCEPTED');
+  for (const depth of [1, 9]) assert.equal(verify(tierFixture(depth), 'medium').code, 'MEDIUM_BRANCH_DEPTH_REJECTED');
+  assert.equal(verify(tierFixture(8, true), 'hard').code, 'HARD_BRANCH_DEPTH_REJECTED');
+  assert.equal(verify(tierFixture(9), 'hard').code, 'HARD_MISLEADING_BRANCH_REJECTED');
+  assert.equal(verify(tierFixture(9, true), 'hard').code, 'ACCEPTED');
+  const easy = generate({ seed: 'tier-spoof-easy', tier: 'easy' });
+  assert.equal(verify(easy.grid, 'easy').code, 'ACCEPTED');
+  assert.equal(verify(easy.grid, 'medium').code, 'INVALID_TILES');
+  assert.equal(verify(tierFixture(2), 'easy').code, 'INVALID_TILES');
+});
 test('v2 random stream has independent deterministic 256-bit state',()=>{
   const a=seededRandom('a'),b=seededRandom('a'),c=seededRandom('b');
   const av=Array.from({length:12},()=>a()); assert.deepEqual(av,Array.from({length:12},()=>b())); assert.notDeepEqual(av,Array.from({length:12},()=>c()));
