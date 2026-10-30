@@ -140,6 +140,22 @@ test('tier plan validates dimensions, bounds, names and weights without choosing
   assert.equal(canonicalPlan({ ...plan, tiers: [{ ...plan.tiers[0], minActions: 30, maxActions: 70 }] }).tiers[0].maxActions, 70);
 });
 
+for (const [kind, names] of [
+  ['array', [[], ['easy'], [['easy']]]],
+  ['object', [{}, { toString: 'easy' }, { toString: () => 'easy' },
+    { toString() { throw new Error('NAME_MUST_NOT_BE_COERCED'); } }]],
+]) test(`${kind} tier names fail plan validation before creating a batch`, t => {
+  const root = mkdtempSync(join(tmpdir(), 'fc-tier-name-test-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  for (const [index, name] of names.entries()) {
+    const malformed = { ...plan, tiers: [{ ...plan.tiers[0], name }] };
+    assert.throws(() => canonicalPlan(malformed), { message: 'INVALID_PLAN' });
+    assert.throws(() => createBatch({ root, id: `invalid-name-${index}`, year: 2031,
+      plan: malformed, sourceRevision: revision }), { message: 'INVALID_PLAN' });
+    assert.deepEqual(readdirSync(root), [], 'invalid plans must leave no batch artifacts');
+  }
+});
+
 test('locks refuse active owners, recover only dead same-host owners and preserve approved batches', t => {
   const f = fixture(t), lock = join(f.dir, '.lock'); mkdirSync(lock, { mode: 0o700 });
   const path = join(lock, 'owner.json'); save(path, { pid: process.pid, host: hostname() });

@@ -30,7 +30,7 @@ export function canonicalPlan(plan) {
   const names = new Set();
   const tiers = plan.tiers.map(tier => {
     if (!tier || Object.keys(tier).some(k => !['name', 'weight', 'config', 'minActions', 'maxActions'].includes(k))
-        || !/^[a-z][a-z0-9-]{0,31}$/.test(tier.name) || names.has(tier.name)
+        || typeof tier.name !== 'string' || !/^[a-z][a-z0-9-]{0,31}$/.test(tier.name) || names.has(tier.name)
         || !Number.isInteger(tier.weight) || tier.weight < 1 || tier.weight > 32) fail('INVALID_PLAN');
     names.add(tier.name);
     const minActions = tier.minActions ?? 1, maxActions = tier.maxActions ?? 100000;
